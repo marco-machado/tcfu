@@ -1,3 +1,5 @@
+import { PLAYER_CONFIG } from "../config/GameConfig";
+
 export class Player extends Phaser.GameObjects.Container {
     private ship: Phaser.GameObjects.Sprite;
     private engine: Phaser.GameObjects.Sprite;
@@ -6,7 +8,7 @@ export class Player extends Phaser.GameObjects.Container {
     private cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
     constructor(scene: Phaser.Scene) {
-        super(scene, scene.scale.width / 2, scene.scale.height - 50);
+        super(scene, scene.scale.width / 2, scene.scale.height - PLAYER_CONFIG.spawnOffsetFromBottom);
 
         // Add this container to the scene
         this.scene.add.existing(this);
@@ -14,15 +16,13 @@ export class Player extends Phaser.GameObjects.Container {
         // Enable physics on this container
         this.scene.physics.add.existing(this);
 
-        // Set physics properties
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
             this.body.setCollideWorldBounds(true);
-            this.body.setOffset(-14, -14);
-            this.body.setSize(28, 28);
+            this.body.setOffset(PLAYER_CONFIG.body.offsetX, PLAYER_CONFIG.body.offsetY);
+            this.body.setSize(PLAYER_CONFIG.body.width, PLAYER_CONFIG.body.height);
         }
 
-        // Build the ship
-        this.ship = this.scene.add.sprite(0, -2, 'player-ship');
+        this.ship = this.scene.add.sprite(0, PLAYER_CONFIG.shipSpriteOffsetY, 'player-ship');
         this.engine = this.scene.add.sprite(0, 0, 'player-base-engine');
         this.engineIdle = this.scene.add.sprite(0, 0, 'player-base-engine-effects');
         this.engineIdle.play('player-base-engine-idle')
@@ -44,9 +44,9 @@ export class Player extends Phaser.GameObjects.Container {
     update() {
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
             if (this.cursorKeys?.left.isDown) {
-                this.body.setVelocityX(-200);
+                this.body.setVelocityX(-PLAYER_CONFIG.velocity);
             } else if (this.cursorKeys?.right.isDown) {
-                this.body.setVelocityX(200);
+                this.body.setVelocityX(PLAYER_CONFIG.velocity);
             } else {
                 this.body.setVelocityX(0);
             }

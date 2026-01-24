@@ -14,7 +14,7 @@
 - ✅ Scene shutdown/cleanup methods
 
 ### Known Issues
-- [ ] Debug console.log statements in `PlayerWeaponsSystem.ts` (lines 36, 38, 52)
+- [x] Debug console.log statements in `PlayerWeaponsSystem.ts` (lines 36, 38, 52)
 - [ ] Player projectile uses wrong sprite (`klaed-scout-bullet` instead of player bullet)
 - [ ] UIScene is placeholder only (displays "UI Scene" text)
 - [ ] Object pooling referenced but not fully implemented
@@ -24,8 +24,8 @@
 ## GameScene.ts Improvements Plan
 
 ### 1. **Configuration Management**
-- [ ] Extract magic numbers into a config object (background scroll speed, spawn positions)
-- [ ] Create constants for game dimensions and physics settings
+- [x] Extract magic numbers into a config object (background scroll speed, spawn positions)
+- [x] Create constants for game dimensions and physics settings
 
 ### 2. **Scene Lifecycle Management**
 - [x] Add `shutdown()` method to properly clean up resources
@@ -67,7 +67,7 @@
 
 ### 9. **Performance Optimizations**
 - [ ] Object pooling for projectiles and effects
-- [ ] Configurable background scroll speed
+- [x] Configurable background scroll speed
 - [ ] Batch destroy operations
 
 ### 10. **Documentation**

@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { BACKGROUND_CONFIG } from "../config/GameConfig";
 import { Player } from "../entities/Player";
 import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem";
 import { ISystem } from "../systems/ISystem";
@@ -72,8 +73,7 @@ export class GameScene extends Scene {
   }
 
   update() {
-    // Scroll the background downward to simulate upward movement
-    this.background.tilePositionY -= 1;
+    this.background.tilePositionY -= BACKGROUND_CONFIG.scrollSpeed;
   }
 
   shutdown() {

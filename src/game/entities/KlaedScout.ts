@@ -1,3 +1,4 @@
+import { ENEMY_CONFIG } from "../config/GameConfig";
 import { Enemy } from "./Enemy";
 
 export class KlaedScout extends Enemy {
@@ -7,10 +8,9 @@ export class KlaedScout extends Enemy {
     constructor(scene: Phaser.Scene) {
         super(scene);
 
-        // Set physics properties
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
-            this.body.setSize(24, 26);
-            this.body.setOffset(-12, -18);
+            this.body.setSize(ENEMY_CONFIG.klaedScout.body.width, ENEMY_CONFIG.klaedScout.body.height);
+            this.body.setOffset(ENEMY_CONFIG.klaedScout.body.offsetX, ENEMY_CONFIG.klaedScout.body.offsetY);
         }
 
         this.ship = this.scene.add.sprite(0, 0, 'klaed-scout-ship').setFlipY(true);

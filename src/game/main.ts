@@ -1,18 +1,17 @@
 import { AUTO, Game, Scale, Types } from 'phaser';
+import { GAME_CONFIG, PHYSICS_CONFIG } from './config/GameConfig';
 import { BootScene } from "./scenes/BootScene";
 import { GameScene } from './scenes/GameScene';
 import { UIScene } from "./scenes/UIScene";
 
-// Find out more information about the GameScene Config at:
-// https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
 const config: Types.Core.GameConfig = {
     type: AUTO,
-    width: 360,
-    height: 640,
+    width: GAME_CONFIG.width,
+    height: GAME_CONFIG.height,
     parent: 'game-container',
     pixelArt: true,
     roundPixels: true,
-    backgroundColor: '#028af8',
+    backgroundColor: GAME_CONFIG.backgroundColor,
     input: {
         gamepad: false,
         keyboard: true,
@@ -22,8 +21,8 @@ const config: Types.Core.GameConfig = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: {x: 0, y: 0},
-            debug: true,
+            gravity: PHYSICS_CONFIG.gravity,
+            debug: PHYSICS_CONFIG.debug,
         },
     },
     scale: {

@@ -1,3 +1,4 @@
+import { WEAPON_CONFIG } from '../config/GameConfig';
 import { Player } from '../entities/Player';
 import { PlayerProjectile } from '../entities/weapons/PlayerProjectile';
 import { ISystem } from './ISystem';
@@ -7,7 +8,7 @@ export class PlayerWeaponsSystem implements ISystem {
     private player: Player | null;
     private projectilesGroup: Phaser.Physics.Arcade.Group | null;
     private lastFireTime = 0;
-    private fireCooldown = 800;
+    private fireCooldown = WEAPON_CONFIG.player.cooldown;
 
     constructor(scene: Phaser.Scene, player: Player, projectilesGroup: Phaser.Physics.Arcade.Group) {
         this.scene = scene;
@@ -32,24 +33,14 @@ export class PlayerWeaponsSystem implements ISystem {
             return; // Can't fire without player or projectiles group
         }
 
-        const bullet = this.projectilesGroup.getFirstDead(false, this.player.x, this.player.y - 20);
-        console.log('HAS BULLET: ', bullet);
+        const spawnY = this.player.y + WEAPON_CONFIG.player.spawnOffsetY;
+        const projectile = new PlayerProjectile(this.scene, this.player.x, spawnY, this.projectilesGroup!);
 
-        console.log('COUNT', this.projectilesGroup.children);
-
-        // Create a new PlayerProjectile at the player's position
-        const projectile = new PlayerProjectile(this.scene, this.player.x, this.player.y - 20, this.projectilesGroup!);
-
-        // Set upward velocity
         if (projectile.body && projectile.body instanceof Phaser.Physics.Arcade.Body) {
-            projectile.body.setVelocityY(-400); // Move upward at 400 pixels/second
+            projectile.body.setVelocityY(WEAPON_CONFIG.player.velocityY);
         }
 
-        // Update the last fire time
         this.lastFireTime = currentTime;
-
-        // eslint-disable-next-line no-console
-        console.log('WEAPON FIRED');
     }
 
     handleWorldStep() {
@@ -59,7 +50,7 @@ export class PlayerWeaponsSystem implements ISystem {
                 return;
             }
 
-            if (projectile instanceof Phaser.GameObjects.Sprite && projectile.y < 100) {
+            if (projectile instanceof Phaser.GameObjects.Sprite && projectile.y < WEAPON_CONFIG.player.cleanupThresholdY) {
                 projectile.setActive(false).setVisible(false);
             }
         })
