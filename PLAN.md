@@ -1,5 +1,7 @@
 # TCFU Development Plan
 
+> Use ✅ for completed tasks, `[ ]` for pending tasks.
+
 ## Current State: Early-to-Mid Prototype
 
 ### What's Working
@@ -14,8 +16,8 @@
 - ✅ Scene shutdown/cleanup methods
 
 ### Known Issues
-- [x] Debug console.log statements in `PlayerWeaponsSystem.ts` (lines 36, 38, 52)
-- [ ] Player projectile uses wrong sprite (`klaed-scout-bullet` instead of player bullet)
+- ✅ Debug console.log statements in `PlayerWeaponsSystem.ts` (lines 36, 38, 52)
+- ✅ Player projectile uses wrong sprite (`klaed-scout-bullet` instead of player bullet)
 - [ ] UIScene is placeholder only (displays "UI Scene" text)
 - [ ] Object pooling referenced but not fully implemented
 
@@ -24,13 +26,13 @@
 ## GameScene.ts Improvements Plan
 
 ### 1. **Configuration Management**
-- [x] Extract magic numbers into a config object (background scroll speed, spawn positions)
-- [x] Create constants for game dimensions and physics settings
+- ✅ Extract magic numbers into a config object (background scroll speed, spawn positions)
+- ✅ Create constants for game dimensions and physics settings
 
 ### 2. **Scene Lifecycle Management**
-- [x] Add `shutdown()` method to properly clean up resources
-- [x] Remove event listeners and destroy systems on scene shutdown
-- [x] Clear physics groups properly
+- ✅ Add `shutdown()` method to properly clean up resources
+- ✅ Remove event listeners and destroy systems on scene shutdown
+- ✅ Clear physics groups properly
 
 ### 3. **Game State Management**
 - [ ] Add score tracking system
@@ -67,7 +69,7 @@
 
 ### 9. **Performance Optimizations**
 - [ ] Object pooling for projectiles and effects
-- [x] Configurable background scroll speed
+- ✅ Configurable background scroll speed
 - [ ] Batch destroy operations
 
 ### 10. **Documentation**

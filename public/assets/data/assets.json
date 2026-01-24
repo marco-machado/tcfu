@@ -48,6 +48,11 @@
           "frameWidth": 4,
           "frameHeight": 16
         }
+      },
+      {
+        "type": "image",
+        "key": "player-bullet",
+        "url": "player_bullet.png"
       }
     ]
   }
