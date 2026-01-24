@@ -6,7 +6,7 @@ export const GAME_CONFIG = {
 
 export const PHYSICS_CONFIG = {
     gravity: { x: 0, y: 0 },
-    debug: import.meta.env.DEV,
+    debug: false,
 }
 
 export const PLAYER_CONFIG = {
