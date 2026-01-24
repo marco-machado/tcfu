@@ -5,6 +5,7 @@ export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text;
     private livesText: Phaser.GameObjects.Text;
     private gameOverText: Phaser.GameObjects.Text | null = null;
+    private restartKey: Phaser.Input.Keyboard.Key | null = null;
 
     constructor() {
         super('UIScene');
@@ -51,5 +52,21 @@ export class UIScene extends Scene {
             'GAME OVER',
             { fontSize: '32px', color: '#ff0000' }
         ).setOrigin(0.5);
+
+        this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2 + 50,
+            'Press R to Restart',
+            { fontSize: '16px', color: '#ffffff' }
+        ).setOrigin(0.5);
+
+        this.restartKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R) ?? null;
+        this.restartKey?.once('down', this.restartGame, this);
+    }
+
+    private restartGame() {
+        this.scene.stop('UIScene');
+        this.scene.stop('GameScene');
+        this.scene.start('GameScene');
     }
 }

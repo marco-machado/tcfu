@@ -76,4 +76,15 @@ export class Player extends Phaser.GameObjects.Container {
             }
         });
     }
+
+    stopAnimations() {
+        this.engineIdle.anims.stop();
+        this.scene.tweens.killTweensOf(this);
+        this.alpha = 1;
+    }
+
+    disableInput() {
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this);
+        this.cursorKeys = undefined;
+    }
 }

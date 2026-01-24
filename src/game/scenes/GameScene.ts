@@ -16,12 +16,16 @@ export class GameScene extends Scene {
   private _gameStateSystem: GameStateSystem & ISystem;
   private playerEnemyOverlap: Phaser.Physics.Arcade.Collider;
   private projectileEnemyOverlap: Phaser.Physics.Arcade.Collider;
+  private isGameOver: boolean = false;
 
   constructor() {
     super("GameScene");
   }
 
   create() {
+    this.isGameOver = false;
+    this.physics.resume();
+
     this.scene.launch("UIScene");
 
     this.background = this.add.tileSprite(
@@ -48,6 +52,7 @@ export class GameScene extends Scene {
     this._gameStateSystem = new GameStateSystem(this);
 
     this.events.on('game-over', this.handleGameOver, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
 
     this.playerEnemyOverlap = this.physics.add.overlap(
       this.player,
@@ -82,20 +87,41 @@ export class GameScene extends Scene {
   }
 
   private handleGameOver() {
+    this.isGameOver = true;
+
     if (this._enemySpawnerSystem) {
       this._enemySpawnerSystem.destroy();
     }
+    if (this._playerWeaponSystem) {
+      this._playerWeaponSystem.destroy();
+    }
     if (this.player) {
       this.player.setActive(false);
+      this.player.stopAnimations();
+      this.player.disableInput();
     }
+
+    this.enemiesGroup.getChildren().forEach((enemy) => {
+      if (enemy instanceof Phaser.GameObjects.Container) {
+        enemy.each((child: Phaser.GameObjects.GameObject) => {
+          if (child instanceof Phaser.GameObjects.Sprite && child.anims) {
+            child.anims.stop();
+          }
+        });
+      }
+    });
+
     this.physics.pause();
   }
 
   update() {
+    if (this.isGameOver) return;
     this.background.tilePositionY -= BACKGROUND_CONFIG.scrollSpeed;
   }
 
   shutdown() {
+    this.events.off('game-over', this.handleGameOver, this);
+
     // Clean up physics colliders
     if (this.playerEnemyOverlap) {
       try {
