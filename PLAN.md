@@ -18,7 +18,7 @@
 ### Known Issues
 - ✅ Debug console.log statements in `PlayerWeaponsSystem.ts` (lines 36, 38, 52)
 - ✅ Player projectile uses wrong sprite (`klaed-scout-bullet` instead of player bullet)
-- [ ] UIScene is placeholder only (displays "UI Scene" text)
+- ✅ UIScene is placeholder only (displays "UI Scene" text)
 - [ ] Object pooling referenced but not fully implemented
 
 ---
@@ -35,16 +35,16 @@
 - ✅ Clear physics groups properly
 
 ### 3. **Game State Management**
-- [ ] Add score tracking system
-- [ ] Implement player lives/health system
-- [ ] Add game over state handling
+- ✅ Add score tracking system
+- ✅ Implement player lives/health system
+- ✅ Add game over state handling
 - [ ] Track wave progression or difficulty scaling
 
 ### 4. **Enhanced Collision System**
 - [ ] Replace instant destruction with damage system
 - [ ] Add visual effects (explosions, screen shake)
-- [ ] Implement scoring on enemy destruction
-- [ ] Add invulnerability frames for player after hit
+- ✅ Implement scoring on enemy destruction
+- ✅ Add invulnerability frames for player after hit
 
 ### 5. **Type Safety Improvements**
 - [ ] Use generics for physics groups: `Phaser.Physics.Arcade.Group<PlayerProjectile>`

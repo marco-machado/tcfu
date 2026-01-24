@@ -4,8 +4,8 @@ export class Player extends Phaser.GameObjects.Container {
     private ship: Phaser.GameObjects.Sprite;
     private engine: Phaser.GameObjects.Sprite;
     private engineIdle: Phaser.GameObjects.Sprite;
-
     private cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
+    private isInvincible: boolean = false;
 
     constructor(scene: Phaser.Scene) {
         super(scene, scene.scale.width / 2, scene.scale.height - PLAYER_CONFIG.spawnOffsetFromBottom);
@@ -55,5 +55,25 @@ export class Player extends Phaser.GameObjects.Container {
                 this.scene.events.emit('player-weapon-fired');
             }
         }
+    }
+
+    getIsInvincible(): boolean {
+        return this.isInvincible;
+    }
+
+    triggerInvincibility(duration: number) {
+        this.isInvincible = true;
+
+        this.scene.tweens.add({
+            targets: this,
+            alpha: 0.3,
+            duration: 100,
+            yoyo: true,
+            repeat: Math.floor(duration / 200),
+            onComplete: () => {
+                this.isInvincible = false;
+                this.alpha = 1;
+            }
+        });
     }
 }

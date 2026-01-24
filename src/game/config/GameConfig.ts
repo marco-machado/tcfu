@@ -42,3 +42,9 @@ export const WEAPON_CONFIG = {
 export const BACKGROUND_CONFIG = {
     scrollSpeed: 1,
 }
+
+export const GAME_STATE_CONFIG = {
+    initialLives: 3,
+    scorePerEnemy: 100,
+    playerInvincibilityDuration: 1500,
+}
