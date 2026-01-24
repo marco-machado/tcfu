@@ -7,5 +7,14 @@ export class Enemy extends Phaser.GameObjects.Container {
 
         // Enable physics on this container
         this.scene.physics.add.existing(this);
+
+        // Setup cleanup on destroy
+        this.once(Phaser.GameObjects.Events.DESTROY, () => {
+            this.cleanup();
+        }, this);
+    }
+
+    protected cleanup() {
+        // Override in subclasses for specific cleanup
     }
 }

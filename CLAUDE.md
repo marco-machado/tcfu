@@ -1,5 +1,9 @@
 # TCFU Development Guide
 
+## Critical Rules
+
+- **NEVER start the dev server** (`npm run dev`) unless explicitly asked by the user
+
 ## Project Overview
 
 TCFU (They Came From Uranus) is a space shooter game built with Phaser 3.90.0 and TypeScript. The game features a player

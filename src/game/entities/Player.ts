@@ -16,11 +16,9 @@ export class Player extends Phaser.GameObjects.Container {
 
         // Set physics properties
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
-            this.body.setSize(28, 28);
-            this.body.setOffset(-14, -14);
             this.body.setCollideWorldBounds(true);
-            this.body.setDrag(0.01);
-            this.body.setDamping(true);
+            this.body.setOffset(-14, -14);
+            this.body.setSize(28, 28);
         }
 
         // Build the ship
@@ -38,7 +36,8 @@ export class Player extends Phaser.GameObjects.Container {
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
 
         this.once(Phaser.GameObjects.Events.DESTROY, () => {
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE);
+            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this);
+            this.cursorKeys = undefined;
         }, this);
     }
 
@@ -48,7 +47,11 @@ export class Player extends Phaser.GameObjects.Container {
                 this.body.setVelocityX(-200);
             } else if (this.cursorKeys?.right.isDown) {
                 this.body.setVelocityX(200);
-            } else if (this.cursorKeys?.space.isDown) {
+            } else {
+                this.body.setVelocityX(0);
+            }
+
+            if (this.cursorKeys?.space.isDown) {
                 this.scene.events.emit('player-weapon-fired');
             }
         }

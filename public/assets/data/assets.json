@@ -1,0 +1,54 @@
+[
+  {
+    "path": "assets/images",
+    "files": [
+      {
+        "type": "image",
+        "key": "background",
+        "url": "deep_space.jpg"
+      },
+      {
+        "type": "image",
+        "key": "player-ship",
+        "url": "player_ship.png"
+      },
+      {
+        "type": "image",
+        "key": "player-base-engine",
+        "url": "player_base_engine.png"
+      },
+      {
+        "type": "image",
+        "key": "klaed-scout-ship",
+        "url": "klaed_scout_ship.png"
+      },
+      {
+        "type": "spritesheet",
+        "key": "player-base-engine-effects",
+        "url": "player_base_engine_effects.png",
+        "frameConfig": {
+          "frameWidth": 48,
+          "frameHeight": 48
+        }
+      },
+      {
+        "type": "spritesheet",
+        "key": "klaed-scout-engine",
+        "url": "klaed_scout_engine.png",
+        "frameConfig": {
+          "frameWidth": 64,
+          "frameHeight": 64
+        }
+      },
+      {
+        "type": "spritesheet",
+        "key": "klaed-scout-bullet",
+        "url": "klaed_scout_bullet.png",
+        "frameConfig": {
+          "frameWidth": 4,
+          "frameHeight": 16
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "key": "player-base-engine-idle",
+    "frames": [
+      0,
+      1,
+      2
+    ],
+    "frameRate": 12,
+    "repeat": -1,
+    "assetKey": "player-base-engine-effects"
+  },
+  {
+    "key": "player-base-engine-powering",
+    "frames": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "frameRate": 12,
+    "repeat": -1,
+    "assetKey": "player-base-engine-effects"
+  },
+  {
+    "key": "klaed-scout-engine-powering",
+    "frameRate": 12,
+    "repeat": -1,
+    "assetKey": "klaed-scout-engine"
+  },
+  {
+    "key": "klaed-scout-bullet-flying",
+    "frameRate": 12,
+    "repeat": -1,
+    "assetKey": "klaed-scout-bullet"
+  }
+]

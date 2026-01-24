@@ -1,4 +1,4 @@
-import { Enemy } from "./Enemy.ts";
+import { Enemy } from "./Enemy";
 
 export class KlaedScout extends Enemy {
     private ship: Phaser.GameObjects.Sprite;
@@ -18,5 +18,18 @@ export class KlaedScout extends Enemy {
         this.engine.play('klaed-scout-engine-powering');
 
         this.add([this.engine, this.ship]);
+    }
+
+    protected cleanup() {
+        // Stop any running animations
+        if (this.engine && this.engine.anims) {
+            this.engine.anims.stop();
+        }
+        
+        // Clear sprite references
+        this.ship = null as any;
+        this.engine = null as any;
+        
+        super.cleanup();
     }
 }
