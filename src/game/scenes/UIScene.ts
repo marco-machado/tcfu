@@ -1,5 +1,6 @@
 import { Scene } from "phaser";
 import { GAME_STATE_CONFIG } from "../config/GameConfig";
+import { HighScoreManager } from "../utils/HighScoreManager";
 
 export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text;
@@ -7,6 +8,8 @@ export class UIScene extends Scene {
     private gameOverText: Phaser.GameObjects.Text | null = null;
     private pauseText: Phaser.GameObjects.Text | null = null;
     private restartKey: Phaser.Input.Keyboard.Key | null = null;
+    private menuKey: Phaser.Input.Keyboard.Key | null = null;
+    private currentScore: number = 0;
 
     constructor() {
         super('UIScene');
@@ -43,6 +46,7 @@ export class UIScene extends Scene {
     }
 
     private updateScore(data: { score: number }) {
+        this.currentScore = data.score;
         this.scoreText.setText(`Score: ${data.score}`);
     }
 
@@ -51,22 +55,44 @@ export class UIScene extends Scene {
     }
 
     private showGameOver() {
+        const isNewHighScore = HighScoreManager.update(this.currentScore);
+        const highScore = HighScoreManager.get();
+
         this.gameOverText = this.add.text(
             this.scale.width / 2,
-            this.scale.height / 2,
+            this.scale.height / 2 - 30,
             'GAME OVER',
             { fontSize: '32px', color: '#ff0000' }
         ).setOrigin(0.5);
 
+        if (isNewHighScore) {
+            this.add.text(
+                this.scale.width / 2,
+                this.scale.height / 2 + 10,
+                'NEW HIGH SCORE!',
+                { fontSize: '18px', color: '#ffff00' }
+            ).setOrigin(0.5);
+        }
+
         this.add.text(
             this.scale.width / 2,
-            this.scale.height / 2 + 50,
-            'Press R to Restart',
+            this.scale.height / 2 + 40,
+            `High Score: ${highScore}`,
             { fontSize: '16px', color: '#ffffff' }
+        ).setOrigin(0.5);
+
+        this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2 + 80,
+            'R - Restart   M - Main Menu',
+            { fontSize: '14px', color: '#ffffff' }
         ).setOrigin(0.5);
 
         this.restartKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R) ?? null;
         this.restartKey?.once('down', this.restartGame, this);
+
+        this.menuKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.M) ?? null;
+        this.menuKey?.once('down', this.goToMainMenu, this);
     }
 
     private restartGame() {
@@ -78,14 +104,32 @@ export class UIScene extends Scene {
     private showPaused() {
         this.pauseText = this.add.text(
             this.scale.width / 2,
-            this.scale.height / 2,
+            this.scale.height / 2 - 20,
             'PAUSED',
             { fontSize: '32px', color: '#ffffff' }
         ).setOrigin(0.5);
+
+        this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2 + 30,
+            'P - Resume   M - Main Menu',
+            { fontSize: '14px', color: '#ffffff' }
+        ).setOrigin(0.5).setName('pauseHint');
+
+        this.menuKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.M) ?? null;
+        this.menuKey?.once('down', this.goToMainMenu, this);
     }
 
     private hidePaused() {
         this.pauseText?.destroy();
         this.pauseText = null;
+        this.children.getByName('pauseHint')?.destroy();
+        this.menuKey?.off('down', this.goToMainMenu, this);
+    }
+
+    private goToMainMenu() {
+        this.scene.stop('UIScene');
+        this.scene.stop('GameScene');
+        this.scene.start('MainMenuScene');
     }
 }
