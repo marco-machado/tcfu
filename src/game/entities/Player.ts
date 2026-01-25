@@ -43,13 +43,28 @@ export class Player extends Phaser.GameObjects.Container {
 
     update() {
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
+            let vx = 0;
+            let vy = 0;
+
             if (this.cursorKeys?.left.isDown) {
-                this.body.setVelocityX(-PLAYER_CONFIG.velocity);
+                vx = -1;
             } else if (this.cursorKeys?.right.isDown) {
-                this.body.setVelocityX(PLAYER_CONFIG.velocity);
-            } else {
-                this.body.setVelocityX(0);
+                vx = 1;
             }
+
+            if (this.cursorKeys?.up.isDown) {
+                vy = -1;
+            } else if (this.cursorKeys?.down.isDown) {
+                vy = 1;
+            }
+
+            if (vx !== 0 && vy !== 0) {
+                const diagonal = Math.SQRT1_2;
+                vx *= diagonal;
+                vy *= diagonal;
+            }
+
+            this.body.setVelocity(vx * PLAYER_CONFIG.velocity, vy * PLAYER_CONFIG.velocity);
 
             if (this.cursorKeys?.space.isDown) {
                 this.scene.events.emit('player-weapon-fired');
