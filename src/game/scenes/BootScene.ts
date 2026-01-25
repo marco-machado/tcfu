@@ -21,7 +21,7 @@ export class BootScene extends Scene {
     create() {
         this.#createAnimations();
 
-        this.scene.start('GameScene');
+        this.scene.start('MainMenuScene');
     }
 
     #createAnimations() {

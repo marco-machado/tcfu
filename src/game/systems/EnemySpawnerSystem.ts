@@ -28,7 +28,7 @@ export class EnemySpawnerSystem implements ISystem {
   }
 
   private update() {
-    if (!this.scene) return;
+    if (!this.scene || this.scene.physics.world.isPaused) return;
     const currentTime = this.scene.time.now;
 
     // Check if it's time to spawn a new enemy

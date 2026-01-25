@@ -17,6 +17,9 @@ export class GameScene extends Scene {
   private playerEnemyOverlap: Phaser.Physics.Arcade.Collider;
   private projectileEnemyOverlap: Phaser.Physics.Arcade.Collider;
   private isGameOver: boolean = false;
+  private isPaused: boolean = false;
+  private pauseKey: Phaser.Input.Keyboard.Key | null = null;
+  private escKey: Phaser.Input.Keyboard.Key | null = null;
 
   constructor() {
     super("GameScene");
@@ -24,7 +27,13 @@ export class GameScene extends Scene {
 
   create() {
     this.isGameOver = false;
+    this.isPaused = false;
     this.physics.resume();
+
+    this.pauseKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.P) ?? null;
+    this.escKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC) ?? null;
+    this.pauseKey?.on('down', this.togglePause, this);
+    this.escKey?.on('down', this.togglePause, this);
 
     this.scene.launch("UIScene");
 
@@ -115,12 +124,32 @@ export class GameScene extends Scene {
   }
 
   update() {
-    if (this.isGameOver) return;
+    if (this.isGameOver || this.isPaused) return;
     this.background.tilePositionY -= BACKGROUND_CONFIG.scrollSpeed;
+  }
+
+  private togglePause() {
+    if (this.isGameOver) return;
+
+    this.isPaused = !this.isPaused;
+
+    if (this.isPaused) {
+      this.physics.pause();
+      this.tweens.pauseAll();
+      this.anims.pauseAll();
+      this.events.emit('game-paused');
+    } else {
+      this.physics.resume();
+      this.tweens.resumeAll();
+      this.anims.resumeAll();
+      this.events.emit('game-resumed');
+    }
   }
 
   shutdown() {
     this.events.off('game-over', this.handleGameOver, this);
+    this.pauseKey?.off('down', this.togglePause, this);
+    this.escKey?.off('down', this.togglePause, this);
 
     // Clean up physics colliders
     if (this.playerEnemyOverlap) {

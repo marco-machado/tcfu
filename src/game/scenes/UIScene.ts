@@ -5,6 +5,7 @@ export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text;
     private livesText: Phaser.GameObjects.Text;
     private gameOverText: Phaser.GameObjects.Text | null = null;
+    private pauseText: Phaser.GameObjects.Text | null = null;
     private restartKey: Phaser.Input.Keyboard.Key | null = null;
 
     constructor() {
@@ -29,11 +30,15 @@ export class UIScene extends Scene {
         gameScene.events.on('score-changed', this.updateScore, this);
         gameScene.events.on('lives-changed', this.updateLives, this);
         gameScene.events.on('game-over', this.showGameOver, this);
+        gameScene.events.on('game-paused', this.showPaused, this);
+        gameScene.events.on('game-resumed', this.hidePaused, this);
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             gameScene.events.off('score-changed', this.updateScore, this);
             gameScene.events.off('lives-changed', this.updateLives, this);
             gameScene.events.off('game-over', this.showGameOver, this);
+            gameScene.events.off('game-paused', this.showPaused, this);
+            gameScene.events.off('game-resumed', this.hidePaused, this);
         });
     }
 
@@ -68,5 +73,19 @@ export class UIScene extends Scene {
         this.scene.stop('UIScene');
         this.scene.stop('GameScene');
         this.scene.start('GameScene');
+    }
+
+    private showPaused() {
+        this.pauseText = this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2,
+            'PAUSED',
+            { fontSize: '32px', color: '#ffffff' }
+        ).setOrigin(0.5);
+    }
+
+    private hidePaused() {
+        this.pauseText?.destroy();
+        this.pauseText = null;
     }
 }

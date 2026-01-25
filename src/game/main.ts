@@ -2,6 +2,7 @@ import { AUTO, Game, Scale, Types } from 'phaser';
 import { GAME_CONFIG, PHYSICS_CONFIG } from './config/GameConfig';
 import { BootScene } from "./scenes/BootScene";
 import { GameScene } from './scenes/GameScene';
+import { MainMenuScene } from "./scenes/MainMenuScene";
 import { UIScene } from "./scenes/UIScene";
 
 const config: Types.Core.GameConfig = {
@@ -15,7 +16,7 @@ const config: Types.Core.GameConfig = {
     input: {
         gamepad: false,
         keyboard: true,
-        mouse: false,
+        mouse: true,
         touch: false,
     },
     physics: {
@@ -31,6 +32,7 @@ const config: Types.Core.GameConfig = {
     },
     scene: [
         BootScene,
+        MainMenuScene,
         GameScene,
         UIScene,
     ]
