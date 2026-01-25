@@ -5,6 +5,8 @@ import { HighScoreManager } from "../utils/HighScoreManager";
 export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text;
     private livesText: Phaser.GameObjects.Text;
+    private waveText: Phaser.GameObjects.Text;
+    private waveAnnouncement: Phaser.GameObjects.Text | null = null;
     private gameOverText: Phaser.GameObjects.Text | null = null;
     private pauseText: Phaser.GameObjects.Text | null = null;
     private restartKey: Phaser.Input.Keyboard.Key | null = null;
@@ -30,6 +32,12 @@ export class UIScene extends Scene {
             color: '#ffffff'
         }).setOrigin(1, 0);
 
+        this.waveText = this.add.text(this.scale.width / 2, 20, 'Wave 1', {
+            fontSize: '16px',
+            color: '#ffffff'
+        }).setOrigin(0.5, 0);
+
+        gameScene.events.on('wave-started', this.handleWaveStarted, this);
         gameScene.events.on('score-changed', this.updateScore, this);
         gameScene.events.on('lives-changed', this.updateLives, this);
         gameScene.events.on('game-over', this.showGameOver, this);
@@ -37,6 +45,7 @@ export class UIScene extends Scene {
         gameScene.events.on('game-resumed', this.hidePaused, this);
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            gameScene.events.off('wave-started', this.handleWaveStarted, this);
             gameScene.events.off('score-changed', this.updateScore, this);
             gameScene.events.off('lives-changed', this.updateLives, this);
             gameScene.events.off('game-over', this.showGameOver, this);
@@ -52,6 +61,41 @@ export class UIScene extends Scene {
 
     private updateLives(data: { lives: number }) {
         this.livesText.setText(`Lives: ${data.lives}`);
+    }
+
+    private handleWaveStarted(data: { currentWave: number }) {
+        this.waveText.setText(`Wave ${data.currentWave}`);
+
+        if (data.currentWave > 1) {
+            this.showWaveAnnouncement(data.currentWave);
+        }
+    }
+
+    private showWaveAnnouncement(waveNumber: number) {
+        if (this.waveAnnouncement) {
+            this.waveAnnouncement.destroy();
+        }
+
+        this.waveAnnouncement = this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2 - 50,
+            `WAVE ${waveNumber}`,
+            { fontSize: '48px', color: '#ffff00' }
+        ).setOrigin(0.5).setAlpha(0);
+
+        this.tweens.add({
+            targets: this.waveAnnouncement,
+            alpha: { from: 0, to: 1 },
+            scale: { from: 0.5, to: 1.2 },
+            duration: 300,
+            ease: 'Power2',
+            yoyo: true,
+            hold: 500,
+            onComplete: () => {
+                this.waveAnnouncement?.destroy();
+                this.waveAnnouncement = null;
+            }
+        });
     }
 
     private showGameOver() {

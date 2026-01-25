@@ -5,6 +5,7 @@ import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem";
 import { GameStateSystem } from "../systems/GameStateSystem";
 import { ISystem } from "../systems/ISystem";
 import { PlayerWeaponsSystem } from "../systems/PlayerWeaponsSystem";
+import { WaveSystem } from "../systems/WaveSystem";
 
 export class GameScene extends Scene {
   private player: Player;
@@ -14,6 +15,7 @@ export class GameScene extends Scene {
   private _playerWeaponSystem: PlayerWeaponsSystem & ISystem;
   private _enemySpawnerSystem: EnemySpawnerSystem & ISystem;
   private _gameStateSystem: GameStateSystem & ISystem;
+  private _waveSystem: WaveSystem & ISystem;
   private playerEnemyOverlap: Phaser.Physics.Arcade.Collider;
   private projectileEnemyOverlap: Phaser.Physics.Arcade.Collider;
   private isGameOver: boolean = false;
@@ -57,8 +59,9 @@ export class GameScene extends Scene {
       this.player,
       this.playerProjectilesGroup
     );
-    this._enemySpawnerSystem = new EnemySpawnerSystem(this, this.enemiesGroup);
     this._gameStateSystem = new GameStateSystem(this);
+    this._waveSystem = new WaveSystem(this);
+    this._enemySpawnerSystem = new EnemySpawnerSystem(this, this.enemiesGroup);
 
     this.events.on('game-over', this.handleGameOver, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
@@ -103,6 +106,9 @@ export class GameScene extends Scene {
     }
     if (this._playerWeaponSystem) {
       this._playerWeaponSystem.destroy();
+    }
+    if (this._waveSystem) {
+      this._waveSystem.destroy();
     }
     if (this.player) {
       this.player.setActive(false);
@@ -192,6 +198,14 @@ export class GameScene extends Scene {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error destroying game state system:", error);
+      }
+    }
+    if (this._waveSystem && this._waveSystem.destroy) {
+      try {
+        this._waveSystem.destroy();
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying wave system:", error);
       }
     }
 

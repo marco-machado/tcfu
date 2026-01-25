@@ -48,3 +48,23 @@ export const GAME_STATE_CONFIG = {
     scorePerEnemy: 100,
     playerInvincibilityDuration: 1500,
 }
+
+export const WAVE_CONFIG = {
+    baseKillsToComplete: 5,
+    killsScalingPerWave: 2,
+
+    spawner: {
+        baseRate: 2000,
+        minRate: 500,
+        rateReductionPerWave: 250,
+        spawnPaddingX: 20,
+        spawnY: -50,
+        cleanupOffsetY: 100,
+    },
+
+    enemy: {
+        baseVelocityY: 100,
+        maxVelocityY: 300,
+        velocityIncreasePerWave: 15,
+    },
+}
