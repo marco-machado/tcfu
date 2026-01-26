@@ -1,4 +1,6 @@
-# TCFU Development Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Critical Rules
 
@@ -6,16 +8,7 @@
 
 ## Project Overview
 
-TCFU (They Came From Uranus) is a space shooter game built with Phaser 3.90.0 and TypeScript. The game features a player
-ship fighting against alien enemies in a classic arcade-style vertical shooter format.
-
-## Project Structure
-
-- `src/`: TypeScript game code (Phaser). Entities, systems, and scenes live under `src/game/**`.
-- `public/`: Static assets served as-is.
-- `dist/`: Build output (do not edit).
-- `vite/`: Vite configs (`config.dev.mjs`, `config.prod.mjs`).
-- Root: `index.html`, `eslint.config.mjs`, `tsconfig.json`.
+TCFU (They Came From Uranus) is a space shooter game built with Phaser 3.90.0 and TypeScript. The game features a player ship fighting against alien enemies in a classic arcade-style vertical shooter with an endless wave system.
 
 ## Development Commands
 
@@ -30,81 +23,75 @@ npm run typecheck   # Strict TypeScript checks with tsc
 
 ## Architecture
 
-### Core Structure
+### Entry Point & Config
 
-- **Entry Point**: `src/main.ts` → `src/game/main.ts` initializes Phaser game
-- **Game Container**: HTML element `#game-container` hosts the 360x640 pixel game
-- **Physics**: Arcade physics with no gravity, debug mode enabled in development
-- **Asset Management**: JSON-driven asset loading via `public/assets/data/assets.json` and `public/assets/data/animations.json`
+- `src/main.ts` → `src/game/main.ts` initializes Phaser game
+- Game canvas: 360x640 pixels, pixel art mode, arcade physics (no gravity)
+- All gameplay constants centralized in `src/game/config/GameConfig.ts`
 
-### Scene Architecture
+### Scene Flow
 
-Three-scene system:
+Four-scene system:
 
-1. **BootScene**: Asset preloading and animation creation from JSON data
-2. **GameScene**: Main gameplay logic, entity management, systems coordination
-3. **UIScene**: UI overlay launched alongside GameScene
+1. **BootScene**: Asset preloading via JSON pack files (`public/assets/data/assets.json`, `animations.json`)
+2. **MainMenuScene**: Title screen with Play button, displays high score
+3. **GameScene**: Main gameplay - spawns entities, manages systems, handles collisions
+4. **UIScene**: HUD overlay (score, lives, wave) launched alongside GameScene
 
 ### Entity System
 
-- **Player**: Container-based entity with ship + engine sprites, keyboard controls
-- **Enemies**: Group-managed enemy entities (KlaedScout type)
-- **Weapons**: ProjectilesGroup system with cooldown-based firing
+- **Player** (`src/game/entities/Player.ts`): Container-based (ship + engine sprites), keyboard controls (arrows + space), invincibility mechanic
+- **Enemies** (`src/game/entities/`): Group-managed, currently KlaedScout type
+- **Projectiles** (`src/game/entities/weapons/`): Physics group with auto-cleanup
 
 ### System Architecture
 
-- **PlayerWeaponsSystem**: Handles weapon firing events and projectile creation
-- **EnemySpawnerSystem**: Manages enemy spawn logic
-- Scene-based event system for entity communication (`player-weapon-fired` event)
+Systems implement `ISystem` interface (requires `destroy()` method):
+
+- **PlayerWeaponsSystem**: Listens for `player-weapon-fired` event, creates projectiles with cooldown
+- **EnemySpawnerSystem**: Timer-based spawning, responds to `wave-difficulty-changed` for spawn rate
+- **WaveSystem**: Tracks kills, advances waves, emits difficulty scaling events
+- **GameStateSystem**: Manages score, lives, emits `game-over` when lives depleted
+
+### Event System
+
+Scene-based Phaser events coordinate between systems:
+
+| Event | Emitter | Payload | Purpose |
+|-------|---------|---------|---------|
+| `player-weapon-fired` | Player | - | Trigger projectile spawn |
+| `enemy-destroyed` | GameScene | `{ points }` | Score + wave progress |
+| `player-hit` | GameScene | - | Life lost |
+| `wave-started` | WaveSystem | `{ currentWave, ... }` | UI update |
+| `wave-difficulty-changed` | WaveSystem | `{ spawnRate, enemyVelocity }` | Spawner adjustment |
+| `game-over` | GameStateSystem | - | End game state |
+| `game-paused`/`game-resumed` | GameScene | - | Toggle pause state |
+| `score-changed` | GameStateSystem | `{ score }` | UI update |
+| `lives-changed` | GameStateSystem | `{ lives }` | UI update |
 
 ### Asset Pipeline
 
-- **Images**: Located in `public/assets/images/`
-- **Spritesheets**: Configured with frameWidth/frameHeight in assets.json
-- **Animations**: JSON-defined with key, frames, frameRate, repeat properties
-- **Loading**: Phaser pack-based loading system via BootScene
-
-### Code Patterns
-
-- **TypeScript**: Strict mode enabled, ES2020 target
-- **Scene References**: Systems access entities via `(scene as any).player` pattern
-- **Physics**: Arcade body type checking before property access
-- **Events**: Phaser events system for inter-system communication
-- **Containers**: Player uses Container for multi-sprite composition
-
-### Build Configuration
-
-- **Vite**: Separate dev/prod configs in `vite/` directory
-- **Chunking**: Phaser separated into its own chunk for optimal loading
-- **TypeScript**: Bundler module resolution, no emit (Vite handles compilation)
+- Images in `public/assets/images/`
+- Spritesheets configured in `public/assets/data/assets.json` (frameWidth/frameHeight)
+- Animations defined in `public/assets/data/animations.json` (key, frames, frameRate, repeat)
+- Asset keys use kebab-case
 
 ## Code Style
 
-- Indentation: 4 spaces (no tabs)
-- Semicolons: omit; prefer no trailing semicolons
-- Imports: alphabetical, grouped order (enforced by `eslint-plugin-import`)
-- Prefer `const`, object destructuring, optional chaining/nullish coalescing
-- Keep Phaser-specific `any` usage minimal
-- Scene classes: PascalCase with "Scene" suffix
-- Entity classes: PascalCase
-- System classes: PascalCase with "System" suffix
-- Asset keys: kebab-case
-- File extensions: `.ts` for TypeScript, `.mjs` for Vite configs
+- 4 spaces indentation, no semicolons
+- Imports: alphabetical, grouped (enforced by eslint-plugin-import)
+- Naming: PascalCase classes (Scene/System suffix), kebab-case asset keys
+- Physics: Always check `body instanceof Phaser.Physics.Arcade.Body` before property access
+- Containers: Use for multi-sprite entity composition (see Player.ts)
+- Cleanup: Systems must clean up event listeners in `destroy()`, scenes in `shutdown()`
 
-## Testing Guidelines
+## Testing
 
-No test runner configured yet. If adding tests:
-- Unit: Vitest (`*.spec.ts` beside sources, e.g., `src/game/entities/Enemy.spec.ts`)
-- Smoke/E2E: Playwright against `npm run dev`
-- Aim for coverage on core systems (spawner, weapons) and scene lifecycle hooks
+No test runner configured. If adding tests:
+- Unit: Vitest (`*.spec.ts` beside sources)
+- E2E: Playwright against dev server
 
-## Commit & PR Guidelines
+## Commit Guidelines
 
-- Use Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`
-- PRs should include: concise description, screenshots/gifs for gameplay/UI changes, steps to test, and linked issues
-- Run `npm run lint` and `npm run typecheck` before opening a PR; builds must be clean
-
-## Security & Configuration
-
-- Do not commit credentials. Keep assets in `public/` and large binaries out of Git.
-- Avoid editing `dist/`. For server port changes, update `vite/config.*.mjs`.
+- Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`
+- Run `npm run lint` and `npm run typecheck` before committing
