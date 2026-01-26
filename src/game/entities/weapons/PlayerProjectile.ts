@@ -11,8 +11,4 @@ export class PlayerProjectile extends Phaser.GameObjects.Sprite {
             this.body.setSize(body.width, body.height).setOffset(body.offsetX, body.offsetY);
         }
     }
-
-    update() {
-        console.log('UPDATE');
-    }
 }

@@ -37,6 +37,14 @@ export const WEAPON_CONFIG = {
         cleanupThresholdY: 100,
         projectileBody: { width: 4, height: 12, offsetX: 0, offsetY: 4 },
     },
+    enemy: {
+        cooldownMin: 2000,
+        cooldownMax: 4000,
+        spawnOffsetY: 20,
+        velocityY: 200,
+        projectileBody: { width: 4, height: 12, offsetX: 0, offsetY: 0 },
+        firstShootingWave: 3,
+    },
 }
 
 export const BACKGROUND_CONFIG = {
@@ -66,5 +74,16 @@ export const WAVE_CONFIG = {
         baseVelocityY: 100,
         maxVelocityY: 300,
         velocityIncreasePerWave: 15,
+    },
+
+    formations: {
+        spacingX: 40,
+        spacingY: 35,
+        firstFormationWave: 6,
+        patterns: [
+            { cols: 1, rows: 1, weight: 5 },
+            { cols: 2, rows: 1, weight: 3 },
+            { cols: 3, rows: 1, weight: 2 },
+        ],
     },
 }

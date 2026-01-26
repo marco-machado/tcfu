@@ -1,27 +1,31 @@
-import { Scene } from "phaser";
-import { BACKGROUND_CONFIG, GAME_STATE_CONFIG } from "../config/GameConfig";
-import { Player } from "../entities/Player";
-import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem";
-import { GameStateSystem } from "../systems/GameStateSystem";
-import { ISystem } from "../systems/ISystem";
-import { PlayerWeaponsSystem } from "../systems/PlayerWeaponsSystem";
-import { WaveSystem } from "../systems/WaveSystem";
+import { Scene } from "phaser"
+import { BACKGROUND_CONFIG, GAME_STATE_CONFIG } from "../config/GameConfig"
+import { Player } from "../entities/Player"
+import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem"
+import { EnemyWeaponsSystem } from "../systems/EnemyWeaponsSystem"
+import { GameStateSystem } from "../systems/GameStateSystem"
+import { ISystem } from "../systems/ISystem"
+import { PlayerWeaponsSystem } from "../systems/PlayerWeaponsSystem"
+import { WaveSystem } from "../systems/WaveSystem"
 
 export class GameScene extends Scene {
-  private player: Player;
-  private playerProjectilesGroup: Phaser.Physics.Arcade.Group;
-  private enemiesGroup: Phaser.Physics.Arcade.Group;
-  private background: Phaser.GameObjects.TileSprite;
-  private _playerWeaponSystem: PlayerWeaponsSystem & ISystem;
-  private _enemySpawnerSystem: EnemySpawnerSystem & ISystem;
-  private _gameStateSystem: GameStateSystem & ISystem;
-  private _waveSystem: WaveSystem & ISystem;
-  private playerEnemyOverlap: Phaser.Physics.Arcade.Collider;
-  private projectileEnemyOverlap: Phaser.Physics.Arcade.Collider;
-  private isGameOver: boolean = false;
-  private isPaused: boolean = false;
-  private pauseKey: Phaser.Input.Keyboard.Key | null = null;
-  private escKey: Phaser.Input.Keyboard.Key | null = null;
+  private player: Player
+  private playerProjectilesGroup: Phaser.Physics.Arcade.Group
+  private enemyProjectilesGroup: Phaser.Physics.Arcade.Group
+  private enemiesGroup: Phaser.Physics.Arcade.Group
+  private background: Phaser.GameObjects.TileSprite
+  private _playerWeaponSystem: PlayerWeaponsSystem & ISystem
+  private _enemyWeaponsSystem: EnemyWeaponsSystem & ISystem
+  private _enemySpawnerSystem: EnemySpawnerSystem & ISystem
+  private _gameStateSystem: GameStateSystem & ISystem
+  private _waveSystem: WaveSystem & ISystem
+  private playerEnemyOverlap: Phaser.Physics.Arcade.Collider
+  private projectileEnemyOverlap: Phaser.Physics.Arcade.Collider
+  private enemyProjectilePlayerOverlap: Phaser.Physics.Arcade.Collider
+  private isGameOver: boolean = false
+  private isPaused: boolean = false
+  private pauseKey: Phaser.Input.Keyboard.Key | null = null
+  private escKey: Phaser.Input.Keyboard.Key | null = null
 
   constructor() {
     super("GameScene");
@@ -49,8 +53,11 @@ export class GameScene extends Scene {
 
     this.playerProjectilesGroup = this.physics.add.group({
       name: "PlayerProjectiles",
-    });
-    this.enemiesGroup = this.physics.add.group({ name: "Enemies" });
+    })
+    this.enemyProjectilesGroup = this.physics.add.group({
+      name: "EnemyProjectiles",
+    })
+    this.enemiesGroup = this.physics.add.group({ name: "Enemies" })
 
     this.player = new Player(this);
 
@@ -58,10 +65,15 @@ export class GameScene extends Scene {
       this,
       this.player,
       this.playerProjectilesGroup
-    );
-    this._gameStateSystem = new GameStateSystem(this);
-    this._waveSystem = new WaveSystem(this);
-    this._enemySpawnerSystem = new EnemySpawnerSystem(this, this.enemiesGroup);
+    )
+    this._gameStateSystem = new GameStateSystem(this)
+    this._waveSystem = new WaveSystem(this)
+    this._enemySpawnerSystem = new EnemySpawnerSystem(this, this.enemiesGroup)
+    this._enemyWeaponsSystem = new EnemyWeaponsSystem(
+      this,
+      this.enemiesGroup,
+      this.enemyProjectilesGroup
+    )
 
     this.events.on('game-over', this.handleGameOver, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
@@ -87,28 +99,47 @@ export class GameScene extends Scene {
       this.enemiesGroup,
       (obj1, obj2) => {
         try {
-          obj1.destroy();
-          obj2.destroy();
-          this.events.emit('enemy-destroyed', { points: GAME_STATE_CONFIG.scorePerEnemy });
+          obj1.destroy()
+          obj2.destroy()
+          this.events.emit('enemy-destroyed', { points: GAME_STATE_CONFIG.scorePerEnemy })
         } catch (error) {
           // eslint-disable-next-line no-console
-          console.error("Error in projectile-enemy collision:", error);
+          console.error("Error in projectile-enemy collision:", error)
         }
       }
-    );
+    )
+
+    this.enemyProjectilePlayerOverlap = this.physics.add.overlap(
+      this.player,
+      this.enemyProjectilesGroup,
+      (_player, projectile) => {
+        try {
+          if (this.player.getIsInvincible()) return
+          projectile.destroy()
+          this.events.emit('player-hit')
+          this.player.triggerInvincibility(GAME_STATE_CONFIG.playerInvincibilityDuration)
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error in enemy-projectile-player collision:", error)
+        }
+      }
+    )
   }
 
   private handleGameOver() {
-    this.isGameOver = true;
+    this.isGameOver = true
 
     if (this._enemySpawnerSystem) {
-      this._enemySpawnerSystem.destroy();
+      this._enemySpawnerSystem.destroy()
     }
     if (this._playerWeaponSystem) {
-      this._playerWeaponSystem.destroy();
+      this._playerWeaponSystem.destroy()
+    }
+    if (this._enemyWeaponsSystem) {
+      this._enemyWeaponsSystem.destroy()
     }
     if (this._waveSystem) {
-      this._waveSystem.destroy();
+      this._waveSystem.destroy()
     }
     if (this.player) {
       this.player.setActive(false);
@@ -168,10 +199,18 @@ export class GameScene extends Scene {
     }
     if (this.projectileEnemyOverlap) {
       try {
-        this.projectileEnemyOverlap.destroy();
+        this.projectileEnemyOverlap.destroy()
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error("Error destroying projectile-enemy overlap:", error);
+        console.error("Error destroying projectile-enemy overlap:", error)
+      }
+    }
+    if (this.enemyProjectilePlayerOverlap) {
+      try {
+        this.enemyProjectilePlayerOverlap.destroy()
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying enemy-projectile-player overlap:", error)
       }
     }
 
@@ -186,10 +225,18 @@ export class GameScene extends Scene {
     }
     if (this._enemySpawnerSystem && this._enemySpawnerSystem.destroy) {
       try {
-        this._enemySpawnerSystem.destroy();
+        this._enemySpawnerSystem.destroy()
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error("Error destroying enemy spawner system:", error);
+        console.error("Error destroying enemy spawner system:", error)
+      }
+    }
+    if (this._enemyWeaponsSystem && this._enemyWeaponsSystem.destroy) {
+      try {
+        this._enemyWeaponsSystem.destroy()
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying enemy weapons system:", error)
       }
     }
     if (this._gameStateSystem && this._gameStateSystem.destroy) {
@@ -231,11 +278,20 @@ export class GameScene extends Scene {
     }
     if (this.enemiesGroup) {
       try {
-        this.enemiesGroup.clear(true, true);
-        this.enemiesGroup.destroy();
+        this.enemiesGroup.clear(true, true)
+        this.enemiesGroup.destroy()
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error("Error destroying enemies group:", error);
+        console.error("Error destroying enemies group:", error)
+      }
+    }
+    if (this.enemyProjectilesGroup) {
+      try {
+        this.enemyProjectilesGroup.clear(true, true)
+        this.enemyProjectilesGroup.destroy()
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying enemy projectiles group:", error)
       }
     }
   }
