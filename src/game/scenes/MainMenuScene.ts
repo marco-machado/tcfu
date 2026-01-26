@@ -19,11 +19,10 @@ export class MainMenuScene extends Scene {
             'background'
         )
 
-        this.add.text(
+        this.add.image(
             this.scale.width / 2,
             this.scale.height / 3,
-            'THEY CAME\nFROM URANUS',
-            { fontSize: '32px', color: '#ffffff', align: 'center' }
+            'title-logo'
         ).setOrigin(0.5)
 
         this.highScoreText = this.add.text(

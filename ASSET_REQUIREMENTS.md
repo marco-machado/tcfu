@@ -25,9 +25,9 @@ This document lists visual and audio assets needed to improve TCFU's UI and game
 ### 1. UI Graphics
 
 #### 1.1 Logo / Title
-| Asset | Dimensions | Description |
-|-------|------------|-------------|
-| `title-logo.png` | ~280 × 80px | "THEY CAME FROM URANUS" pixel art logo, white with optional accent color |
+| Asset | Dimensions | Description | Prompt |
+|-------|------------|-------------|--------|
+| `title-logo.png` | ~280 × 80px | "THEY CAME FROM URANUS" pixel art logo, white with optional accent color | Pixel art game logo "THEY CAME FROM URANUS", retro 1980s arcade style, horizontal banner format 280x80 pixels, white blocky pixel letters with yellow glow accents, hard pixel edges, no anti-aliasing, 8-bit aesthetic, classic space shooter typography like Galaga or Space Invaders, small pixel UFO or alien silhouette integrated into design, transparent background, 2-4 color maximum palette (white, yellow, optional red accent), crisp readable text, authentic retro arcade cabinet title screen feel |
 
 #### 1.2 Buttons
 | Asset | Dimensions | Description |
@@ -116,6 +116,19 @@ This document lists visual and audio assets needed to improve TCFU's UI and game
 - 8-bit / chiptune aesthetic
 - Short, punchy sound effects (50-200ms)
 - Music: 80s arcade synth feel, loopable
+
+---
+
+## Asset Creation Workflow
+
+Recommended process for creating assets with AI assistance:
+
+1. **Generate prompt** — Use DESIGN_SYSTEM.md specs to craft an AI image generation prompt (dimensions, colors, style constraints)
+2. **AI generation** — Run prompt through AI image generator (GPT Image 1.5 recommended for transparent PNG support)
+3. **Review** — Claude analyzes the output for design system compliance (colors, pixel style, readability)
+4. **Refine in GIMP** — Fix issues identified during review (pixel cleanup, readability, color correction)
+5. **Save to directory** — Place file in correct location per File Organization section
+6. **Integrate** — Add entry to `assets.json`, update code to use the new asset
 
 ---
 

@@ -53,6 +53,11 @@
         "type": "image",
         "key": "player-bullet",
         "url": "player_bullet.png"
+      },
+      {
+        "type": "image",
+        "key": "title-logo",
+        "url": "ui/title-logo.png"
       }
     ]
   }
