@@ -3,8 +3,8 @@ import { ISystem } from "./ISystem"
 
 export interface WaveState {
     currentWave: number
-    killsInWave: number
-    killsRequired: number
+    scoreInWave: number
+    scoreRequired: number
     spawnRate: number
     enemyVelocity: number
 }
@@ -12,7 +12,8 @@ export interface WaveState {
 export class WaveSystem implements ISystem {
     private scene: Phaser.Scene | null
     private currentWave: number = 1
-    private killsInWave: number = 0
+    private scoreInWave: number = 0
+    private totalScoreAtWaveStart: number = 0
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene
@@ -22,7 +23,7 @@ export class WaveSystem implements ISystem {
 
     private setupEventListeners() {
         if (!this.scene) return
-        this.scene.events.on('enemy-destroyed', this.handleEnemyDestroyed, this)
+        this.scene.events.on('score-changed', this.handleScoreChanged, this)
     }
 
     private emitInitialState() {
@@ -34,21 +35,22 @@ export class WaveSystem implements ISystem {
         })
     }
 
-    private handleEnemyDestroyed() {
+    private handleScoreChanged(data: { score: number }) {
         if (!this.scene) return
 
-        this.killsInWave++
+        this.scoreInWave = data.score - this.totalScoreAtWaveStart
 
-        if (this.killsInWave >= this.getKillsRequired()) {
-            this.advanceWave()
+        if (this.scoreInWave >= this.getScoreRequired()) {
+            this.advanceWave(data.score)
         }
     }
 
-    private advanceWave() {
+    private advanceWave(currentScore: number) {
         if (!this.scene) return
 
         this.currentWave++
-        this.killsInWave = 0
+        this.totalScoreAtWaveStart = currentScore
+        this.scoreInWave = 0
 
         const waveState = this.getWaveState()
         this.scene.events.emit('wave-started', waveState)
@@ -58,9 +60,9 @@ export class WaveSystem implements ISystem {
         })
     }
 
-    private getKillsRequired(): number {
-        return WAVE_CONFIG.baseKillsToComplete +
-               (this.currentWave - 1) * WAVE_CONFIG.killsScalingPerWave
+    private getScoreRequired(): number {
+        return WAVE_CONFIG.baseScoreToComplete +
+               (this.currentWave - 1) * WAVE_CONFIG.scoreScalingPerWave
     }
 
     private calculateSpawnRate(): number {
@@ -82,8 +84,8 @@ export class WaveSystem implements ISystem {
     getWaveState(): WaveState {
         return {
             currentWave: this.currentWave,
-            killsInWave: this.killsInWave,
-            killsRequired: this.getKillsRequired(),
+            scoreInWave: this.scoreInWave,
+            scoreRequired: this.getScoreRequired(),
             spawnRate: this.calculateSpawnRate(),
             enemyVelocity: this.calculateEnemyVelocity(),
         }
@@ -95,7 +97,7 @@ export class WaveSystem implements ISystem {
 
     destroy() {
         if (this.scene) {
-            this.scene.events.off('enemy-destroyed', this.handleEnemyDestroyed, this)
+            this.scene.events.off('score-changed', this.handleScoreChanged, this)
         }
         this.scene = null
     }
