@@ -50,7 +50,7 @@ Systems implement `ISystem` interface (requires `destroy()` method):
 
 - **PlayerWeaponsSystem**: Listens for `player-weapon-fired` event, creates projectiles with cooldown
 - **EnemySpawnerSystem**: Timer-based spawning, responds to `wave-difficulty-changed` for spawn rate
-- **WaveSystem**: Tracks kills, advances waves, emits difficulty scaling events
+- **WaveSystem**: Tracks score accumulated per wave, advances waves when score threshold reached, emits difficulty scaling events (note: score multipliers affect wave progression speed)
 - **GameStateSystem**: Manages score, lives, emits `game-over` when lives depleted
 
 ### Event System

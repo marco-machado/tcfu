@@ -65,6 +65,30 @@ This document lists visual and audio assets needed to improve TCFU's UI and game
 |-------|------------|-------------|
 | `shield-effect.png` | 48 × 48px (spritesheet) | Invincibility visual indicator (flashing overlay or shield bubble) |
 
+#### 2.3 Power-Up Sprites
+
+All power-up sprites go in `public/assets/images/powerups/`.
+
+| Asset | Dimensions | Description | Color Palette |
+|-------|------------|-------------|---------------|
+| `extra_life.png` | 24 × 24px | Heart or +1 icon | Pink (#ff6699) |
+| `fire_rate.png` | 24 × 24px | Rapid fire symbol (bullets/lightning bolt) | Orange (#ffaa00) |
+| `damage.png` | 24 × 24px | Damage boost (fist/explosion/sword) | Red (#ff4444) |
+| `spread_shot.png` | 24 × 24px | Triple arrow or fan pattern | Blue (#00aaff) |
+| `speed_up.png` | 24 × 24px | Speed boost (arrow/lightning/wing) | Cyan (#88ffff) |
+| `invincibility.png` | 24 × 24px | Star or shield burst | Yellow (#ffff00) |
+| `shield.png` | 24 × 24px | Round shield/bubble | Cyan (#00ffff) |
+| `magnet.png` | 24 × 24px | Magnet shape (U-shape) | Magenta (#ff00ff) |
+| `score_multiplier.png` | 24 × 24px | 2X text or coin symbol | Green (#00ff00) |
+| `bomb.png` | 24 × 24px | Bomb or explosion icon | Orange-red (#ff6600) |
+
+**Power-Up Sprite Guidelines:**
+- Use bright, distinct colors for easy identification during gameplay
+- Add 1px dark outline for visibility against space background
+- Optional: 4-frame horizontal strip (96×24px) for idle glow/pulse animation at 8 FPS
+- Icons should be recognizable at a glance
+- Current placeholder sprites exist; replace with final pixel art when ready
+
 ---
 
 ### 3. Audio (SFX)
@@ -90,7 +114,16 @@ This document lists visual and audio assets needed to improve TCFU's UI and game
 | `sfx-wave-start.wav` | WAV/OGG | New wave announcement |
 | `sfx-game-over.wav` | WAV/OGG | Game over sting |
 
-#### 3.4 Music
+#### 3.4 Power-Up Sounds
+| Asset | Format | Description |
+|-------|--------|-------------|
+| `sfx-powerup-collect.wav` | WAV/OGG | Generic power-up pickup sound |
+| `sfx-powerup-shield.wav` | WAV/OGG | Shield activation |
+| `sfx-powerup-shield-hit.wav` | WAV/OGG | Shield absorbs damage |
+| `sfx-powerup-bomb.wav` | WAV/OGG | Screen clear explosion |
+| `sfx-powerup-expire.wav` | WAV/OGG | Timed power-up ending warning |
+
+#### 3.5 Music
 | Asset | Format | Description |
 |-------|--------|-------------|
 | `music-menu.ogg` | OGG | Main menu loop (retro synth style) |
@@ -146,6 +179,8 @@ Recommended process for creating assets with AI assistance:
 - `sfx-wave-start.wav`
 - `shield-effect.png`
 - `music-gameplay.ogg`
+- Power-up sprites (all 10) — placeholder sprites exist, replace with pixel art
+- `sfx-powerup-collect.wav`
 
 ### Tier 3 - Polish
 - Button graphics (all)
@@ -172,6 +207,17 @@ public/assets/
 │   │   ├── icon-life.png
 │   │   ├── icon-life-empty.png
 │   │   └── panel-overlay.png
+│   ├── powerups/
+│   │   ├── extra_life.png
+│   │   ├── fire_rate.png
+│   │   ├── damage.png
+│   │   ├── spread_shot.png
+│   │   ├── speed_up.png
+│   │   ├── invincibility.png
+│   │   ├── shield.png
+│   │   ├── magnet.png
+│   │   ├── score_multiplier.png
+│   │   └── bomb.png
 │   └── effects/
 │       ├── explosion-enemy.png
 │       ├── explosion-player.png
@@ -187,7 +233,12 @@ public/assets/
 │   │   ├── sfx-button-hover.wav
 │   │   ├── sfx-button-click.wav
 │   │   ├── sfx-wave-start.wav
-│   │   └── sfx-game-over.wav
+│   │   ├── sfx-game-over.wav
+│   │   ├── sfx-powerup-collect.wav
+│   │   ├── sfx-powerup-shield.wav
+│   │   ├── sfx-powerup-shield-hit.wav
+│   │   ├── sfx-powerup-bomb.wav
+│   │   └── sfx-powerup-expire.wav
 │   └── music/
 │       ├── music-menu.ogg
 │       └── music-gameplay.ogg

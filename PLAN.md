@@ -2,7 +2,7 @@
 
 > Use ✅ for completed tasks, `[ ]` for pending tasks.
 
-## Current State: Early-to-Mid Prototype
+## Current State: Playable Prototype
 
 ### What's Working
 - ✅ Player entity with keyboard controls and multi-sprite container
@@ -11,7 +11,7 @@
 - ✅ Basic collisions (player-enemy, projectile-enemy)
 - ✅ Scrolling background
 - ✅ Animated sprites on all entities
-- ✅ Three-scene architecture (Boot → Game → UI)
+- ✅ Four-scene architecture (Boot → MainMenu → Game + UI)
 - ✅ Event-driven system communication
 - ✅ Scene shutdown/cleanup methods
 
@@ -38,7 +38,7 @@
 - ✅ Add score tracking system
 - ✅ Implement player lives/health system
 - ✅ Add game over state handling
-- [ ] Track wave progression or difficulty scaling
+- ✅ Track wave progression (score-based thresholds, multipliers affect progression speed)
 
 ### 4. **Enhanced Collision System**
 - [ ] Replace instant destruction with damage system
@@ -63,9 +63,9 @@
 - [ ] Add sound effects
 
 ### 8. **Event System Enhancement**
-- [ ] Emit events for score changes, game over, enemy destroyed
+- ✅ Emit events for score changes, game over, enemy destroyed
 - [ ] Create centralized event constants
-- [ ] Better integration with UIScene
+- ✅ Better integration with UIScene
 
 ### 9. **Performance Optimizations**
 - [ ] Object pooling for projectiles and effects
@@ -83,16 +83,16 @@
 ### Content Expansion
 - [ ] Additional enemy types with varied behaviors
 - [ ] Enemy AI (movement patterns, targeting)
-- [ ] Enemy return fire / projectiles
+- ✅ Enemy return fire / projectiles
 - [ ] Boss encounters
 - [ ] Power-ups and collectibles
 
 ### Progression
-- [ ] Wave system
-- [ ] Difficulty scaling
-- [ ] High score persistence
+- ✅ Wave system (score-based progression)
+- ✅ Difficulty scaling (spawn rate/enemy velocity per wave)
+- ✅ High score persistence (via HighScoreManager)
 
 ### Polish
-- [ ] Main menu scene
-- [ ] Pause functionality
-- [ ] Game over screen with restart
+- ✅ Main menu scene
+- ✅ Pause functionality
+- ✅ Game over screen with restart
