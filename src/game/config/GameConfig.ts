@@ -91,9 +91,9 @@ export const POWERUP_CONFIG = {
     },
 
     permanent: {
-        fireRateReduction: 150,
+        fireRateReduction: 200,
         fireRateMinCooldown: 200,
-        maxFireRateStacks: 4,
+        maxFireRateStacks: 3,
         damageMultiplier: 1.5,
         maxDamageStacks: 3,
         spreadShotAngles: [-8, 0, 8],
