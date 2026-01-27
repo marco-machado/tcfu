@@ -7,6 +7,7 @@ export class EnemyWeaponsSystem implements ISystem {
     private enemiesGroup: Phaser.Physics.Arcade.Group | null
     private projectilesGroup: Phaser.Physics.Arcade.Group | null
     private enemyFireTimers: Map<number, number> = new Map()
+    private enemyHasFired: Set<number> = new Set()
     private currentWave = 1
     private canShoot = false
 
@@ -55,7 +56,7 @@ export class EnemyWeaponsSystem implements ISystem {
                 return
             }
 
-            if (currentTime >= nextFireTime) {
+            if (currentTime >= nextFireTime && (enemy as Phaser.GameObjects.Container).y > 0) {
                 this.fireProjectile(enemy as Phaser.GameObjects.Container)
                 this.scheduleNextFire(enemyId, currentTime)
             }
@@ -72,10 +73,15 @@ export class EnemyWeaponsSystem implements ISystem {
     }
 
     private scheduleNextFire(enemyId: number, currentTime: number) {
-        const cooldown = Phaser.Math.Between(
-            WEAPON_CONFIG.enemy.cooldownMin,
-            WEAPON_CONFIG.enemy.cooldownMax
-        )
+        const hasFired = this.enemyHasFired.has(enemyId)
+        const cooldown = hasFired
+            ? Phaser.Math.Between(WEAPON_CONFIG.enemy.cooldownMin, WEAPON_CONFIG.enemy.cooldownMax)
+            : Phaser.Math.Between(WEAPON_CONFIG.enemy.initialCooldownMin, WEAPON_CONFIG.enemy.initialCooldownMax)
+
+        if (!hasFired) {
+            this.enemyHasFired.add(enemyId)
+        }
+
         this.enemyFireTimers.set(enemyId, currentTime + cooldown)
     }
 
@@ -92,7 +98,7 @@ export class EnemyWeaponsSystem implements ISystem {
 
     private cleanupOffScreenProjectiles() {
         if (!this.scene || !this.projectilesGroup) return
-        const cleanupThreshold = this.scene.scale.height + 50
+        const cleanupThreshold = this.scene.scale.height + WEAPON_CONFIG.enemy.cleanupOffsetY
 
         this.projectilesGroup.getChildren().forEach((projectile: Phaser.GameObjects.GameObject) => {
             if (projectile instanceof Phaser.GameObjects.Sprite && projectile.y > cleanupThreshold) {
@@ -115,6 +121,7 @@ export class EnemyWeaponsSystem implements ISystem {
         this.enemyFireTimers.forEach((_, enemyId) => {
             if (!activeEnemyIds.has(enemyId)) {
                 this.enemyFireTimers.delete(enemyId)
+                this.enemyHasFired.delete(enemyId)
             }
         })
     }
@@ -126,6 +133,7 @@ export class EnemyWeaponsSystem implements ISystem {
         }
 
         this.enemyFireTimers.clear()
+        this.enemyHasFired.clear()
         this.projectilesGroup = null
         this.enemiesGroup = null
         this.scene = null

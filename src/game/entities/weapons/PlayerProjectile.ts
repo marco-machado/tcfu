@@ -1,14 +1,23 @@
-import { WEAPON_CONFIG } from "../../config/GameConfig";
+import { WEAPON_CONFIG } from "../../config/GameConfig"
 
 export class PlayerProjectile extends Phaser.GameObjects.Sprite {
-    constructor(scene: Phaser.Scene, x: number, y: number, group: Phaser.Physics.Arcade.Group) {
-        super(scene, x, y, 'player-bullet');
+    readonly damage: number
 
-        group.add(this, true);
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        group: Phaser.Physics.Arcade.Group,
+        damageMultiplier: number = 1
+    ) {
+        super(scene, x, y, 'player-bullet')
+        this.damage = damageMultiplier
+
+        group.add(this, true)
 
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
-            const body = WEAPON_CONFIG.player.projectileBody;
-            this.body.setSize(body.width, body.height).setOffset(body.offsetX, body.offsetY);
+            const body = WEAPON_CONFIG.player.projectileBody
+            this.body.setSize(body.width, body.height).setOffset(body.offsetX, body.offsetY)
         }
     }
 }
