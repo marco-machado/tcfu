@@ -31,6 +31,10 @@ export class PlayerPowerUpState {
         this.setupEventListeners()
     }
 
+    emitInitialState() {
+        this.scene?.events.emit('bombs-changed', { bombs: this.bombCount })
+    }
+
     private setupEventListeners() {
         if (!this.scene) return
 
@@ -249,9 +253,7 @@ export class PlayerPowerUpState {
             hasSpreadShot: false,
             speedBonuses: 0,
         }
-        this.bombCount = POWERUP_CONFIG.bombs.initialBombs
         this.scene?.events.emit('powerup-modifiers-changed', this.getModifiers())
-        this.scene?.events.emit('bombs-changed', { bombs: this.bombCount })
     }
 
     destroy() {

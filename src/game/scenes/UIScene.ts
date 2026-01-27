@@ -53,8 +53,10 @@ export class UIScene extends Scene {
             color: '#ffffff'
         }).setOrigin(0.5, 0)
 
-        const emptyBom = '○'.repeat(POWERUP_CONFIG.bombs.maxBombs)
-        this.bombText = this.add.text(20, 45, `BOM: ${emptyBom}`, {
+        const initialBombs = POWERUP_CONFIG.bombs.initialBombs
+        const filledBom = '●'.repeat(initialBombs)
+        const emptyBom = '○'.repeat(POWERUP_CONFIG.bombs.maxBombs - initialBombs)
+        this.bombText = this.add.text(20, 45, `BOM: ${filledBom}${emptyBom}`, {
             fontSize: '12px',
             color: '#ff6600'
         })
@@ -91,6 +93,8 @@ export class UIScene extends Scene {
         gameScene.events.on('powerup-shield-absorbed', this.showShieldAbsorbed, this)
         gameScene.events.on('bombs-changed', this.updateBombs, this)
         gameScene.events.on('powerup-modifiers-changed', this.updateModifiers, this)
+
+        gameScene.events.emit('ui-ready')
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             gameScene.events.off('wave-started', this.handleWaveStarted, this)

@@ -112,6 +112,9 @@ export class GameScene extends Scene {
     this.player = new Player(this);
 
     this._playerPowerUpState = new PlayerPowerUpState(this)
+    this.events.on('ui-ready', () => {
+      this._playerPowerUpState.emitInitialState()
+    }, this)
     this._gameStateSystem = new GameStateSystem(this, this._playerPowerUpState)
     this._playerWeaponSystem = new PlayerWeaponsSystem(
       this,
