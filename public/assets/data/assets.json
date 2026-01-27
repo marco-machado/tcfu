@@ -1,5 +1,70 @@
 [
   {
+    "path": "assets/images/powerups",
+    "files": [
+      {
+        "type": "spritesheet",
+        "key": "powerup-extra-life",
+        "url": "extra_life.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-fire-rate",
+        "url": "fire_rate.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-damage",
+        "url": "damage.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-spread",
+        "url": "spread_shot.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-speed",
+        "url": "speed_up.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-invincibility",
+        "url": "invincibility.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-shield",
+        "url": "shield.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-magnet",
+        "url": "magnet.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-score",
+        "url": "score_multiplier.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      },
+      {
+        "type": "spritesheet",
+        "key": "powerup-bomb",
+        "url": "bomb.png",
+        "frameConfig": { "frameWidth": 24, "frameHeight": 24 }
+      }
+    ]
+  },
+  {
     "path": "assets/images",
     "files": [
       {
