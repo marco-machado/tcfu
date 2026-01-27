@@ -1,7 +1,7 @@
 export const GAME_CONFIG = {
     width: 360,
     height: 640,
-    backgroundColor: '#028af8',
+    backgroundColor: '#000000',
     debug: true,
 }
 
