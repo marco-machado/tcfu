@@ -11,12 +11,19 @@ This document lists visual and audio assets needed to improve TCFU's UI and game
 - Enemy sprites (Klaed Scout ship, engine animation, bullet animation)
 - Player bullet sprite
 - Scrolling space background
+- Title logo
+- Powerup sprites (10 types - placeholder sprites implemented)
 
 **Current UI Implementation:**
-- All UI is text-based (no graphics)
+- Text-based HUD with lives, score, wave display
+- Powerup status indicators (BOM, DMG, FR, SPD with filled/empty circles)
+- Timed effect progress bars (animated, color-coded)
 - Buttons are styled text boxes with background colors
-- HUD uses plain text for lives, score, wave
-- No visual icons or panels
+- Wave announcements with scale animation
+- Powerup collection announcements (stacked, color-coded)
+- Shield absorbed feedback
+- Loading screen with progress bar
+- No visual icons or panels (text-based indicators)
 
 ---
 
