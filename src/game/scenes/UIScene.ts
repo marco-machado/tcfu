@@ -39,16 +39,19 @@ export class UIScene extends Scene {
         const gameScene = this.scene.get('GameScene')
 
         this.livesText = this.add.text(20, 20, `Lives: ${GAME_STATE_CONFIG.initialLives}`, {
+            fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
         })
 
         this.scoreText = this.add.text(this.scale.width - 20, 20, 'Score: 0', {
+            fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
         }).setOrigin(1, 0)
 
         this.waveText = this.add.text(this.scale.width / 2, 20, 'Wave 1', {
+            fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
         }).setOrigin(0.5, 0)
@@ -57,24 +60,28 @@ export class UIScene extends Scene {
         const filledBom = '●'.repeat(initialBombs)
         const emptyBom = '○'.repeat(POWERUP_CONFIG.bombs.maxBombs - initialBombs)
         this.bombText = this.add.text(20, 45, `BOM: ${filledBom}${emptyBom}`, {
+            fontFamily: 'KenVector Future',
             fontSize: '12px',
             color: '#ff6600'
         })
 
         const emptyDmg = '○'.repeat(POWERUP_CONFIG.permanent.maxDamageStacks)
         this.damageText = this.add.text(80, 45, `DMG: ${emptyDmg}`, {
+            fontFamily: 'KenVector Future',
             fontSize: '12px',
             color: '#ff4444'
         })
 
         const emptyFr = '○'.repeat(POWERUP_CONFIG.permanent.maxFireRateStacks)
         this.fireRateText = this.add.text(145, 45, `FR: ${emptyFr}`, {
+            fontFamily: 'KenVector Future',
             fontSize: '12px',
             color: '#ffaa00'
         })
 
         const emptySpd = '○'.repeat(POWERUP_CONFIG.permanent.maxSpeedBonuses)
         this.speedText = this.add.text(215, 45, `SPD: ${emptySpd}`, {
+            fontFamily: 'KenVector Future',
             fontSize: '12px',
             color: '#88ffff'
         })
@@ -168,7 +175,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 - UI_CONFIG.announcements.waveOffsetY,
             `WAVE ${waveNumber}`,
-            { fontSize: '48px', color: '#ffff00' }
+            { fontFamily: 'KenVector Future', fontSize: '48px', color: '#ffff00' }
         ).setOrigin(0.5).setAlpha(0)
 
         this.tweens.add({
@@ -197,7 +204,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             baseY + yOffset,
             name,
-            { fontSize: '20px', color: color, fontStyle: 'bold' }
+            { fontFamily: 'KenVector Future', fontSize: '20px', color: color, fontStyle: 'bold' }
         ).setOrigin(0.5).setAlpha(0)
 
         this.activeAnnouncements.push(text)
@@ -233,6 +240,7 @@ export class UIScene extends Scene {
 
         const container = this.add.container(0, 0)
         const label = this.add.text(0, -8, this.getPowerUpShortName(data.type), {
+            fontFamily: 'KenVector Future',
             fontSize: '10px',
             color: this.getPowerUpColor(data.type)
         }).setOrigin(0.5)
@@ -296,7 +304,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.announcements.shieldBlockedOffsetY,
             'SHIELD BLOCKED!',
-            { fontSize: '16px', color: '#00ffff', fontStyle: 'bold' }
+            { fontFamily: 'KenVector Future', fontSize: '16px', color: '#00ffff', fontStyle: 'bold' }
         ).setOrigin(0.5).setAlpha(0)
 
         this.tweens.add({
@@ -382,7 +390,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 - UI_CONFIG.gameOver.textOffsetY,
             'GAME OVER',
-            { fontSize: '32px', color: '#ff0000' }
+            { fontFamily: 'KenVector Future', fontSize: '32px', color: '#ff0000' }
         ).setOrigin(0.5)
 
         if (isNewHighScore) {
@@ -390,7 +398,7 @@ export class UIScene extends Scene {
                 this.scale.width / 2,
                 this.scale.height / 2 + UI_CONFIG.gameOver.highScoreOffsetY,
                 'NEW HIGH SCORE!',
-                { fontSize: '18px', color: '#ffff00' }
+                { fontFamily: 'KenVector Future', fontSize: '18px', color: '#ffff00' }
             ).setOrigin(0.5)
         }
 
@@ -398,14 +406,14 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.gameOver.scoreOffsetY,
             `High Score: ${highScore}`,
-            { fontSize: '16px', color: '#ffffff' }
+            { fontFamily: 'KenVector Future', fontSize: '16px', color: '#ffffff' }
         ).setOrigin(0.5)
 
         this.add.text(
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.gameOver.instructionsOffsetY,
             'R - Restart   M - Main Menu',
-            { fontSize: '14px', color: '#ffffff' }
+            { fontFamily: 'KenVector Future', fontSize: '14px', color: '#ffffff' }
         ).setOrigin(0.5)
 
         this.restartKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R) ?? null
@@ -427,14 +435,14 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 - UI_CONFIG.pause.textOffsetY,
             'PAUSED',
-            { fontSize: '32px', color: '#ffffff' }
+            { fontFamily: 'KenVector Future', fontSize: '32px', color: '#ffffff' }
         ).setOrigin(0.5)
 
         this.add.text(
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.pause.hintOffsetY,
             'P - Resume   M - Main Menu   B - Bomb',
-            { fontSize: '14px', color: '#ffffff' }
+            { fontFamily: 'KenVector Future', fontSize: '14px', color: '#ffffff' }
         ).setOrigin(0.5).setName('pauseHint')
 
         if (GAME_CONFIG.debug) {
@@ -445,7 +453,7 @@ export class UIScene extends Scene {
                 '1-Life  2-Fire  3-Dmg  4-Spread  5-Speed\n' +
                 '6-Invincible  7-Shield  8-Magnet\n' +
                 '9-Score 2x  0-Bomb  B-Use Bomb',
-                { fontSize: '10px', color: '#888888', align: 'center' }
+                { fontFamily: 'KenVector Future', fontSize: '10px', color: '#888888', align: 'center' }
             ).setOrigin(0.5, 0)
         }
 
