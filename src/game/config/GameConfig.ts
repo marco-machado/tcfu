@@ -52,9 +52,9 @@ export const WEAPON_CONFIG = {
 }
 
 export const BACKGROUND_CONFIG = {
-    baseScrollSpeed: 1,
-    maxScrollSpeed: 3,
-    scrollSpeedIncreasePerWave: 0.2,
+    baseScrollSpeed: 0.8,
+    maxScrollSpeed: 2,
+    scrollSpeedIncreasePerWave: 0.15,
 }
 
 export const GAME_STATE_CONFIG = {
@@ -84,8 +84,8 @@ export const POWERUP_CONFIG = {
     },
 
     durations: {
-        invincibility: 10000,
-        shield: 15000,
+        invincibility: 5000,
+        shield: 10000,
         magnet: 15000,
         scoreMultiplier: 15000,
     },

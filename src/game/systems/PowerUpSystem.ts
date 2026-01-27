@@ -1,4 +1,5 @@
 import { GAME_CONFIG, POWERUP_CONFIG } from "../config/GameConfig"
+import { GameScene } from "../scenes/GameScene"
 import {
     Bomb,
     DamageUp,
@@ -106,7 +107,8 @@ export class PowerUpSystem implements ISystem {
         if (powerUp) {
             this.powerUpsGroup.add(powerUp)
             if (powerUp.body && powerUp.body instanceof Phaser.Physics.Arcade.Body) {
-                powerUp.body.setVelocityY(POWERUP_CONFIG.spawner.velocityY)
+                const gameScene = this.scene as GameScene
+                powerUp.body.setVelocityY(gameScene.currentScrollSpeed * 60)
             }
         }
     }
@@ -131,7 +133,8 @@ export class PowerUpSystem implements ISystem {
             this.powerUpsGroup.add(powerUp)
 
             if (powerUp.body && powerUp.body instanceof Phaser.Physics.Arcade.Body) {
-                powerUp.body.setVelocityY(POWERUP_CONFIG.spawner.velocityY)
+                const gameScene = this.scene as GameScene
+                powerUp.body.setVelocityY(gameScene.currentScrollSpeed * 60)
             }
         }
     }

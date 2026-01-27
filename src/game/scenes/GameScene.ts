@@ -31,7 +31,7 @@ export class GameScene extends Scene {
   private playerPowerUpOverlap: Phaser.Physics.Arcade.Collider
   private isGameOver: boolean = false
   private isPaused: boolean = false
-  private currentScrollSpeed: number = BACKGROUND_CONFIG.baseScrollSpeed
+  public currentScrollSpeed: number = BACKGROUND_CONFIG.baseScrollSpeed
   private pauseKey: Phaser.Input.Keyboard.Key | null = null
   private escKey: Phaser.Input.Keyboard.Key | null = null
   private bombKey: Phaser.Input.Keyboard.Key | null = null
