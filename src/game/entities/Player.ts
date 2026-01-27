@@ -1,4 +1,4 @@
-import { PLAYER_CONFIG } from "../config/GameConfig";
+import { ANIMATION_CONFIG, PLAYER_CONFIG, POWERUP_CONFIG } from "../config/GameConfig";
 
 export class Player extends Phaser.GameObjects.Container {
     private ship: Phaser.GameObjects.Sprite;
@@ -6,6 +6,7 @@ export class Player extends Phaser.GameObjects.Container {
     private engineIdle: Phaser.GameObjects.Sprite;
     private cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
     private isInvincible: boolean = false;
+    private speedBonus: number = 0;
 
     constructor(scene: Phaser.Scene) {
         super(scene, scene.scale.width / 2, scene.scale.height - PLAYER_CONFIG.spawnOffsetFromBottom);
@@ -34,9 +35,11 @@ export class Player extends Phaser.GameObjects.Container {
 
         // Setup events
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
+        this.scene.events.on('powerup-modifiers-changed', this.handleModifiersChanged, this);
 
         this.once(Phaser.GameObjects.Events.DESTROY, () => {
             this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this);
+            this.scene.events.off('powerup-modifiers-changed', this.handleModifiersChanged, this);
             this.cursorKeys = undefined;
         }, this);
     }
@@ -64,12 +67,17 @@ export class Player extends Phaser.GameObjects.Container {
                 vy *= diagonal;
             }
 
-            this.body.setVelocity(vx * PLAYER_CONFIG.velocity, vy * PLAYER_CONFIG.velocity);
+            const currentSpeed = PLAYER_CONFIG.velocity + this.speedBonus;
+            this.body.setVelocity(vx * currentSpeed, vy * currentSpeed);
 
             if (this.cursorKeys?.space.isDown) {
                 this.scene.events.emit('player-weapon-fired');
             }
         }
+    }
+
+    private handleModifiersChanged(modifiers: { speedBonuses: number }) {
+        this.speedBonus = modifiers.speedBonuses * POWERUP_CONFIG.permanent.speedBonus;
     }
 
     getIsInvincible(): boolean {
@@ -79,12 +87,13 @@ export class Player extends Phaser.GameObjects.Container {
     triggerInvincibility(duration: number) {
         this.isInvincible = true;
 
+        const { flashAlpha, flashDuration, flashRepeatDivisor } = ANIMATION_CONFIG.playerInvincibility
         this.scene.tweens.add({
             targets: this,
-            alpha: 0.3,
-            duration: 100,
+            alpha: flashAlpha,
+            duration: flashDuration,
             yoyo: true,
-            repeat: Math.floor(duration / 200),
+            repeat: Math.floor(duration / flashRepeatDivisor),
             onComplete: () => {
                 this.isInvincible = false;
                 this.alpha = 1;
