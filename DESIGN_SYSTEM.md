@@ -21,7 +21,7 @@ TCFU is a **retro arcade pixel art vertical space shooter** inspired by classic 
 
 | Property | Value |
 |----------|-------|
-| Dimensions | 360 × 640 pixels (portrait) |
+| Dimensions | 360 x 640 pixels (portrait) |
 | Pixel Art Mode | Enabled |
 | Round Pixels | Enabled |
 | Scale Mode | `Scale.FIT` |
@@ -42,7 +42,7 @@ TCFU is a **retro arcade pixel art vertical space shooter** inspired by classic 
 | Red | `#ff0000` | Game over text, player projectiles |
 | Light Red | `#ff6666` | Secondary/danger buttons |
 | Gray | `#888888` | Hint text, disabled states |
-| Dark Gray | `#333333` | Button backgrounds (default) |
+| Dark Gray | `#333333` | Button backgrounds (default), bar backgrounds |
 | Dark Gray Hover | `#555555` | Button backgrounds (hover) |
 
 ### Entity Color Coding
@@ -54,6 +54,21 @@ TCFU is a **retro arcade pixel art vertical space shooter** inspired by classic 
 
 This warm vs. cool color separation creates instant visual distinction between player and enemy elements.
 
+### Powerup Effect Colors
+
+| Effect | Color | Hex |
+|--------|-------|-----|
+| Invincibility | Yellow | `#ffff00` |
+| Shield | Cyan | `#00ffff` |
+| Magnet | Magenta | `#ff00ff` |
+| Score Multiplier | Green | `#00ff00` |
+| Fire Rate | Orange | `#ffaa00` |
+| Damage | Red | `#ff4444` |
+| Spread Shot | Blue | `#00aaff` |
+| Speed | Cyan | `#88ffff` |
+| Extra Life | Pink | `#ff6699` |
+| Bomb | Orange-Red | `#ff6600` |
+
 ---
 
 ## Typography
@@ -62,10 +77,11 @@ This warm vs. cool color separation creates instant visual distinction between p
 |------|--------|-------|-------|
 | 48px | Bold | Large announcements (wave number) | Yellow |
 | 32px | Normal | Titles ("GAME OVER", menu) | White/Red |
-| 24px | Normal | Primary buttons | White |
+| 24px | Normal | Primary buttons, shield blocked | White/Cyan |
+| 20px | Normal | Powerup announcements | Yellow (varies) |
 | 16px | Normal | HUD data (lives, score, wave) | White |
 | 14px | Normal | Control hints, instructions | White |
-| 12px | Normal | Footer, secondary hints | Gray |
+| 12px | Normal | Footer, secondary hints, debug text | Gray |
 
 **Font**: System default (no custom fonts loaded)
 
@@ -74,6 +90,21 @@ This warm vs. cool color separation creates instant visual distinction between p
 ## UI Components
 
 See [UI_COMPONENTS.md](./UI_COMPONENTS.md) for detailed UI component specifications.
+
+### UI Layout Zones
+
+```
++-------------------------------------------+
+| HUD Row 1: Lives | Wave | Score           |  <- 20px from top
+| HUD Row 2: BOM | DMG | FR | SPD           |  <- 40px from top
+|                                           |
+|           [GAMEPLAY AREA]                 |
+|                                           |
+|        [CENTER ANNOUNCEMENTS]             |  <- Center screen
+|                                           |
+|     [TIMED EFFECTS PROGRESS BARS]         |  <- Bottom area
++-------------------------------------------+
+```
 
 ---
 
@@ -91,13 +122,14 @@ See [UI_COMPONENTS.md](./UI_COMPONENTS.md) for detailed UI component specificati
 
 | Asset | Dimensions | Notes |
 |-------|------------|-------|
-| Player ship | ~32 × 32px | White/light base color |
-| Player engine effects | 48 × 48px | Spritesheet |
-| Enemy ship (Klaed Scout) | ~32 × 32px | Dark red base |
-| Enemy engine | 64 × 64px | Spritesheet, cyan glow |
-| Player projectile | 4 × 12px | Thin vertical, red |
-| Enemy projectile | 4 × 16px | Spritesheet, orange/yellow |
-| Background | 2368 × 1792px | Deep space starfield, tiles vertically |
+| Player ship | ~32 x 32px | White/light base color |
+| Player engine effects | 48 x 48px | Spritesheet |
+| Enemy ship (Klaed Scout) | ~32 x 32px | Dark red base |
+| Enemy engine | 64 x 64px | Spritesheet, cyan glow |
+| Player projectile | 4 x 12px | Thin vertical, red |
+| Enemy projectile | 4 x 16px | Spritesheet, orange/yellow |
+| Powerup sprites | 24 x 24px | Bright colors, 1px outline |
+| Background | 2368 x 1792px | Deep space starfield, tiles vertically |
 
 ### Collision Bodies
 
@@ -105,9 +137,9 @@ Bodies are smaller than visual sprites for forgiving gameplay:
 
 | Entity | Body Size | Offset |
 |--------|-----------|--------|
-| Player | 28 × 28px | (-14, -14) |
-| Klaed Scout | 24 × 26px | (-12, -18) |
-| Player bullet | 4 × 12px | — |
+| Player | 28 x 28px | (-14, -14) |
+| Klaed Scout | 24 x 26px | (-12, -18) |
+| Player bullet | 4 x 12px | - |
 
 ---
 
@@ -129,8 +161,7 @@ Bodies are smaller than visual sprites for forgiving gameplay:
 
 ### UI Animation Patterns
 
-Use Phaser tweens for UI feedback:
-
+**Wave Announcement:**
 ```typescript
 this.tweens.add({
     targets: element,
@@ -143,6 +174,20 @@ this.tweens.add({
 })
 ```
 
+**Shield Absorbed:**
+```typescript
+this.tweens.add({
+    targets: element,
+    scale: { from: 1.0, to: 1.3 },
+    duration: 200,
+    ease: 'Power2'
+})
+```
+
+**Timed Effect Progress Bar:**
+- Smooth width tween from full to zero over effect duration
+- Pauses when game paused, resumes with remaining duration
+
 ---
 
 ## Asset Pipeline
@@ -153,15 +198,18 @@ Use **kebab-case** for all asset keys:
 - `player-ship`
 - `klaed-scout-engine`
 - `player-bullet`
+- `powerup-fire-rate`
+- `powerup-shield`
 
 ### File Locations
 
 ```
 public/assets/
-├── images/           # All sprite and background images
-└── data/
-    ├── assets.json   # Asset registry (images, spritesheets)
-    └── animations.json  # Animation definitions
++-- images/           # All sprite and background images
+|   +-- powerups/     # Powerup sprites
++-- data/
+    +-- assets.json   # Asset registry (images, spritesheets)
+    +-- animations.json  # Animation definitions
 ```
 
 ### Adding New Assets
@@ -215,11 +263,13 @@ Add to `animations.json`:
 
 From back to front:
 
-1. **Background** — Scrolling starfield
-2. **Enemies** — Enemy ships and projectiles
-3. **Player** — Player ship and projectiles
-4. **HUD** — Lives, wave, score (UIScene overlay)
-5. **Announcements** — Wave start, pause, game over modals
+1. **Background** - Scrolling starfield
+2. **PowerUps** - Collectible items
+3. **Enemies** - Enemy ships and projectiles
+4. **Player** - Player ship and projectiles
+5. **HUD** - Lives, wave, score, powerup indicators (UIScene overlay)
+6. **Timed Effects** - Progress bars for active effects
+7. **Announcements** - Wave start, powerup collected, pause, game over modals
 
 ---
 
@@ -233,5 +283,11 @@ Key visual parameters from `GameConfig.ts`:
 | `GAME_HEIGHT` | 640 | Canvas height |
 | `PLAYER_CONFIG.velocity` | 200 | Player movement speed |
 | `ENEMY_CONFIG.velocityY` | 100 | Base enemy descent speed |
-| `WEAPON_CONFIG.fireRate` | 800 | Milliseconds between shots |
+| `WEAPON_CONFIG.cooldown` | 800 | Base milliseconds between shots |
 | `WAVE_CONFIG.baseSpawnRate` | 2000 | Initial spawn interval (ms) |
+| `POWERUP_CONFIG.dropChance` | 0.15 | 15% enemy death drop chance |
+| `POWERUP_CONFIG.randomInterval` | 15000 | Random spawn interval (ms) |
+| `POWERUP_CONFIG.durations.invincibility` | 10000 | Invincibility duration (ms) |
+| `POWERUP_CONFIG.durations.shield` | 15000 | Shield duration (ms) |
+| `POWERUP_CONFIG.durations.magnet` | 15000 | Magnet duration (ms) |
+| `POWERUP_CONFIG.durations.scoreMultiplier` | 15000 | 2x score duration (ms) |
