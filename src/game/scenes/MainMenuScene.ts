@@ -1,5 +1,5 @@
 import { Scene } from "phaser"
-import { BACKGROUND_CONFIG } from "../config/GameConfig"
+import { BACKGROUND_CONFIG, MENU_CONFIG } from "../config/GameConfig"
 import { HighScoreManager } from "../utils/HighScoreManager"
 
 export class MainMenuScene extends Scene {
@@ -21,7 +21,7 @@ export class MainMenuScene extends Scene {
 
         this.add.image(
             this.scale.width / 2,
-            this.scale.height / 3,
+            this.scale.height * MENU_CONFIG.titleLogoYFraction,
             'title-logo'
         ).setOrigin(0.5)
 
@@ -34,7 +34,7 @@ export class MainMenuScene extends Scene {
 
         const startButton = this.add.text(
             this.scale.width / 2,
-            this.scale.height / 2 + 50,
+            this.scale.height / 2 + MENU_CONFIG.startButtonOffsetY,
             'START',
             { fontSize: '24px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 20, y: 10 } }
         ).setOrigin(0.5).setInteractive({ useHandCursor: true })
@@ -53,7 +53,7 @@ export class MainMenuScene extends Scene {
 
         const clearButton = this.add.text(
             this.scale.width / 2,
-            this.scale.height / 2 + 100,
+            this.scale.height / 2 + MENU_CONFIG.clearButtonOffsetY,
             'CLEAR DATA',
             { fontSize: '14px', color: '#ff6666', backgroundColor: '#333333', padding: { x: 10, y: 5 } }
         ).setOrigin(0.5).setInteractive({ useHandCursor: true })
@@ -78,13 +78,13 @@ export class MainMenuScene extends Scene {
 
         this.add.text(
             this.scale.width / 2,
-            this.scale.height - 50,
+            this.scale.height - MENU_CONFIG.instructionsOffsetFromBottom,
             'Press SPACE or click START',
             { fontSize: '12px', color: '#888888' }
         ).setOrigin(0.5)
     }
 
     update() {
-        this.background.tilePositionY -= BACKGROUND_CONFIG.scrollSpeed
+        this.background.tilePositionY -= BACKGROUND_CONFIG.baseScrollSpeed
     }
 }
