@@ -14,7 +14,6 @@ export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text
     private livesText: Phaser.GameObjects.Text
     private waveText: Phaser.GameObjects.Text
-    private waveAnnouncement: Phaser.GameObjects.Text | null = null
     private gameOverText: Phaser.GameObjects.Text | null = null
     private pauseText: Phaser.GameObjects.Text | null = null
     private debugKeysText: Phaser.GameObjects.Text | null = null
@@ -27,7 +26,6 @@ export class UIScene extends Scene {
     private damageText: Phaser.GameObjects.Text
     private fireRateText: Phaser.GameObjects.Text
     private speedText: Phaser.GameObjects.Text
-    private activeAnnouncements: Phaser.GameObjects.Text[] = []
 
     constructor() {
         super('UIScene')
@@ -94,10 +92,8 @@ export class UIScene extends Scene {
         gameScene.events.on('game-over', this.showGameOver, this)
         gameScene.events.on('game-paused', this.showPaused, this)
         gameScene.events.on('game-resumed', this.hidePaused, this)
-        gameScene.events.on('powerup-collected', this.showPowerUpCollected, this)
         gameScene.events.on('powerup-timed-started', this.showTimedEffect, this)
         gameScene.events.on('powerup-timed-ended', this.hideTimedEffect, this)
-        gameScene.events.on('powerup-shield-absorbed', this.showShieldAbsorbed, this)
         gameScene.events.on('bombs-changed', this.updateBombs, this)
         gameScene.events.on('powerup-modifiers-changed', this.updateModifiers, this)
 
@@ -110,10 +106,8 @@ export class UIScene extends Scene {
             gameScene.events.off('game-over', this.showGameOver, this)
             gameScene.events.off('game-paused', this.showPaused, this)
             gameScene.events.off('game-resumed', this.hidePaused, this)
-            gameScene.events.off('powerup-collected', this.showPowerUpCollected, this)
             gameScene.events.off('powerup-timed-started', this.showTimedEffect, this)
             gameScene.events.off('powerup-timed-ended', this.hideTimedEffect, this)
-            gameScene.events.off('powerup-shield-absorbed', this.showShieldAbsorbed, this)
             gameScene.events.off('bombs-changed', this.updateBombs, this)
             gameScene.events.off('powerup-modifiers-changed', this.updateModifiers, this)
             this.timedEffectUIs.clear()
@@ -162,69 +156,29 @@ export class UIScene extends Scene {
         this.waveText.setText(`Wave ${data.currentWave}`)
 
         if (data.currentWave > 1) {
-            this.showWaveAnnouncement(data.currentWave)
-        }
-    }
-
-    private showWaveAnnouncement(waveNumber: number) {
-        if (this.waveAnnouncement) {
-            this.waveAnnouncement.destroy()
-        }
-
-        this.waveAnnouncement = this.add.text(
-            this.scale.width / 2,
-            this.scale.height / 2 - UI_CONFIG.announcements.waveOffsetY,
-            `WAVE ${waveNumber}`,
-            { fontFamily: 'KenVector Future', fontSize: '48px', color: '#ffff00' }
-        ).setOrigin(0.5).setAlpha(0)
-
-        this.tweens.add({
-            targets: this.waveAnnouncement,
-            alpha: { from: 0, to: 1 },
-            scale: { from: UI_CONFIG.announcements.waveScaleFrom, to: UI_CONFIG.announcements.waveScaleTo },
-            duration: UI_CONFIG.announcements.waveAnimDuration,
-            ease: 'Power2',
-            yoyo: true,
-            hold: UI_CONFIG.announcements.waveHoldDuration,
-            onComplete: () => {
-                this.waveAnnouncement?.destroy()
-                this.waveAnnouncement = null
-            }
-        })
-    }
-
-    private showPowerUpCollected(data: { type: PowerUpType }) {
-        const name = this.getPowerUpDisplayName(data.type)
-        const color = this.getPowerUpColor(data.type)
-
-        const baseY = this.scale.height / 2 + UI_CONFIG.announcements.powerUpBaseOffsetY
-        const yOffset = this.activeAnnouncements.length * UI_CONFIG.announcements.powerUpStackSpacing
-
-        const text = this.add.text(
-            this.scale.width / 2,
-            baseY + yOffset,
-            name,
-            { fontFamily: 'KenVector Future', fontSize: '20px', color: color, fontStyle: 'bold' }
-        ).setOrigin(0.5).setAlpha(0)
-
-        this.activeAnnouncements.push(text)
-
-        this.tweens.add({
-            targets: text,
-            alpha: { from: 0, to: 1 },
-            y: baseY + yOffset - UI_CONFIG.announcements.powerUpAnimOffsetY,
-            duration: UI_CONFIG.announcements.powerUpAnimDuration,
-            ease: 'Power2',
-            yoyo: true,
-            hold: UI_CONFIG.announcements.powerUpHoldDuration,
-            onComplete: () => {
-                const index = this.activeAnnouncements.indexOf(text)
-                if (index > -1) {
-                    this.activeAnnouncements.splice(index, 1)
+            this.tweens.add({
+                targets: this.waveText,
+                scale: { from: 1, to: 1.8 },
+                duration: 200,
+                ease: 'Back.easeOut',
+                yoyo: true,
+                hold: 100
+            })
+            let previousColor: string | null = null
+            this.tweens.addCounter({
+                from: 0,
+                to: 100,
+                duration: 500,
+                onUpdate: (tween) => {
+                    const value = tween.getValue() ?? 0
+                    const newColor = value < 50 ? '#ffff00' : '#ffffff'
+                    if (newColor !== previousColor) {
+                        this.waveText.setStyle({ color: newColor })
+                        previousColor = newColor
+                    }
                 }
-                text.destroy()
-            }
-        })
+            })
+        }
     }
 
     private showTimedEffect(data: { type: PowerUpType; duration: number }) {
@@ -295,43 +249,6 @@ export class UIScene extends Scene {
         effects.forEach((ui, index) => {
             ui.container.x = startX + index * spacing
         })
-    }
-
-    private showShieldAbsorbed() {
-        this.hideTimedEffect({ type: PowerUpType.SHIELD })
-
-        const text = this.add.text(
-            this.scale.width / 2,
-            this.scale.height / 2 + UI_CONFIG.announcements.shieldBlockedOffsetY,
-            'SHIELD BLOCKED!',
-            { fontFamily: 'KenVector Future', fontSize: '16px', color: '#00ffff', fontStyle: 'bold' }
-        ).setOrigin(0.5).setAlpha(0)
-
-        this.tweens.add({
-            targets: text,
-            alpha: { from: 0, to: 1 },
-            scale: { from: 1, to: UI_CONFIG.announcements.shieldBlockedScaleTo },
-            duration: UI_CONFIG.announcements.shieldBlockedDuration,
-            yoyo: true,
-            hold: UI_CONFIG.announcements.shieldBlockedHoldDuration,
-            onComplete: () => text.destroy()
-        })
-    }
-
-    private getPowerUpDisplayName(type: PowerUpType): string {
-        const names: Record<PowerUpType, string> = {
-            [PowerUpType.EXTRA_LIFE]: '+1 LIFE',
-            [PowerUpType.FIRE_RATE_UP]: 'FIRE RATE+',
-            [PowerUpType.DAMAGE_UP]: 'DAMAGE+',
-            [PowerUpType.SPREAD_SHOT]: 'SPREAD SHOT',
-            [PowerUpType.SPEED_UP]: 'SPEED+',
-            [PowerUpType.INVINCIBILITY]: 'INVINCIBLE',
-            [PowerUpType.SHIELD]: 'SHIELD',
-            [PowerUpType.MAGNET]: 'MAGNET',
-            [PowerUpType.SCORE_MULTIPLIER]: '2X SCORE',
-            [PowerUpType.BOMB]: '+1 BOMB',
-        }
-        return names[type] || type
     }
 
     private getPowerUpShortName(type: PowerUpType): string {
