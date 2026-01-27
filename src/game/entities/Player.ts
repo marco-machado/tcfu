@@ -1,14 +1,15 @@
-import { ANIMATION_CONFIG, PLAYER_CONFIG, POWERUP_CONFIG } from "../config/GameConfig";
+import { ANIMATION_CONFIG, PLAYER_CONFIG, POWERUP_CONFIG } from "../config/GameConfig"
+import { InputManager } from "../input/InputManager"
 
 export class Player extends Phaser.GameObjects.Container {
-    private ship: Phaser.GameObjects.Sprite;
-    private engine: Phaser.GameObjects.Sprite;
-    private engineIdle: Phaser.GameObjects.Sprite;
-    private cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
-    private isInvincible: boolean = false;
-    private speedBonus: number = 0;
+    private ship: Phaser.GameObjects.Sprite
+    private engine: Phaser.GameObjects.Sprite
+    private engineIdle: Phaser.GameObjects.Sprite
+    private inputManager: InputManager | undefined
+    private isInvincible: boolean = false
+    private speedBonus: number = 0
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, inputManager?: InputManager) {
         super(scene, scene.scale.width / 2, scene.scale.height - PLAYER_CONFIG.spawnOffsetFromBottom);
 
         // Add this container to the scene
@@ -28,50 +29,51 @@ export class Player extends Phaser.GameObjects.Container {
         this.engineIdle = this.scene.add.sprite(0, 0, 'player-base-engine-effects');
         this.engineIdle.play('player-base-engine-idle')
 
-        this.add([this.engineIdle, this.engine, this.ship]);
+        this.add([this.engineIdle, this.engine, this.ship])
 
-        // Keyboard input
-        this.cursorKeys = this.scene.input.keyboard?.createCursorKeys();
+        this.inputManager = inputManager ?? new InputManager(scene)
 
         // Setup events
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
         this.scene.events.on('powerup-modifiers-changed', this.handleModifiersChanged, this);
 
         this.once(Phaser.GameObjects.Events.DESTROY, () => {
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this);
-            this.scene.events.off('powerup-modifiers-changed', this.handleModifiersChanged, this);
-            this.cursorKeys = undefined;
-        }, this);
+            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this)
+            this.scene.events.off('powerup-modifiers-changed', this.handleModifiersChanged, this)
+            this.inputManager = undefined
+        }, this)
     }
 
     update() {
         if (this.body && this.body instanceof Phaser.Physics.Arcade.Body) {
-            let vx = 0;
-            let vy = 0;
+            let vx = 0
+            let vy = 0
 
-            if (this.cursorKeys?.left.isDown) {
-                vx = -1;
-            } else if (this.cursorKeys?.right.isDown) {
-                vx = 1;
+            const cursor = this.inputManager?.getCursorState()
+
+            if (cursor?.left) {
+                vx = -1
+            } else if (cursor?.right) {
+                vx = 1
             }
 
-            if (this.cursorKeys?.up.isDown) {
-                vy = -1;
-            } else if (this.cursorKeys?.down.isDown) {
-                vy = 1;
+            if (cursor?.up) {
+                vy = -1
+            } else if (cursor?.down) {
+                vy = 1
             }
 
             if (vx !== 0 && vy !== 0) {
-                const diagonal = Math.SQRT1_2;
-                vx *= diagonal;
-                vy *= diagonal;
+                const diagonal = Math.SQRT1_2
+                vx *= diagonal
+                vy *= diagonal
             }
 
-            const currentSpeed = PLAYER_CONFIG.velocity + this.speedBonus;
-            this.body.setVelocity(vx * currentSpeed, vy * currentSpeed);
+            const currentSpeed = PLAYER_CONFIG.velocity + this.speedBonus
+            this.body.setVelocity(vx * currentSpeed, vy * currentSpeed)
 
-            if (this.cursorKeys?.space.isDown) {
-                this.scene.events.emit('player-weapon-fired');
+            if (cursor?.space) {
+                this.scene.events.emit('player-weapon-fired')
             }
         }
     }
@@ -108,7 +110,7 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     disableInput() {
-        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this);
-        this.cursorKeys = undefined;
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this)
+        this.inputManager = undefined
     }
 }

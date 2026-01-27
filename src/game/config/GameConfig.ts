@@ -206,3 +206,33 @@ export const ANIMATION_CONFIG = {
         flashRepeatDivisor: 200,
     },
 }
+
+export const TOUCH_CONTROLS_CONFIG = {
+    movementZone: {
+        xEnd: 0.5,
+    },
+    movement: {
+        deadZone: 5,
+        sensitivity: 1.5,
+    },
+    buttons: {
+        fire: { x: 300, y: 540, radius: 40 },
+        bomb: { x: 300, y: 460, radius: 30 },
+        pause: { x: 330, y: 70, radius: 20 },
+    },
+    style: {
+        fillColor: 0x333333,
+        fillAlpha: 0.6,
+        strokeColor: 0xffffff,
+        strokeAlpha: 0.8,
+        strokeWidth: 2,
+        activeColor: 0x00ff00,
+        activeAlpha: 0.8,
+        touchIndicator: {
+            outerRadius: 50,
+            innerRadius: 20,
+            color: 0xffffff,
+            alpha: 0.3,
+        },
+    },
+}

@@ -2,6 +2,7 @@ import { Scene } from "phaser"
 import { BACKGROUND_CONFIG, GAME_CONFIG, GAME_STATE_CONFIG } from "../config/GameConfig"
 import { Player } from "../entities/Player"
 import { PowerUp, PowerUpType } from "../entities/powerups"
+import { InputManager } from "../input/InputManager"
 import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem"
 import { EnemyWeaponsSystem } from "../systems/EnemyWeaponsSystem"
 import { GameStateSystem } from "../systems/GameStateSystem"
@@ -9,6 +10,7 @@ import { ISystem } from "../systems/ISystem"
 import { PlayerPowerUpState } from "../systems/PlayerPowerUpState"
 import { PlayerWeaponsSystem } from "../systems/PlayerWeaponsSystem"
 import { PowerUpSystem } from "../systems/PowerUpSystem"
+import { TouchControlsSystem } from "../systems/TouchControlsSystem"
 import { WaveSystem } from "../systems/WaveSystem"
 
 export class GameScene extends Scene {
@@ -25,6 +27,8 @@ export class GameScene extends Scene {
   private _waveSystem: WaveSystem & ISystem
   private _playerPowerUpState: PlayerPowerUpState
   private _powerUpSystem: PowerUpSystem & ISystem
+  private _inputManager: InputManager
+  private _touchControlsSystem: TouchControlsSystem | null = null
   private playerEnemyOverlap: Phaser.Physics.Arcade.Collider
   private projectileEnemyOverlap: Phaser.Physics.Arcade.Collider
   private enemyProjectilePlayerOverlap: Phaser.Physics.Arcade.Collider
@@ -109,7 +113,15 @@ export class GameScene extends Scene {
     this.enemiesGroup = this.physics.add.group({ name: "Enemies" })
     this.powerUpsGroup = this.physics.add.group({ name: "PowerUps" })
 
-    this.player = new Player(this);
+    this._inputManager = new InputManager(this)
+
+    if (this._inputManager.isTouchDevice()) {
+      this._touchControlsSystem = new TouchControlsSystem(this, this._inputManager)
+    }
+
+    this.events.on('pause-button-pressed', this.togglePause, this)
+
+    this.player = new Player(this, this._inputManager)
 
     this._playerPowerUpState = new PlayerPowerUpState(this)
     this.events.on('ui-ready', () => {
@@ -257,6 +269,10 @@ export class GameScene extends Scene {
     if (this._powerUpSystem) {
       this._powerUpSystem.destroy()
     }
+    if (this._touchControlsSystem) {
+      this._touchControlsSystem.destroy()
+      this._touchControlsSystem = null
+    }
     if (this.player) {
       this.player.setActive(false);
       this.player.stopAnimations();
@@ -313,13 +329,14 @@ export class GameScene extends Scene {
   }
 
   shutdown() {
-    this.events.off('game-over', this.handleGameOver, this);
-    this.events.off('wave-started', this.handleWaveStarted, this);
-    this.pauseKey?.off('down', this.togglePause, this);
-    this.escKey?.off('down', this.togglePause, this);
-    this.bombKey?.off('down', this.activateBomb, this);
-    this.debugKeys.forEach(key => key.removeAllListeners());
-    this.debugKeys = [];
+    this.events.off('game-over', this.handleGameOver, this)
+    this.events.off('wave-started', this.handleWaveStarted, this)
+    this.events.off('pause-button-pressed', this.togglePause, this)
+    this.pauseKey?.off('down', this.togglePause, this)
+    this.escKey?.off('down', this.togglePause, this)
+    this.bombKey?.off('down', this.activateBomb, this)
+    this.debugKeys.forEach(key => key.removeAllListeners())
+    this.debugKeys = []
 
     // Clean up physics colliders
     if (this.playerEnemyOverlap) {
@@ -410,6 +427,23 @@ export class GameScene extends Scene {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error destroying player power-up state:", error)
+      }
+    }
+    if (this._touchControlsSystem) {
+      try {
+        this._touchControlsSystem.destroy()
+        this._touchControlsSystem = null
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying touch controls system:", error)
+      }
+    }
+    if (this._inputManager) {
+      try {
+        this._inputManager.destroy()
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying input manager:", error)
       }
     }
 
