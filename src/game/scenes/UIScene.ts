@@ -418,6 +418,7 @@ export class UIScene extends Scene {
     }
 
     private showPaused() {
+        this.tweens.pauseAll()
         this.pauseText = this.add.text(
             this.scale.width / 2,
             this.scale.height / 2 - UI_CONFIG.pause.textOffsetY,
@@ -449,6 +450,7 @@ export class UIScene extends Scene {
     }
 
     private hidePaused() {
+        this.tweens.resumeAll()
         this.pauseText?.destroy()
         this.pauseText = null
         this.children.getByName('pauseHint')?.destroy()

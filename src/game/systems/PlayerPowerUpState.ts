@@ -45,6 +45,20 @@ export class PlayerPowerUpState {
         this.scene.events.on('powerup-bomb-collected', this.addBomb, this)
         this.scene.events.on('bomb-activated', this.useBomb, this)
         this.scene.events.on('game-over', this.resetPermanentModifiers, this)
+        this.scene.events.on('game-paused', this.handlePaused, this)
+        this.scene.events.on('game-resumed', this.handleResumed, this)
+    }
+
+    private handlePaused() {
+        this.timedEffects.forEach(effect => {
+            effect.timerEvent.paused = true
+        })
+    }
+
+    private handleResumed() {
+        this.timedEffects.forEach(effect => {
+            effect.timerEvent.paused = false
+        })
     }
 
     private addFireRateBonus() {
@@ -255,6 +269,8 @@ export class PlayerPowerUpState {
             this.scene.events.off('powerup-bomb-collected', this.addBomb, this)
             this.scene.events.off('bomb-activated', this.useBomb, this)
             this.scene.events.off('game-over', this.resetPermanentModifiers, this)
+            this.scene.events.off('game-paused', this.handlePaused, this)
+            this.scene.events.off('game-resumed', this.handleResumed, this)
         }
         this.scene = null
     }
