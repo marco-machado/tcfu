@@ -213,7 +213,6 @@ export const TOUCH_CONTROLS_CONFIG = {
     },
     movement: {
         deadZone: 5,
-        sensitivity: 1.5,
     },
     buttons: {
         fire: { x: 300, y: 540, radius: 40 },

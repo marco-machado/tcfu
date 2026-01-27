@@ -6,6 +6,7 @@ export class Player extends Phaser.GameObjects.Container {
     private engine: Phaser.GameObjects.Sprite
     private engineIdle: Phaser.GameObjects.Sprite
     private inputManager: InputManager | undefined
+    private ownsInputManager: boolean = false
     private isInvincible: boolean = false
     private speedBonus: number = 0
 
@@ -31,7 +32,12 @@ export class Player extends Phaser.GameObjects.Container {
 
         this.add([this.engineIdle, this.engine, this.ship])
 
-        this.inputManager = inputManager ?? new InputManager(scene)
+        if (inputManager) {
+            this.inputManager = inputManager
+        } else {
+            this.inputManager = new InputManager(scene)
+            this.ownsInputManager = true
+        }
 
         // Setup events
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
@@ -40,6 +46,9 @@ export class Player extends Phaser.GameObjects.Container {
         this.once(Phaser.GameObjects.Events.DESTROY, () => {
             this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this)
             this.scene.events.off('powerup-modifiers-changed', this.handleModifiersChanged, this)
+            if (this.ownsInputManager) {
+                this.inputManager?.destroy()
+            }
             this.inputManager = undefined
         }, this)
     }
@@ -111,6 +120,9 @@ export class Player extends Phaser.GameObjects.Container {
 
     disableInput() {
         this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this)
+        if (this.ownsInputManager) {
+            this.inputManager?.destroy()
+        }
         this.inputManager = undefined
     }
 }

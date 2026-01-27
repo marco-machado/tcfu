@@ -19,7 +19,9 @@ export class TouchControlsSystem implements ISystem {
 
     private movementTouch: TouchPoint | null = null
     private fireButtonPressed: boolean = false
+    private firePointerId: number = -1
     private bombButtonPressed: boolean = false
+    private bombButtonTimeout: ReturnType<typeof setTimeout> | null = null
 
     private fireZone: Phaser.Geom.Circle
     private bombZone: Phaser.Geom.Circle
@@ -71,7 +73,7 @@ export class TouchControlsSystem implements ISystem {
     private drawControls() {
         if (!this.graphics || !this.scene) return
 
-        const { buttons, style } = TOUCH_CONTROLS_CONFIG
+        const { buttons } = TOUCH_CONTROLS_CONFIG
 
         this.graphics.clear()
         this.clearTextObjects()
@@ -187,6 +189,7 @@ export class TouchControlsSystem implements ISystem {
 
         if (this.fireZone.contains(pointer.x, pointer.y)) {
             this.fireButtonPressed = true
+            this.firePointerId = pointer.id
             this.inputManager?.setTouchState({ space: true })
             this.redraw()
             return
@@ -196,8 +199,12 @@ export class TouchControlsSystem implements ISystem {
             this.bombButtonPressed = true
             this.scene?.events.emit('bomb-activated')
             this.redraw()
-            setTimeout(() => {
+            if (this.bombButtonTimeout) {
+                clearTimeout(this.bombButtonTimeout)
+            }
+            this.bombButtonTimeout = setTimeout(() => {
                 this.bombButtonPressed = false
+                this.bombButtonTimeout = null
                 this.redraw()
             }, 100)
             return
@@ -227,14 +234,11 @@ export class TouchControlsSystem implements ISystem {
     }
 
     private handlePointerUp(pointer: Phaser.Input.Pointer) {
-        if (this.fireButtonPressed) {
-            const wasInFireZone = this.fireZone.contains(pointer.x, pointer.y)
-            const isFirePointer = pointer.id === this.getFirePointerId()
-            if (wasInFireZone || isFirePointer || !pointer.isDown) {
-                this.fireButtonPressed = false
-                this.inputManager?.setTouchState({ space: false })
-                this.redraw()
-            }
+        if (this.fireButtonPressed && pointer.id === this.firePointerId) {
+            this.fireButtonPressed = false
+            this.firePointerId = -1
+            this.inputManager?.setTouchState({ space: false })
+            this.redraw()
         }
 
         if (this.movementTouch && pointer.id === this.movementTouch.id) {
@@ -247,10 +251,6 @@ export class TouchControlsSystem implements ISystem {
             })
             this.redraw()
         }
-    }
-
-    private getFirePointerId(): number {
-        return -1
     }
 
     private updateMovementState() {
@@ -279,6 +279,11 @@ export class TouchControlsSystem implements ISystem {
     }
 
     destroy() {
+        if (this.bombButtonTimeout) {
+            clearTimeout(this.bombButtonTimeout)
+            this.bombButtonTimeout = null
+        }
+
         if (this.scene) {
             this.scene.input.off('pointerdown', this.handlePointerDown, this)
             this.scene.input.off('pointermove', this.handlePointerMove, this)

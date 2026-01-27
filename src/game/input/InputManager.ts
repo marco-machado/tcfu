@@ -34,11 +34,11 @@ export class InputManager {
 
     getCursorState(): ICursorState {
         return {
-            left: this.keyboardCursors?.left.isDown || this.touchState.left,
-            right: this.keyboardCursors?.right.isDown || this.touchState.right,
-            up: this.keyboardCursors?.up.isDown || this.touchState.up,
-            down: this.keyboardCursors?.down.isDown || this.touchState.down,
-            space: this.keyboardCursors?.space.isDown || this.touchState.space,
+            left: (this.keyboardCursors?.left?.isDown ?? false) || this.touchState.left,
+            right: (this.keyboardCursors?.right?.isDown ?? false) || this.touchState.right,
+            up: (this.keyboardCursors?.up?.isDown ?? false) || this.touchState.up,
+            down: (this.keyboardCursors?.down?.isDown ?? false) || this.touchState.down,
+            space: (this.keyboardCursors?.space?.isDown ?? false) || this.touchState.space,
         }
     }
 
