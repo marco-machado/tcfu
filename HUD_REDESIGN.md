@@ -209,7 +209,7 @@ livesIcon: {
 
 1. Visual inspection at all powerup states (0 to max stacks)
 2. Test lives display from 1-9 lives (verify hybrid ×N format for 6+)
-3. Test spread shot indicator toggles correctly
+3. Confirm no spread shot indicator is present in the HUD (removed in this redesign)
 4. Check readability on 360×640 canvas
 5. Pause screen still shows relevant info
 6. Run `npm run typecheck` and `npm run lint`

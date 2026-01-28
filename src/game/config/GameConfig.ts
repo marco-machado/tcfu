@@ -181,7 +181,7 @@ export const UI_CONFIG = {
             stats: {
                 bombs: { x: 15, maxSegments: 3, color: 0xff6600 },
                 damage: { x: 106, maxSegments: 3, color: 0xff4444 },
-                fireRate: { x: 197, maxSegments: 4, color: 0xffaa00 },
+                fireRate: { x: 197, maxSegments: 3, color: 0xffaa00 },
                 speed: { x: 298, maxSegments: 3, color: 0x88ffff },
             },
         },

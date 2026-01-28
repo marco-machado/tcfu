@@ -53,12 +53,15 @@ export class UIScene extends Scene {
         }).setOrigin(0.5, 0)
 
         const stats = UI_CONFIG.hud.statBar.stats
-        this.createStatBar('bombs', 'icon-bomb', stats.bombs.x, stats.bombs.maxSegments, stats.bombs.color)
-        this.createStatBar('damage', 'icon-damage', stats.damage.x, stats.damage.maxSegments, stats.damage.color)
-        this.createStatBar('fireRate', 'icon-firerate', stats.fireRate.x, stats.fireRate.maxSegments, stats.fireRate.color)
-        this.createStatBar('speed', 'icon-speed', stats.speed.x, stats.speed.maxSegments, stats.speed.color)
+        this.createStatBar('bombs', 'icon-bomb', stats.bombs.x, stats.bombs.maxSegments)
+        this.createStatBar('damage', 'icon-damage', stats.damage.x, stats.damage.maxSegments)
+        this.createStatBar('fireRate', 'icon-firerate', stats.fireRate.x, stats.fireRate.maxSegments)
+        this.createStatBar('speed', 'icon-speed', stats.speed.x, stats.speed.maxSegments)
 
         this.updateStatBar('bombs', POWERUP_CONFIG.bombs.initialBombs, stats.bombs.color)
+        this.updateStatBar('damage', 0, stats.damage.color)
+        this.updateStatBar('fireRate', 0, stats.fireRate.color)
+        this.updateStatBar('speed', 0, stats.speed.color)
 
         this.timedEffectsContainer = this.add.container(this.scale.width / 2, this.scale.height - UI_CONFIG.hud.timedEffectsContainerOffsetY)
 
@@ -151,7 +154,7 @@ export class UIScene extends Scene {
         }
     }
 
-    private createStatBar(key: string, iconKey: string, x: number, maxSegments: number, color: number): void {
+    private createStatBar(key: string, iconKey: string, x: number, maxSegments: number): void {
         const config = UI_CONFIG.hud.statBar
         const container = this.add.container(x, config.y)
 
