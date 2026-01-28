@@ -12,7 +12,6 @@ interface TimedEffectUI {
 
 export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text
-    private livesText: Phaser.GameObjects.Text
     private waveText: Phaser.GameObjects.Text
     private gameOverText: Phaser.GameObjects.Text | null = null
     private pauseText: Phaser.GameObjects.Text | null = null
@@ -22,10 +21,11 @@ export class UIScene extends Scene {
     private currentScore: number = 0
     private timedEffectsContainer: Phaser.GameObjects.Container | null = null
     private timedEffectUIs: Map<PowerUpType, TimedEffectUI> = new Map()
-    private bombText: Phaser.GameObjects.Text
-    private damageText: Phaser.GameObjects.Text
-    private fireRateText: Phaser.GameObjects.Text
-    private speedText: Phaser.GameObjects.Text
+    private livesContainer: Phaser.GameObjects.Container
+    private livesIcons: Phaser.GameObjects.Image[] = []
+    private livesOverflowText: Phaser.GameObjects.Text | null = null
+    private statContainers: Map<string, Phaser.GameObjects.Container> = new Map()
+    private statSegments: Map<string, Phaser.GameObjects.Rectangle[]> = new Map()
 
     constructor() {
         super('UIScene')
@@ -36,11 +36,9 @@ export class UIScene extends Scene {
 
         const gameScene = this.scene.get('GameScene')
 
-        this.livesText = this.add.text(20, 20, `Lives: ${GAME_STATE_CONFIG.initialLives}`, {
-            fontFamily: 'KenVector Future',
-            fontSize: '16px',
-            color: '#ffffff'
-        })
+        const livesConfig = UI_CONFIG.hud.lives
+        this.livesContainer = this.add.container(livesConfig.x, livesConfig.y)
+        this.createLivesDisplay(GAME_STATE_CONFIG.initialLives)
 
         this.scoreText = this.add.text(this.scale.width - 20, 20, 'Score: 0', {
             fontFamily: 'KenVector Future',
@@ -54,35 +52,14 @@ export class UIScene extends Scene {
             color: '#ffffff'
         }).setOrigin(0.5, 0)
 
-        const initialBombs = POWERUP_CONFIG.bombs.initialBombs
-        const filledBom = '●'.repeat(initialBombs)
-        const emptyBom = '○'.repeat(POWERUP_CONFIG.bombs.maxBombs - initialBombs)
-        this.bombText = this.add.text(20, 45, `BOM: ${filledBom}${emptyBom}`, {
-            fontFamily: 'KenVector Future',
-            fontSize: '12px',
-            color: '#ff6600'
-        })
+        const stats = UI_CONFIG.hud.statBar.stats
+        this.createStatBar('bombs', 'icon-bomb', stats.bombs.x, stats.bombs.maxSegments, stats.bombs.color)
+        this.createStatBar('damage', 'icon-damage', stats.damage.x, stats.damage.maxSegments, stats.damage.color)
+        this.createStatBar('fireRate', 'icon-firerate', stats.fireRate.x, stats.fireRate.maxSegments, stats.fireRate.color)
+        this.createStatBar('speed', 'icon-speed', stats.speed.x, stats.speed.maxSegments, stats.speed.color)
+        this.createStatBar('spread', 'icon-spread', stats.spread.x, stats.spread.maxSegments, stats.spread.color)
 
-        const emptyDmg = '○'.repeat(POWERUP_CONFIG.permanent.maxDamageStacks)
-        this.damageText = this.add.text(80, 45, `DMG: ${emptyDmg}`, {
-            fontFamily: 'KenVector Future',
-            fontSize: '12px',
-            color: '#ff4444'
-        })
-
-        const emptyFr = '○'.repeat(POWERUP_CONFIG.permanent.maxFireRateStacks)
-        this.fireRateText = this.add.text(145, 45, `FR: ${emptyFr}`, {
-            fontFamily: 'KenVector Future',
-            fontSize: '12px',
-            color: '#ffaa00'
-        })
-
-        const emptySpd = '○'.repeat(POWERUP_CONFIG.permanent.maxSpeedBonuses)
-        this.speedText = this.add.text(215, 45, `SPD: ${emptySpd}`, {
-            fontFamily: 'KenVector Future',
-            fontSize: '12px',
-            color: '#88ffff'
-        })
+        this.updateStatBar('bombs', POWERUP_CONFIG.bombs.initialBombs, stats.bombs.color)
 
         this.timedEffectsContainer = this.add.container(this.scale.width / 2, this.scale.height - UI_CONFIG.hud.timedEffectsContainerOffsetY)
 
@@ -111,6 +88,13 @@ export class UIScene extends Scene {
             gameScene.events.off('bombs-changed', this.updateBombs, this)
             gameScene.events.off('powerup-modifiers-changed', this.updateModifiers, this)
             this.timedEffectUIs.clear()
+            this.livesIcons.forEach(icon => icon.destroy())
+            this.livesIcons = []
+            this.livesOverflowText?.destroy()
+            this.livesContainer?.destroy()
+            this.statContainers.forEach(container => container.destroy())
+            this.statContainers.clear()
+            this.statSegments.clear()
         })
     }
 
@@ -120,36 +104,87 @@ export class UIScene extends Scene {
     }
 
     private updateLives(data: { lives: number }) {
-        this.livesText.setText(`Lives: ${data.lives}`)
+        this.createLivesDisplay(data.lives)
     }
 
     private updateBombs(data: { bombs: number }) {
-        const maxBom = POWERUP_CONFIG.bombs.maxBombs
-        const filledBom = '●'.repeat(Math.min(data.bombs, maxBom))
-        const emptyBom = '○'.repeat(Math.max(0, maxBom - data.bombs))
-        this.bombText.setText(`BOM: ${filledBom}${emptyBom}`)
+        this.updateStatBar('bombs', data.bombs, UI_CONFIG.hud.statBar.stats.bombs.color)
     }
 
     private updateModifiers(modifiers: PermanentModifiers) {
-        const maxDmg = POWERUP_CONFIG.permanent.maxDamageStacks
+        const stats = UI_CONFIG.hud.statBar.stats
+
         const dmgStacks = modifiers.damageMultiplier > 1
             ? Math.round(Math.log(modifiers.damageMultiplier) / Math.log(POWERUP_CONFIG.permanent.damageMultiplier))
             : 0
-        const filledDmg = '●'.repeat(dmgStacks)
-        const emptyDmg = '○'.repeat(maxDmg - dmgStacks)
-        this.damageText.setText(`DMG: ${filledDmg}${emptyDmg}`)
+        this.updateStatBar('damage', dmgStacks, stats.damage.color)
+        this.updateStatBar('fireRate', modifiers.fireRateBonuses, stats.fireRate.color)
+        this.updateStatBar('speed', modifiers.speedBonuses, stats.speed.color)
+        this.updateStatBar('spread', modifiers.hasSpreadShot ? 1 : 0, stats.spread.color)
+    }
 
-        const maxFr = POWERUP_CONFIG.permanent.maxFireRateStacks
-        const frStacks = modifiers.fireRateBonuses
-        const filledFr = '●'.repeat(Math.min(frStacks, maxFr))
-        const emptyFr = '○'.repeat(Math.max(0, maxFr - frStacks))
-        this.fireRateText.setText(`FR: ${filledFr}${emptyFr}`)
+    private createLivesDisplay(lives: number): void {
+        const config = UI_CONFIG.hud.lives
 
-        const maxSpd = POWERUP_CONFIG.permanent.maxSpeedBonuses
-        const spdStacks = modifiers.speedBonuses
-        const filledSpd = '●'.repeat(Math.min(spdStacks, maxSpd))
-        const emptySpd = '○'.repeat(Math.max(0, maxSpd - spdStacks))
-        this.speedText.setText(`SPD: ${filledSpd}${emptySpd}`)
+        this.livesIcons.forEach(icon => icon.destroy())
+        this.livesIcons = []
+        this.livesOverflowText?.destroy()
+        this.livesOverflowText = null
+
+        const displayCount = Math.min(lives, config.maxIconDisplay)
+        const iconSpacing = config.iconSize + config.iconGap
+
+        for (let i = 0; i < displayCount; i++) {
+            const icon = this.add.image(i * iconSpacing, 0, 'icon-life')
+            icon.setDisplaySize(config.iconSize, config.iconSize)
+            icon.setOrigin(0, 0)
+            this.livesContainer.add(icon)
+            this.livesIcons.push(icon)
+        }
+
+        if (lives > config.maxIconDisplay) {
+            const overflowX = displayCount * iconSpacing + config.overflowTextGap
+            this.livesOverflowText = this.add.text(overflowX, 0, `×${lives - config.maxIconDisplay + 1}`, {
+                fontFamily: 'KenVector Future',
+                fontSize: '14px',
+                color: '#ffffff'
+            })
+            this.livesContainer.add(this.livesOverflowText)
+        }
+    }
+
+    private createStatBar(key: string, iconKey: string, x: number, maxSegments: number, color: number): void {
+        const config = UI_CONFIG.hud.statBar
+        const container = this.add.container(x, config.y)
+
+        const icon = this.add.image(0, 0, iconKey)
+        icon.setDisplaySize(config.iconSize, config.iconSize)
+        icon.setOrigin(0, 0.5)
+        container.add(icon)
+
+        const segments: Phaser.GameObjects.Rectangle[] = []
+        const barStartX = config.iconSize + config.iconToBarGap
+
+        for (let i = 0; i < maxSegments; i++) {
+            const segmentX = barStartX + i * (config.segmentWidth + config.segmentGap)
+            const segment = this.add.rectangle(segmentX, 0, config.segmentWidth, config.barHeight, config.emptyColor)
+            segment.setOrigin(0, 0.5)
+            container.add(segment)
+            segments.push(segment)
+        }
+
+        this.statContainers.set(key, container)
+        this.statSegments.set(key, segments)
+    }
+
+    private updateStatBar(key: string, filledCount: number, fillColor: number): void {
+        const segments = this.statSegments.get(key)
+        if (!segments) return
+
+        const emptyColor = UI_CONFIG.hud.statBar.emptyColor
+        segments.forEach((segment, index) => {
+            segment.setFillStyle(index < filledCount ? fillColor : emptyColor)
+        })
     }
 
     private handleWaveStarted(data: { currentWave: number }) {
