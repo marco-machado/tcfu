@@ -117,7 +117,7 @@ A simple arrow icon pointing right with a vibrant cyan and white glow, sleek sha
 
 **Life Ship** (#ffffff):
 ```
-A simple spaceship icon pointing upward with a vibrant white and silver glow, clean triangular silhouette with small wings. The ship's surface shimmers with a soft, radiant white aura. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 2 --removebg
+A simple spaceship icon pointing upward with a vibrant white and silver glow, clean triangular silhouette with small wings. The ship's surface shimmers with a soft, radiant white aura. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 2 --removebg --native
 ```
 
 ### Asset File Locations
