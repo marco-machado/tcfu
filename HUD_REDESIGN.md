@@ -39,7 +39,7 @@ All rendering is text-based using KenVector Future bitmap font.
 ┌────────────────────────────────────────────────────────────┐
 │  🚀🚀🚀🚀🚀×2        WAVE 4              SCORE: 3400      │  y=20
 ├────────────────────────────────────────────────────────────┤
-│  💣[██░] ⚡[███] 🔥[███░] ➡️[███] ⤳[█]                   │  y=45
+│  💣[██░] ⚡[███] 🔥[███░] ➡️[███]                         │  y=45
 └────────────────────────────────────────────────────────────┘
                      (gameplay area)
 ┌────────────────────────────────────────────────────────────┐
@@ -47,7 +47,7 @@ All rendering is text-based using KenVector Future bitmap font.
 └────────────────────────────────────────────────────────────┘
 ```
 
-**Legend:** 💣=Bombs, ⚡=Damage, 🔥=Fire Rate, ➡️=Speed, ⤳=Spread Shot
+**Legend:** 💣=Bombs, ⚡=Damage, 🔥=Fire Rate, ➡️=Speed
 
 ### Row 1: Lives Display (Hybrid Icon + Count)
 
@@ -79,7 +79,6 @@ All rendering is text-based using KenVector Future bitmap font.
 | Damage | x=70 | 3 | #ff4444 (red) |
 | Fire Rate | x=125 | 4 | #ffaa00 (yellow) |
 | Speed | x=185 | 3 | #88ffff (cyan) |
-| Spread | x=245 | 1 (toggle) | #00aaff (light blue) |
 
 Each indicator width: ~50px (16 icon + 4 gap + 30 bar)
 
@@ -96,16 +95,30 @@ Each indicator width: ~50px (16 icon + 4 gap + 30 bar)
 
 ### Prompts for Each Icon
 
-| Icon | Prompt | Color Reference |
-|------|--------|-----------------|
-| **Bomb** | `pixel art bomb icon, round bomb with fuse, simple silhouette, orange and black --ar 64:64 --style rd_plus__ui_element --removebg` | #ff6600 |
-| **Damage** | `pixel art lightning bolt icon, energy symbol, simple silhouette, red glow --ar 64:64 --style rd_plus__ui_element --removebg` | #ff4444 |
-| **Fire Rate** | `pixel art flame icon, small fire, simple silhouette, yellow orange --ar 64:64 --style rd_plus__ui_element --removebg` | #ffaa00 |
-| **Speed** | `pixel art arrow icon, speed lines, motion blur, simple silhouette, cyan blue --ar 64:64 --style rd_plus__ui_element --removebg` | #88ffff |
-| **Spread** | `pixel art triple arrow spread icon, three arrows diverging, simple silhouette, light blue --ar 64:64 --style rd_plus__ui_element --removebg` | #00aaff |
-| **Life Ship** | `pixel art small spaceship icon, top-down view, simple white ship, retro arcade --ar 64:64 --style rd_plus__ui_element --removebg` | #ffffff |
+**Bomb** (#ff6600):
+```
+A glowing round bomb with a vibrant orange and yellow pulsing light, featuring a flickering red and orange fuse that dances with tiny, erratic flames. The bomb's surface shimmers with a soft, radiant white aura, casting gentle highlights and subtle shadows. The fuse, slightly off-center, burns with a lively, unpredictable flicker, adding a sense of urgency and dynamism. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 1 --removebg
+```
 
-**Negative prompt for all**: `muted, dull, hazy, muddy colors, blurry, mutated, deformed, noise, borders, frame, watermark, text`
+**Damage** (#ff4444):
+```
+A glowing lightning bolt with a vibrant red and orange pulsing light, featuring crackling energy sparks that dance along its jagged edges with tiny, erratic electric flashes. The bolt's surface shimmers with a soft, radiant white aura, casting gentle highlights and subtle shadows. The shape, slightly dynamic and angular, crackles with a lively, unpredictable energy, adding a sense of power and intensity. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 1 --removebg
+```
+
+**Fire Rate** (#ffaa00):
+```
+A glowing flame with a vibrant yellow and orange pulsing light, featuring dancing fire tendrils that flicker and sway with tiny, erratic embers rising upward. The flame's surface shimmers with a soft, radiant white aura, casting gentle highlights and subtle shadows. The shape, slightly tapered and organic, burns with a lively, unpredictable motion, adding a sense of speed and rapid energy. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 1 --removebg
+```
+
+**Speed** (#88ffff):
+```
+A simple arrow icon pointing right with a vibrant cyan and white glow, sleek shape with trailing speed lines. The arrow's surface shimmers with a soft, radiant white aura. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 2 --removebg
+```
+
+**Life Ship** (#ffffff):
+```
+A simple spaceship icon pointing upward with a vibrant white and silver glow, clean triangular silhouette with small wings. The ship's surface shimmers with a soft, radiant white aura. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 2 --removebg
+```
 
 ### Asset File Locations
 
@@ -115,7 +128,6 @@ public/assets/images/ui/
 ├── icon-damage.png    (64×64, scaled to 16×16 in-game)
 ├── icon-firerate.png  (64×64, scaled to 16×16 in-game)
 ├── icon-speed.png     (64×64, scaled to 16×16 in-game)
-├── icon-spread.png    (64×64, scaled to 16×16 in-game)
 └── icon-life.png      (64×64, scaled to 16×16 in-game)
 ```
 
@@ -133,7 +145,6 @@ public/assets/images/ui/
 { "type": "image", "key": "icon-damage", "url": "images/ui/icon-damage.png" },
 { "type": "image", "key": "icon-firerate", "url": "images/ui/icon-firerate.png" },
 { "type": "image", "key": "icon-speed", "url": "images/ui/icon-speed.png" },
-{ "type": "image", "key": "icon-spread", "url": "images/ui/icon-spread.png" },
 { "type": "image", "key": "icon-life", "url": "images/ui/icon-life.png" }
 ```
 
@@ -158,8 +169,7 @@ Replace text indicators (lines 57-85) with icon + segmented bar:
 
 1. Create stat bar component with icon sprite + rectangle segments
 2. Update `updateBombs()` to fill/empty segments
-3. Update `updateModifiers()` to handle damage, fire rate, speed, spread shot
-4. Add spread shot indicator (single toggle segment)
+3. Update `updateModifiers()` to handle damage, fire rate, speed
 
 ### Phase 4: Update GameConfig
 
@@ -188,7 +198,7 @@ livesIcon: {
 
 ## Files to Modify
 
-1. `public/assets/images/ui/` - New icon files (6 images)
+1. `public/assets/images/ui/` - New icon files (5 images)
 2. `public/assets/data/assets.json` - Register new icons
 3. `src/game/scenes/UIScene.ts` - Main HUD rendering (lines 39-85, 117-153)
 4. `src/game/config/GameConfig.ts` - UI_CONFIG additions (lines 156-193)
@@ -199,7 +209,7 @@ livesIcon: {
 
 1. Visual inspection at all powerup states (0 to max stacks)
 2. Test lives display from 1-9 lives (verify hybrid ×N format for 6+)
-3. Test spread shot indicator toggles correctly
+3. Confirm no spread shot indicator is present in the HUD (removed in this redesign)
 4. Check readability on 360×640 canvas
 5. Pause screen still shows relevant info
 6. Run `npm run typecheck` and `npm run lint`
