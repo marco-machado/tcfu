@@ -6,7 +6,6 @@
       { "type": "image", "key": "icon-damage", "url": "icon-damage.png" },
       { "type": "image", "key": "icon-firerate", "url": "icon-firerate.png" },
       { "type": "image", "key": "icon-speed", "url": "icon-speed.png" },
-      { "type": "image", "key": "icon-spread", "url": "icon-spread.png" },
       { "type": "image", "key": "icon-life", "url": "icon-life.png" }
     ]
   },

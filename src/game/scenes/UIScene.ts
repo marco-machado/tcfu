@@ -57,7 +57,6 @@ export class UIScene extends Scene {
         this.createStatBar('damage', 'icon-damage', stats.damage.x, stats.damage.maxSegments, stats.damage.color)
         this.createStatBar('fireRate', 'icon-firerate', stats.fireRate.x, stats.fireRate.maxSegments, stats.fireRate.color)
         this.createStatBar('speed', 'icon-speed', stats.speed.x, stats.speed.maxSegments, stats.speed.color)
-        this.createStatBar('spread', 'icon-spread', stats.spread.x, stats.spread.maxSegments, stats.spread.color)
 
         this.updateStatBar('bombs', POWERUP_CONFIG.bombs.initialBombs, stats.bombs.color)
 
@@ -120,7 +119,6 @@ export class UIScene extends Scene {
         this.updateStatBar('damage', dmgStacks, stats.damage.color)
         this.updateStatBar('fireRate', modifiers.fireRateBonuses, stats.fireRate.color)
         this.updateStatBar('speed', modifiers.speedBonuses, stats.speed.color)
-        this.updateStatBar('spread', modifiers.hasSpreadShot ? 1 : 0, stats.spread.color)
     }
 
     private createLivesDisplay(lives: number): void {
