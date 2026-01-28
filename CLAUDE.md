@@ -73,8 +73,8 @@ Base class: `src/game/entities/powerups/PowerUp.ts` - Three categories: `INSTANT
 **Timed (pausable):**
 | Type | Duration | Effect |
 |------|----------|--------|
-| Invincibility | 10s | Damage immunity |
-| Shield | 15s | Absorbs one hit |
+| Invincibility | 5s | Damage immunity |
+| Shield | 10s | Absorbs one hit |
 | Magnet | 15s | Attracts powerups (120px radius) |
 | ScoreMultiplier | 15s | 2x score |
 

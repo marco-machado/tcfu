@@ -51,17 +51,12 @@
 - [x] Implement scoring on enemy destruction
 - [x] Add invulnerability frames for player after hit
 
-### 5. **Type Safety Improvements**
-- [ ] Use generics for physics groups: `Phaser.Physics.Arcade.Group<PlayerProjectile>`
-- [ ] Add proper typing for collision callbacks
-- [ ] Create interfaces for game state
-
-### 6. **Code Organization**
+### 5. **Code Organization**
 - [ ] Extract collision handlers into separate methods
 - [ ] Create a GameConfig interface for settings
 - [ ] Separate concerns with dedicated handler methods
 
-### 7. **Visual/Audio Feedback**
+### 6. **Visual/Audio Feedback**
 - [ ] Add particle effects for explosions
 - [ ] Implement screen effects (flash, shake)
 - [x] Add UI feedback for hits and score
@@ -69,20 +64,19 @@
 - [x] Add shield absorption feedback
 - [ ] Add sound effects
 
-### 8. **Event System Enhancement**
+### 7. **Event System Enhancement**
 - [x] Emit events for score changes, game over, enemy destroyed
 - [ ] Create centralized event constants
 - [x] Better integration with UIScene
 - [x] Powerup events (collected, timed start/end, modifiers changed)
 - [x] Bomb events (activated, screen clear)
 
-### 9. **Performance Optimizations**
+### 8. **Performance Optimizations**
 - [ ] Object pooling for projectiles and effects
 - [x] Configurable background scroll speed
 - [ ] Batch destroy operations
 
-### 10. **Documentation**
-- [ ] Add JSDoc comments for all methods
+### 9. **Documentation**
 - [x] Document game systems and their interactions
 
 ---
