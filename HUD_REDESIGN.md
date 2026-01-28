@@ -89,7 +89,7 @@ Each indicator width: ~50px (16 icon + 4 gap + 30 bar)
 ### Generation Strategy
 
 - **Generate at 64×64px** (Retro Diffusion minimum size), scale to 16×16px in-game
-- **Style**: `rd_plus__ui_element` for clean icon aesthetics
+- **Style**: `rd_fast__simple` for minimalist icon aesthetics
 - **Use `--removebg`** for transparent backgrounds
 - **Use `--seed` parameter** with same seed across all icons for palette consistency
 
@@ -97,27 +97,27 @@ Each indicator width: ~50px (16 icon + 4 gap + 30 bar)
 
 **Bomb** (#ff6600):
 ```
-A glowing round bomb with a vibrant orange and yellow pulsing light, featuring a flickering red and orange fuse that dances with tiny, erratic flames. The bomb's surface shimmers with a soft, radiant white aura, casting gentle highlights and subtle shadows. The fuse, slightly off-center, burns with a lively, unpredictable flicker, adding a sense of urgency and dynamism. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 1 --removebg
+round bomb icon, lit fuse, orange glow, simple pixel art --ar 64:64 --style rd_fast__simple --seed 1 --removebg
 ```
 
 **Damage** (#ff4444):
 ```
-A glowing lightning bolt with a vibrant red and orange pulsing light, featuring crackling energy sparks that dance along its jagged edges with tiny, erratic electric flashes. The bolt's surface shimmers with a soft, radiant white aura, casting gentle highlights and subtle shadows. The shape, slightly dynamic and angular, crackles with a lively, unpredictable energy, adding a sense of power and intensity. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 1 --removebg
+red lightning bolt icon, simple pixel art --ar 64:64 --style rd_fast__simple --seed 1 --removebg
 ```
 
 **Fire Rate** (#ffaa00):
 ```
-A glowing flame with a vibrant yellow and orange pulsing light, featuring dancing fire tendrils that flicker and sway with tiny, erratic embers rising upward. The flame's surface shimmers with a soft, radiant white aura, casting gentle highlights and subtle shadows. The shape, slightly tapered and organic, burns with a lively, unpredictable motion, adding a sense of speed and rapid energy. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 1 --removebg
+yellow flame icon, simple pixel art --ar 64:64 --style rd_fast__simple --seed 1 --removebg
 ```
 
 **Speed** (#88ffff):
 ```
-A simple arrow icon pointing right with a vibrant cyan and white glow, sleek shape with trailing speed lines. The arrow's surface shimmers with a soft, radiant white aura. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 2 --removebg
+double chevron fast forward icon, cyan, simple pixel art --ar 64:64 --style rd_fast__simple --seed 2 --removebg
 ```
 
 **Life Ship** (#ffffff):
 ```
-A simple spaceship icon pointing upward with a vibrant white and silver glow, clean triangular silhouette with small wings. The ship's surface shimmers with a soft, radiant white aura. Modern style pixel art with bold shapes and patterns, thick defining outlines, geometric shapes and simple shading, 1px outlines. --ar 64:64 --style rd_fast__detailed --seed 2 --removebg --native
+small white spaceship icon, top-down view, simple pixel art --ar 64:64 --style rd_fast__simple --seed 1 --removebg
 ```
 
 ### Asset File Locations
