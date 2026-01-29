@@ -6,6 +6,7 @@ A retro arcade-style vertical space shooter built with Phaser 3 and TypeScript.
 
 - **Classic Arcade Gameplay**: Fight waves of alien enemies in an endless vertical shooter
 - **Score-Based Wave Progression**: Waves advance based on score accumulated, with increasing difficulty
+- **Mobile Touch Controls**: Relative touch movement with auto-fire on touch devices
 - **10 Powerup Types**:
   - **Permanent**: Fire Rate Up, Damage Up, Spread Shot, Speed Up
   - **Instant**: Extra Life, Bomb
@@ -16,6 +17,8 @@ A retro arcade-style vertical space shooter built with Phaser 3 and TypeScript.
 
 ## Controls
 
+### Keyboard
+
 | Key | Action |
 |-----|--------|
 | Arrow Keys | Move player |
@@ -24,6 +27,14 @@ A retro arcade-style vertical space shooter built with Phaser 3 and TypeScript.
 | B | Activate bomb |
 | R | Restart (game over) |
 | M | Main menu |
+
+### Mobile Touch
+
+On touch devices, the game uses relative touch controls:
+- **Movement**: Touch and drag on the left side of the screen - ship moves relative to finger movement
+- **Fire**: Auto-fire enabled automatically on touch devices
+- **Bomb**: Tap the bomb button (bottom right)
+- **Pause**: Tap the pause button (top right)
 
 ## Getting Started
 
@@ -58,6 +69,7 @@ src/game/
 ## Documentation
 
 - [CLAUDE.md](./CLAUDE.md) - Development guide for Claude Code
+- [MOBILE.md](./MOBILE.md) - Mobile touch controls implementation
 - [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - Visual design specifications
 - [UI_COMPONENTS.md](./UI_COMPONENTS.md) - UI component details
 - [ASSET_REQUIREMENTS.md](./ASSET_REQUIREMENTS.md) - Asset creation guide
