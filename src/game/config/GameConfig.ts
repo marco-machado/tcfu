@@ -153,7 +153,7 @@ export const WAVE_CONFIG = {
     },
 
     movement: {
-        firstMovementWave: 5,
+        firstMovementWave: 1,
         patterns: {
             straight: { weight: 4 },
             sineWave: {
