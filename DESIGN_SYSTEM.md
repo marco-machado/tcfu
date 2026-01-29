@@ -21,12 +21,35 @@ TCFU is a **retro arcade pixel art vertical space shooter** inspired by classic 
 
 | Property | Value |
 |----------|-------|
-| Dimensions | 360 x 640 pixels (portrait) |
+| Dimensions | 540 x 960 pixels (portrait 9:16) |
 | Pixel Art Mode | Enabled |
 | Round Pixels | Enabled |
 | Scale Mode | `Scale.FIT` |
 | Auto Center | `Scale.CENTER_BOTH` |
 | Background | `#028af8` |
+
+### Resolution Rationale
+
+**Current choice: 540x960** — Selected for clean integer scaling to common displays while maintaining detailed pixel art aesthetic.
+
+#### Scaling Properties
+| Target Display | Scale Factor | Result |
+|----------------|--------------|--------|
+| 1080x1920 (Full HD portrait) | 2x | Perfect ✓ |
+| 2160x3840 (4K portrait) | 4x | Perfect ✓ |
+
+#### Alternative Resolutions Considered
+
+| Resolution | Pros | Cons |
+|------------|------|------|
+| **180x320** | Chunky GBA-era pixels, scales to 1080x1920 at 6x | Very small canvas, claustrophobic |
+| **270x480** | Middle ground, scales to 1080x1920 at 4x | Less common base resolution |
+| **360x640** (previous) | Familiar, existing assets sized for this | Doesn't scale cleanly to 1080p (1.6875x) |
+| **720x1280** | HD-level detail, 2x to 1440p | Requires larger sprites (~48-56px), more asset work |
+| **1080x1920** | Native Full HD, no scaling needed on 1080p | Loses chunky pixel aesthetic unless using "virtual pixels" |
+
+#### Virtual Resolution Alternative
+If a chunkier retro look is desired later, consider rendering at a lower resolution (e.g., 270x480) and scaling up 2x to 540x960, or using Phaser's camera zoom feature.
 
 ---
 
@@ -279,8 +302,8 @@ Key visual parameters from `GameConfig.ts`:
 
 | Constant | Value | Context |
 |----------|-------|---------|
-| `GAME_WIDTH` | 360 | Canvas width |
-| `GAME_HEIGHT` | 640 | Canvas height |
+| `GAME_WIDTH` | 540 | Canvas width |
+| `GAME_HEIGHT` | 960 | Canvas height |
 | `PLAYER_CONFIG.velocity` | 200 | Player movement speed |
 | `ENEMY_CONFIG.velocityY` | 100 | Base enemy descent speed |
 | `WEAPON_CONFIG.cooldown` | 800 | Base milliseconds between shots |
