@@ -3,6 +3,7 @@ import { GAME_CONFIG, GAME_STATE_CONFIG, POWERUP_CONFIG, UI_CONFIG } from "../co
 import { PowerUpType } from "../entities/powerups"
 import { PermanentModifiers } from "../systems/PlayerPowerUpState"
 import { HighScoreManager } from "../utils/HighScoreManager"
+import { GameScene } from "./GameScene"
 
 interface TimedEffectUI {
     container: Phaser.GameObjects.Container
@@ -362,12 +363,27 @@ export class UIScene extends Scene {
             { fontFamily: 'KenVector Future', fontSize: '16px', color: '#ffffff' }
         ).setOrigin(0.5)
 
-        this.add.text(
+        const restartButton = this.add.text(
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.gameOver.instructionsOffsetY,
-            'R - Restart   M - Main Menu',
-            { fontFamily: 'KenVector Future', fontSize: '14px', color: '#ffffff' }
-        ).setOrigin(0.5)
+            'RESTART',
+            { fontSize: '18px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 15, y: 8 } }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true })
+
+        restartButton.on('pointerover', () => restartButton.setStyle({ backgroundColor: '#555555' }))
+        restartButton.on('pointerout', () => restartButton.setStyle({ backgroundColor: '#333333' }))
+        restartButton.on('pointerdown', () => this.restartGame())
+
+        const menuButton = this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2 + UI_CONFIG.gameOver.instructionsOffsetY + 40,
+            'MAIN MENU',
+            { fontSize: '18px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 15, y: 8 } }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true })
+
+        menuButton.on('pointerover', () => menuButton.setStyle({ backgroundColor: '#555555' }))
+        menuButton.on('pointerout', () => menuButton.setStyle({ backgroundColor: '#333333' }))
+        menuButton.on('pointerdown', () => this.goToMainMenu())
 
         this.restartKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R) ?? null
         this.restartKey?.once('down', this.restartGame, this)
@@ -391,12 +407,30 @@ export class UIScene extends Scene {
             { fontFamily: 'KenVector Future', fontSize: '32px', color: '#ffffff' }
         ).setOrigin(0.5)
 
-        this.add.text(
+        const resumeButton = this.add.text(
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.pause.hintOffsetY,
-            'P - Resume   M - Main Menu   B - Bomb',
-            { fontFamily: 'KenVector Future', fontSize: '14px', color: '#ffffff' }
-        ).setOrigin(0.5).setName('pauseHint')
+            'RESUME',
+            { fontSize: '18px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 15, y: 8 } }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true }).setName('resumeButton')
+
+        resumeButton.on('pointerover', () => resumeButton.setStyle({ backgroundColor: '#555555' }))
+        resumeButton.on('pointerout', () => resumeButton.setStyle({ backgroundColor: '#333333' }))
+        resumeButton.on('pointerdown', () => {
+            const gameScene = this.scene.get('GameScene') as GameScene
+            gameScene.togglePause()
+        })
+
+        const pauseMenuButton = this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2 + UI_CONFIG.pause.hintOffsetY + 40,
+            'MAIN MENU',
+            { fontSize: '18px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 15, y: 8 } }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true }).setName('pauseMenuButton')
+
+        pauseMenuButton.on('pointerover', () => pauseMenuButton.setStyle({ backgroundColor: '#555555' }))
+        pauseMenuButton.on('pointerout', () => pauseMenuButton.setStyle({ backgroundColor: '#333333' }))
+        pauseMenuButton.on('pointerdown', () => this.goToMainMenu())
 
         if (GAME_CONFIG.debug) {
             this.debugKeysText = this.add.text(
@@ -418,7 +452,8 @@ export class UIScene extends Scene {
         this.tweens.resumeAll()
         this.pauseText?.destroy()
         this.pauseText = null
-        this.children.getByName('pauseHint')?.destroy()
+        this.children.getByName('resumeButton')?.destroy()
+        this.children.getByName('pauseMenuButton')?.destroy()
         this.debugKeysText?.destroy()
         this.debugKeysText = null
         this.menuKey?.off('down', this.goToMainMenu, this)

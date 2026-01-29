@@ -17,7 +17,7 @@ const config: Types.Core.GameConfig = {
         gamepad: false,
         keyboard: true,
         mouse: true,
-        touch: false,
+        touch: true,
     },
     physics: {
         default: 'arcade',
