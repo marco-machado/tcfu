@@ -1,10 +1,12 @@
 import { GAME_CONFIG, TOUCH_CONTROLS_CONFIG } from '../config/GameConfig'
 import { Player } from '../entities/Player'
+import { InputManager } from '../input/InputManager'
 import { ISystem } from './ISystem'
 
 export class TouchControlsSystem implements ISystem {
     private scene: Phaser.Scene | null
     private player: Player | null
+    private inputManager: InputManager | null
     private graphics: Phaser.GameObjects.Graphics | null = null
     private container: Phaser.GameObjects.Container | null = null
     private textObjects: Phaser.GameObjects.Text[] = []
@@ -14,12 +16,18 @@ export class TouchControlsSystem implements ISystem {
     private lastTapTime: number = 0
 
     private pauseZone: Phaser.Geom.Circle
+    private leftZone: Phaser.Geom.Circle
+    private rightZone: Phaser.Geom.Circle
+
+    private leftPointerId: number = -1
+    private rightPointerId: number = -1
 
     private isPaused: boolean = false
 
-    constructor(scene: Phaser.Scene, player: Player) {
+    constructor(scene: Phaser.Scene, player: Player, inputManager: InputManager) {
         this.scene = scene
         this.player = player
+        this.inputManager = inputManager
 
         const { buttons } = TOUCH_CONTROLS_CONFIG
 
@@ -27,6 +35,18 @@ export class TouchControlsSystem implements ISystem {
             buttons.pause.x,
             buttons.pause.y,
             buttons.pause.radius
+        )
+
+        this.leftZone = new Phaser.Geom.Circle(
+            buttons.left.x,
+            buttons.left.y,
+            buttons.left.radius
+        )
+
+        this.rightZone = new Phaser.Geom.Circle(
+            buttons.right.x,
+            buttons.right.y,
+            buttons.right.radius
         )
 
         this.createVisuals()
@@ -59,6 +79,20 @@ export class TouchControlsSystem implements ISystem {
             buttons.pause.y,
             buttons.pause.radius,
             '||'
+        )
+
+        this.drawButton(
+            buttons.left.x,
+            buttons.left.y,
+            buttons.left.radius,
+            '<'
+        )
+
+        this.drawButton(
+            buttons.right.x,
+            buttons.right.y,
+            buttons.right.radius,
+            '>'
         )
     }
 
@@ -122,6 +156,18 @@ export class TouchControlsSystem implements ISystem {
 
         if (this.isPaused) return
 
+        if (this.leftZone.contains(pointer.x, pointer.y)) {
+            this.leftPointerId = pointer.id
+            this.inputManager?.setTouchState({ left: true })
+            return
+        }
+
+        if (this.rightZone.contains(pointer.x, pointer.y)) {
+            this.rightPointerId = pointer.id
+            this.inputManager?.setTouchState({ right: true })
+            return
+        }
+
         const now = Date.now()
         if (now - this.lastTapTime < TOUCH_CONTROLS_CONFIG.doubleTapThreshold) {
             this.scene?.events.emit('bomb-activated')
@@ -156,6 +202,16 @@ export class TouchControlsSystem implements ISystem {
     }
 
     private handlePointerUp(pointer: Phaser.Input.Pointer) {
+        if (pointer.id === this.leftPointerId) {
+            this.leftPointerId = -1
+            this.inputManager?.setTouchState({ left: false })
+        }
+
+        if (pointer.id === this.rightPointerId) {
+            this.rightPointerId = -1
+            this.inputManager?.setTouchState({ right: false })
+        }
+
         if (pointer.id === this.activePointerId) {
             this.activePointerId = -1
             this.touchOffset = null
@@ -177,6 +233,7 @@ export class TouchControlsSystem implements ISystem {
         this.container = null
         this.graphics = null
         this.player = null
+        this.inputManager = null
         this.scene = null
     }
 }
