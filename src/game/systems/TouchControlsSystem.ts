@@ -106,6 +106,8 @@ export class TouchControlsSystem implements ISystem {
 
     private handleGamePaused() {
         this.isPaused = true
+        this.activePointerId = -1
+        this.touchOffset = null
     }
 
     private handleGameResumed() {
