@@ -40,17 +40,17 @@ export class UIScene extends Scene {
         this.livesContainer = this.add.container(livesConfig.x, livesConfig.y)
         this.createLivesDisplay(GAME_STATE_CONFIG.initialLives)
 
-        this.scoreText = this.add.text(this.scale.width - 20, 20, 'Score: 0', {
+        this.waveText = this.add.text(this.scale.width - 15, 20, 'WAVE 1', {
             fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
         }).setOrigin(1, 0)
 
-        this.waveText = this.add.text(this.scale.width / 2, 20, 'Wave 1', {
+        this.scoreText = this.add.text(this.scale.width - 15, 44, '0', {
             fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
-        }).setOrigin(0.5, 0)
+        }).setOrigin(1, 0)
 
         const statBarConfig = UI_CONFIG.hud.statBar
         const statEntries: Array<{ key: string; iconKey: string; maxSegments: number }> = [
@@ -108,7 +108,7 @@ export class UIScene extends Scene {
 
     private updateScore(data: { score: number }) {
         this.currentScore = data.score
-        this.scoreText.setText(`Score: ${data.score}`)
+        this.scoreText.setText(`${data.score}`)
     }
 
     private updateLives(data: { lives: number }) {
@@ -166,16 +166,17 @@ export class UIScene extends Scene {
 
         const icon = this.add.image(0, 0, iconKey)
         icon.setDisplaySize(config.iconSize, config.iconSize)
-        icon.setOrigin(0, 0.5)
+        icon.setOrigin(0, 0)
         container.add(icon)
 
         const segments: Phaser.GameObjects.Rectangle[] = []
         const barStartX = config.iconSize + config.iconToBarGap
+        const segmentY = (config.iconSize - config.barHeight) / 2
 
         for (let i = 0; i < maxSegments; i++) {
             const segmentX = barStartX + i * (config.segmentWidth + config.segmentGap)
-            const segment = this.add.rectangle(segmentX, 0, config.segmentWidth, config.barHeight, config.emptyColor)
-            segment.setOrigin(0, 0.5)
+            const segment = this.add.rectangle(segmentX, segmentY, config.segmentWidth, config.barHeight, config.emptyColor)
+            segment.setOrigin(0, 0)
             container.add(segment)
             segments.push(segment)
         }
@@ -195,7 +196,7 @@ export class UIScene extends Scene {
     }
 
     private handleWaveStarted(data: { currentWave: number }) {
-        this.waveText.setText(`Wave ${data.currentWave}`)
+        this.waveText.setText(`WAVE ${data.currentWave}`)
 
         if (data.currentWave > 1) {
             this.tweens.add({

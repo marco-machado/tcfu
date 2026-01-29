@@ -172,7 +172,7 @@ export const UI_CONFIG = {
         },
         statBar: {
             x: 15,
-            startY: 50,
+            startY: 44,
             rowGap: 24,
             iconSize: 16,
             iconToBarGap: 4,
