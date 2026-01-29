@@ -305,7 +305,7 @@ export class GameScene extends Scene {
     )
   }
 
-  private togglePause() {
+  public togglePause() {
     if (this.isGameOver) return;
 
     this.isPaused = !this.isPaused;

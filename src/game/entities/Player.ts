@@ -81,9 +81,7 @@ export class Player extends Phaser.GameObjects.Container {
             const currentSpeed = PLAYER_CONFIG.velocity + this.speedBonus
             this.body.setVelocity(vx * currentSpeed, vy * currentSpeed)
 
-            if (cursor?.space) {
-                this.scene.events.emit('player-weapon-fired')
-            }
+            this.scene.events.emit('player-weapon-fired')
         }
     }
 
