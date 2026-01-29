@@ -142,6 +142,9 @@ export class TouchControlsSystem implements ISystem {
         this.isPaused = true
         this.activePointerId = -1
         this.touchOffset = null
+        this.leftPointerId = -1
+        this.rightPointerId = -1
+        this.inputManager?.setTouchState({ left: false, right: false })
     }
 
     private handleGameResumed() {
@@ -159,12 +162,14 @@ export class TouchControlsSystem implements ISystem {
         if (this.leftZone.contains(pointer.x, pointer.y)) {
             this.leftPointerId = pointer.id
             this.inputManager?.setTouchState({ left: true })
+            this.lastTapTime = 0
             return
         }
 
         if (this.rightZone.contains(pointer.x, pointer.y)) {
             this.rightPointerId = pointer.id
             this.inputManager?.setTouchState({ right: true })
+            this.lastTapTime = 0
             return
         }
 
