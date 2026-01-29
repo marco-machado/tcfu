@@ -151,6 +151,27 @@ export const WAVE_CONFIG = {
             { cols: 3, rows: 1, weight: 2 },
         ],
     },
+
+    movement: {
+        firstMovementWave: 1,
+        patterns: {
+            straight: { weight: 4 },
+            sineWave: {
+                weight: 3,
+                amplitude: 50,
+                frequency: 0.003,
+            },
+            diagonal: {
+                weight: 2,
+                velocityX: 60,
+            },
+            zigzag: {
+                weight: 2,
+                amplitude: 40,
+                switchInterval: 800,
+            },
+        },
+    },
 }
 
 export const UI_CONFIG = {
