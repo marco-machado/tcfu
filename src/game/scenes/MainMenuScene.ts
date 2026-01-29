@@ -29,14 +29,14 @@ export class MainMenuScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2,
             `High Score: ${HighScoreManager.get()}`,
-            { fontSize: '16px', color: '#ffff00' }
+            { fontFamily: 'KenVector Future', fontSize: '16px', color: '#ffff00' }
         ).setOrigin(0.5)
 
         const startButton = this.add.text(
             this.scale.width / 2,
             this.scale.height / 2 + MENU_CONFIG.startButtonOffsetY,
             'START',
-            { fontSize: '24px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 20, y: 10 } }
+            { fontFamily: 'KenVector Future', fontSize: '24px', color: '#ffffff', backgroundColor: '#333333', padding: { x: 20, y: 10 } }
         ).setOrigin(0.5).setInteractive({ useHandCursor: true })
 
         startButton.on('pointerover', () => {
@@ -55,7 +55,7 @@ export class MainMenuScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 + MENU_CONFIG.clearButtonOffsetY,
             'CLEAR DATA',
-            { fontSize: '14px', color: '#ff6666', backgroundColor: '#333333', padding: { x: 10, y: 5 } }
+            { fontFamily: 'KenVector Future', fontSize: '14px', color: '#ff6666', backgroundColor: '#333333', padding: { x: 10, y: 5 } }
         ).setOrigin(0.5).setInteractive({ useHandCursor: true })
 
         clearButton.on('pointerover', () => {
@@ -80,7 +80,7 @@ export class MainMenuScene extends Scene {
             this.scale.width / 2,
             this.scale.height - MENU_CONFIG.instructionsOffsetFromBottom,
             'Press SPACE or click START',
-            { fontSize: '12px', color: '#888888' }
+            { fontFamily: 'KenVector Future', fontSize: '12px', color: '#888888' }
         ).setOrigin(0.5)
     }
 

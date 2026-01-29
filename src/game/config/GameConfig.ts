@@ -52,9 +52,9 @@ export const WEAPON_CONFIG = {
 }
 
 export const BACKGROUND_CONFIG = {
-    baseScrollSpeed: 1,
-    maxScrollSpeed: 3,
-    scrollSpeedIncreasePerWave: 0.2,
+    baseScrollSpeed: 0.8,
+    maxScrollSpeed: 2,
+    scrollSpeedIncreasePerWave: 0.15,
 }
 
 export const GAME_STATE_CONFIG = {
@@ -84,16 +84,16 @@ export const POWERUP_CONFIG = {
     },
 
     durations: {
-        invincibility: 10000,
-        shield: 15000,
+        invincibility: 5000,
+        shield: 10000,
         magnet: 15000,
         scoreMultiplier: 15000,
     },
 
     permanent: {
-        fireRateReduction: 150,
+        fireRateReduction: 200,
         fireRateMinCooldown: 200,
-        maxFireRateStacks: 4,
+        maxFireRateStacks: 3,
         damageMultiplier: 1.5,
         maxDamageStacks: 3,
         spreadShotAngles: [-8, 0, 8],
@@ -162,6 +162,29 @@ export const UI_CONFIG = {
         timedEffectSpacing: 50,
         timedEffectCleanupDuration: 200,
         timedEffectCleanupScale: 0.5,
+        lives: {
+            x: 20,
+            y: 20,
+            iconSize: 16,
+            iconGap: 2,
+            maxIconDisplay: 5,
+            overflowTextGap: 4,
+        },
+        statBar: {
+            y: 45,
+            iconSize: 16,
+            iconToBarGap: 4,
+            segmentWidth: 8,
+            segmentGap: 2,
+            barHeight: 8,
+            emptyColor: 0x333333,
+            stats: {
+                bombs: { x: 15, maxSegments: 3, color: 0xff6600 },
+                damage: { x: 106, maxSegments: 3, color: 0xff4444 },
+                fireRate: { x: 197, maxSegments: 3, color: 0xffaa00 },
+                speed: { x: 298, maxSegments: 3, color: 0x88ffff },
+            },
+        },
     },
     announcements: {
         waveOffsetY: 50,
