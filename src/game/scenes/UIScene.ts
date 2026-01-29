@@ -13,9 +13,7 @@ interface TimedEffectUI {
 
 export class UIScene extends Scene {
     private scoreText: Phaser.GameObjects.Text
-    private livesText: Phaser.GameObjects.Text
     private waveText: Phaser.GameObjects.Text
-    private waveAnnouncement: Phaser.GameObjects.Text | null = null
     private gameOverText: Phaser.GameObjects.Text | null = null
     private pauseText: Phaser.GameObjects.Text | null = null
     private debugKeysText: Phaser.GameObjects.Text | null = null
@@ -24,11 +22,11 @@ export class UIScene extends Scene {
     private currentScore: number = 0
     private timedEffectsContainer: Phaser.GameObjects.Container | null = null
     private timedEffectUIs: Map<PowerUpType, TimedEffectUI> = new Map()
-    private bombText: Phaser.GameObjects.Text
-    private damageText: Phaser.GameObjects.Text
-    private fireRateText: Phaser.GameObjects.Text
-    private speedText: Phaser.GameObjects.Text
-    private activeAnnouncements: Phaser.GameObjects.Text[] = []
+    private livesContainer: Phaser.GameObjects.Container
+    private livesIcons: Phaser.GameObjects.Image[] = []
+    private livesOverflowText: Phaser.GameObjects.Text | null = null
+    private statContainers: Map<string, Phaser.GameObjects.Container> = new Map()
+    private statSegments: Map<string, Phaser.GameObjects.Rectangle[]> = new Map()
 
     constructor() {
         super('UIScene')
@@ -39,46 +37,32 @@ export class UIScene extends Scene {
 
         const gameScene = this.scene.get('GameScene')
 
-        this.livesText = this.add.text(20, 20, `Lives: ${GAME_STATE_CONFIG.initialLives}`, {
-            fontSize: '16px',
-            color: '#ffffff'
-        })
+        const livesConfig = UI_CONFIG.hud.lives
+        this.livesContainer = this.add.container(livesConfig.x, livesConfig.y)
+        this.createLivesDisplay(GAME_STATE_CONFIG.initialLives)
 
         this.scoreText = this.add.text(this.scale.width - 20, 20, 'Score: 0', {
+            fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
         }).setOrigin(1, 0)
 
         this.waveText = this.add.text(this.scale.width / 2, 20, 'Wave 1', {
+            fontFamily: 'KenVector Future',
             fontSize: '16px',
             color: '#ffffff'
         }).setOrigin(0.5, 0)
 
-        const initialBombs = POWERUP_CONFIG.bombs.initialBombs
-        const filledBom = '●'.repeat(initialBombs)
-        const emptyBom = '○'.repeat(POWERUP_CONFIG.bombs.maxBombs - initialBombs)
-        this.bombText = this.add.text(20, 45, `BOM: ${filledBom}${emptyBom}`, {
-            fontSize: '12px',
-            color: '#ff6600'
-        })
+        const stats = UI_CONFIG.hud.statBar.stats
+        this.createStatBar('bombs', 'icon-bomb', stats.bombs.x, stats.bombs.maxSegments)
+        this.createStatBar('damage', 'icon-damage', stats.damage.x, stats.damage.maxSegments)
+        this.createStatBar('fireRate', 'icon-firerate', stats.fireRate.x, stats.fireRate.maxSegments)
+        this.createStatBar('speed', 'icon-speed', stats.speed.x, stats.speed.maxSegments)
 
-        const emptyDmg = '○'.repeat(POWERUP_CONFIG.permanent.maxDamageStacks)
-        this.damageText = this.add.text(80, 45, `DMG: ${emptyDmg}`, {
-            fontSize: '12px',
-            color: '#ff4444'
-        })
-
-        const emptyFr = '○'.repeat(POWERUP_CONFIG.permanent.maxFireRateStacks)
-        this.fireRateText = this.add.text(145, 45, `FR: ${emptyFr}`, {
-            fontSize: '12px',
-            color: '#ffaa00'
-        })
-
-        const emptySpd = '○'.repeat(POWERUP_CONFIG.permanent.maxSpeedBonuses)
-        this.speedText = this.add.text(215, 45, `SPD: ${emptySpd}`, {
-            fontSize: '12px',
-            color: '#88ffff'
-        })
+        this.updateStatBar('bombs', POWERUP_CONFIG.bombs.initialBombs, stats.bombs.color)
+        this.updateStatBar('damage', 0, stats.damage.color)
+        this.updateStatBar('fireRate', 0, stats.fireRate.color)
+        this.updateStatBar('speed', 0, stats.speed.color)
 
         this.timedEffectsContainer = this.add.container(this.scale.width / 2, this.scale.height - UI_CONFIG.hud.timedEffectsContainerOffsetY)
 
@@ -88,10 +72,8 @@ export class UIScene extends Scene {
         gameScene.events.on('game-over', this.showGameOver, this)
         gameScene.events.on('game-paused', this.showPaused, this)
         gameScene.events.on('game-resumed', this.hidePaused, this)
-        gameScene.events.on('powerup-collected', this.showPowerUpCollected, this)
         gameScene.events.on('powerup-timed-started', this.showTimedEffect, this)
         gameScene.events.on('powerup-timed-ended', this.hideTimedEffect, this)
-        gameScene.events.on('powerup-shield-absorbed', this.showShieldAbsorbed, this)
         gameScene.events.on('bombs-changed', this.updateBombs, this)
         gameScene.events.on('powerup-modifiers-changed', this.updateModifiers, this)
 
@@ -104,13 +86,18 @@ export class UIScene extends Scene {
             gameScene.events.off('game-over', this.showGameOver, this)
             gameScene.events.off('game-paused', this.showPaused, this)
             gameScene.events.off('game-resumed', this.hidePaused, this)
-            gameScene.events.off('powerup-collected', this.showPowerUpCollected, this)
             gameScene.events.off('powerup-timed-started', this.showTimedEffect, this)
             gameScene.events.off('powerup-timed-ended', this.hideTimedEffect, this)
-            gameScene.events.off('powerup-shield-absorbed', this.showShieldAbsorbed, this)
             gameScene.events.off('bombs-changed', this.updateBombs, this)
             gameScene.events.off('powerup-modifiers-changed', this.updateModifiers, this)
             this.timedEffectUIs.clear()
+            this.livesIcons.forEach(icon => icon.destroy())
+            this.livesIcons = []
+            this.livesOverflowText?.destroy()
+            this.livesContainer?.destroy()
+            this.statContainers.forEach(container => container.destroy())
+            this.statContainers.clear()
+            this.statSegments.clear()
         })
     }
 
@@ -120,105 +107,115 @@ export class UIScene extends Scene {
     }
 
     private updateLives(data: { lives: number }) {
-        this.livesText.setText(`Lives: ${data.lives}`)
+        this.createLivesDisplay(data.lives)
     }
 
     private updateBombs(data: { bombs: number }) {
-        const maxBom = POWERUP_CONFIG.bombs.maxBombs
-        const filledBom = '●'.repeat(Math.min(data.bombs, maxBom))
-        const emptyBom = '○'.repeat(Math.max(0, maxBom - data.bombs))
-        this.bombText.setText(`BOM: ${filledBom}${emptyBom}`)
+        this.updateStatBar('bombs', data.bombs, UI_CONFIG.hud.statBar.stats.bombs.color)
     }
 
     private updateModifiers(modifiers: PermanentModifiers) {
-        const maxDmg = POWERUP_CONFIG.permanent.maxDamageStacks
+        const stats = UI_CONFIG.hud.statBar.stats
+
         const dmgStacks = modifiers.damageMultiplier > 1
             ? Math.round(Math.log(modifiers.damageMultiplier) / Math.log(POWERUP_CONFIG.permanent.damageMultiplier))
             : 0
-        const filledDmg = '●'.repeat(dmgStacks)
-        const emptyDmg = '○'.repeat(maxDmg - dmgStacks)
-        this.damageText.setText(`DMG: ${filledDmg}${emptyDmg}`)
+        this.updateStatBar('damage', dmgStacks, stats.damage.color)
+        this.updateStatBar('fireRate', modifiers.fireRateBonuses, stats.fireRate.color)
+        this.updateStatBar('speed', modifiers.speedBonuses, stats.speed.color)
+    }
 
-        const maxFr = POWERUP_CONFIG.permanent.maxFireRateStacks
-        const frStacks = modifiers.fireRateBonuses
-        const filledFr = '●'.repeat(Math.min(frStacks, maxFr))
-        const emptyFr = '○'.repeat(Math.max(0, maxFr - frStacks))
-        this.fireRateText.setText(`FR: ${filledFr}${emptyFr}`)
+    private createLivesDisplay(lives: number): void {
+        const config = UI_CONFIG.hud.lives
 
-        const maxSpd = POWERUP_CONFIG.permanent.maxSpeedBonuses
-        const spdStacks = modifiers.speedBonuses
-        const filledSpd = '●'.repeat(Math.min(spdStacks, maxSpd))
-        const emptySpd = '○'.repeat(Math.max(0, maxSpd - spdStacks))
-        this.speedText.setText(`SPD: ${filledSpd}${emptySpd}`)
+        this.livesIcons.forEach(icon => icon.destroy())
+        this.livesIcons = []
+        this.livesOverflowText?.destroy()
+        this.livesOverflowText = null
+
+        const displayCount = Math.min(lives, config.maxIconDisplay)
+        const iconSpacing = config.iconSize + config.iconGap
+
+        for (let i = 0; i < displayCount; i++) {
+            const icon = this.add.image(i * iconSpacing, 0, 'icon-life')
+            icon.setDisplaySize(config.iconSize, config.iconSize)
+            icon.setOrigin(0, 0)
+            this.livesContainer.add(icon)
+            this.livesIcons.push(icon)
+        }
+
+        if (lives > config.maxIconDisplay) {
+            const overflowX = displayCount * iconSpacing + config.overflowTextGap
+            this.livesOverflowText = this.add.text(overflowX, 0, `×${lives - config.maxIconDisplay + 1}`, {
+                fontFamily: 'KenVector Future',
+                fontSize: '14px',
+                color: '#ffffff'
+            })
+            this.livesContainer.add(this.livesOverflowText)
+        }
+    }
+
+    private createStatBar(key: string, iconKey: string, x: number, maxSegments: number): void {
+        const config = UI_CONFIG.hud.statBar
+        const container = this.add.container(x, config.y)
+
+        const icon = this.add.image(0, 0, iconKey)
+        icon.setDisplaySize(config.iconSize, config.iconSize)
+        icon.setOrigin(0, 0.5)
+        container.add(icon)
+
+        const segments: Phaser.GameObjects.Rectangle[] = []
+        const barStartX = config.iconSize + config.iconToBarGap
+
+        for (let i = 0; i < maxSegments; i++) {
+            const segmentX = barStartX + i * (config.segmentWidth + config.segmentGap)
+            const segment = this.add.rectangle(segmentX, 0, config.segmentWidth, config.barHeight, config.emptyColor)
+            segment.setOrigin(0, 0.5)
+            container.add(segment)
+            segments.push(segment)
+        }
+
+        this.statContainers.set(key, container)
+        this.statSegments.set(key, segments)
+    }
+
+    private updateStatBar(key: string, filledCount: number, fillColor: number): void {
+        const segments = this.statSegments.get(key)
+        if (!segments) return
+
+        const emptyColor = UI_CONFIG.hud.statBar.emptyColor
+        segments.forEach((segment, index) => {
+            segment.setFillStyle(index < filledCount ? fillColor : emptyColor)
+        })
     }
 
     private handleWaveStarted(data: { currentWave: number }) {
         this.waveText.setText(`Wave ${data.currentWave}`)
 
         if (data.currentWave > 1) {
-            this.showWaveAnnouncement(data.currentWave)
-        }
-    }
-
-    private showWaveAnnouncement(waveNumber: number) {
-        if (this.waveAnnouncement) {
-            this.waveAnnouncement.destroy()
-        }
-
-        this.waveAnnouncement = this.add.text(
-            this.scale.width / 2,
-            this.scale.height / 2 - UI_CONFIG.announcements.waveOffsetY,
-            `WAVE ${waveNumber}`,
-            { fontSize: '48px', color: '#ffff00' }
-        ).setOrigin(0.5).setAlpha(0)
-
-        this.tweens.add({
-            targets: this.waveAnnouncement,
-            alpha: { from: 0, to: 1 },
-            scale: { from: UI_CONFIG.announcements.waveScaleFrom, to: UI_CONFIG.announcements.waveScaleTo },
-            duration: UI_CONFIG.announcements.waveAnimDuration,
-            ease: 'Power2',
-            yoyo: true,
-            hold: UI_CONFIG.announcements.waveHoldDuration,
-            onComplete: () => {
-                this.waveAnnouncement?.destroy()
-                this.waveAnnouncement = null
-            }
-        })
-    }
-
-    private showPowerUpCollected(data: { type: PowerUpType }) {
-        const name = this.getPowerUpDisplayName(data.type)
-        const color = this.getPowerUpColor(data.type)
-
-        const baseY = this.scale.height / 2 + UI_CONFIG.announcements.powerUpBaseOffsetY
-        const yOffset = this.activeAnnouncements.length * UI_CONFIG.announcements.powerUpStackSpacing
-
-        const text = this.add.text(
-            this.scale.width / 2,
-            baseY + yOffset,
-            name,
-            { fontSize: '20px', color: color, fontStyle: 'bold' }
-        ).setOrigin(0.5).setAlpha(0)
-
-        this.activeAnnouncements.push(text)
-
-        this.tweens.add({
-            targets: text,
-            alpha: { from: 0, to: 1 },
-            y: baseY + yOffset - UI_CONFIG.announcements.powerUpAnimOffsetY,
-            duration: UI_CONFIG.announcements.powerUpAnimDuration,
-            ease: 'Power2',
-            yoyo: true,
-            hold: UI_CONFIG.announcements.powerUpHoldDuration,
-            onComplete: () => {
-                const index = this.activeAnnouncements.indexOf(text)
-                if (index > -1) {
-                    this.activeAnnouncements.splice(index, 1)
+            this.tweens.add({
+                targets: this.waveText,
+                scale: { from: 1, to: 1.8 },
+                duration: 200,
+                ease: 'Back.easeOut',
+                yoyo: true,
+                hold: 100
+            })
+            let previousColor: string | null = null
+            this.tweens.addCounter({
+                from: 0,
+                to: 100,
+                duration: 500,
+                onUpdate: (tween) => {
+                    const value = tween.getValue() ?? 0
+                    const newColor = value < 50 ? '#ffff00' : '#ffffff'
+                    if (newColor !== previousColor) {
+                        this.waveText.setStyle({ color: newColor })
+                        previousColor = newColor
+                    }
                 }
-                text.destroy()
-            }
-        })
+            })
+        }
     }
 
     private showTimedEffect(data: { type: PowerUpType; duration: number }) {
@@ -234,6 +231,7 @@ export class UIScene extends Scene {
 
         const container = this.add.container(0, 0)
         const label = this.add.text(0, -8, this.getPowerUpShortName(data.type), {
+            fontFamily: 'KenVector Future',
             fontSize: '10px',
             color: this.getPowerUpColor(data.type)
         }).setOrigin(0.5)
@@ -288,43 +286,6 @@ export class UIScene extends Scene {
         effects.forEach((ui, index) => {
             ui.container.x = startX + index * spacing
         })
-    }
-
-    private showShieldAbsorbed() {
-        this.hideTimedEffect({ type: PowerUpType.SHIELD })
-
-        const text = this.add.text(
-            this.scale.width / 2,
-            this.scale.height / 2 + UI_CONFIG.announcements.shieldBlockedOffsetY,
-            'SHIELD BLOCKED!',
-            { fontSize: '16px', color: '#00ffff', fontStyle: 'bold' }
-        ).setOrigin(0.5).setAlpha(0)
-
-        this.tweens.add({
-            targets: text,
-            alpha: { from: 0, to: 1 },
-            scale: { from: 1, to: UI_CONFIG.announcements.shieldBlockedScaleTo },
-            duration: UI_CONFIG.announcements.shieldBlockedDuration,
-            yoyo: true,
-            hold: UI_CONFIG.announcements.shieldBlockedHoldDuration,
-            onComplete: () => text.destroy()
-        })
-    }
-
-    private getPowerUpDisplayName(type: PowerUpType): string {
-        const names: Record<PowerUpType, string> = {
-            [PowerUpType.EXTRA_LIFE]: '+1 LIFE',
-            [PowerUpType.FIRE_RATE_UP]: 'FIRE RATE+',
-            [PowerUpType.DAMAGE_UP]: 'DAMAGE+',
-            [PowerUpType.SPREAD_SHOT]: 'SPREAD SHOT',
-            [PowerUpType.SPEED_UP]: 'SPEED+',
-            [PowerUpType.INVINCIBILITY]: 'INVINCIBLE',
-            [PowerUpType.SHIELD]: 'SHIELD',
-            [PowerUpType.MAGNET]: 'MAGNET',
-            [PowerUpType.SCORE_MULTIPLIER]: '2X SCORE',
-            [PowerUpType.BOMB]: '+1 BOMB',
-        }
-        return names[type] || type
     }
 
     private getPowerUpShortName(type: PowerUpType): string {
@@ -383,7 +344,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 - UI_CONFIG.gameOver.textOffsetY,
             'GAME OVER',
-            { fontSize: '32px', color: '#ff0000' }
+            { fontFamily: 'KenVector Future', fontSize: '32px', color: '#ff0000' }
         ).setOrigin(0.5)
 
         if (isNewHighScore) {
@@ -391,7 +352,7 @@ export class UIScene extends Scene {
                 this.scale.width / 2,
                 this.scale.height / 2 + UI_CONFIG.gameOver.highScoreOffsetY,
                 'NEW HIGH SCORE!',
-                { fontSize: '18px', color: '#ffff00' }
+                { fontFamily: 'KenVector Future', fontSize: '18px', color: '#ffff00' }
             ).setOrigin(0.5)
         }
 
@@ -399,7 +360,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 + UI_CONFIG.gameOver.scoreOffsetY,
             `High Score: ${highScore}`,
-            { fontSize: '16px', color: '#ffffff' }
+            { fontFamily: 'KenVector Future', fontSize: '16px', color: '#ffffff' }
         ).setOrigin(0.5)
 
         const restartButton = this.add.text(
@@ -443,7 +404,7 @@ export class UIScene extends Scene {
             this.scale.width / 2,
             this.scale.height / 2 - UI_CONFIG.pause.textOffsetY,
             'PAUSED',
-            { fontSize: '32px', color: '#ffffff' }
+            { fontFamily: 'KenVector Future', fontSize: '32px', color: '#ffffff' }
         ).setOrigin(0.5)
 
         const resumeButton = this.add.text(
@@ -479,7 +440,7 @@ export class UIScene extends Scene {
                 '1-Life  2-Fire  3-Dmg  4-Spread  5-Speed\n' +
                 '6-Invincible  7-Shield  8-Magnet\n' +
                 '9-Score 2x  0-Bomb  B-Use Bomb',
-                { fontSize: '10px', color: '#888888', align: 'center' }
+                { fontFamily: 'KenVector Future', fontSize: '10px', color: '#888888', align: 'center' }
             ).setOrigin(0.5, 0)
         }
 

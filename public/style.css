@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'KenVector Future';
+    src: url('/assets/fonts/kenvector_future_thin.ttf') format('truetype');
+    font-display: block;
+}
+
 body {
     margin: 0;
     padding: 0;
