@@ -208,15 +208,8 @@ export const ANIMATION_CONFIG = {
 }
 
 export const TOUCH_CONTROLS_CONFIG = {
-    movementZone: {
-        xEnd: 0.5,
-    },
-    movement: {
-        deadZone: 5,
-    },
+    doubleTapThreshold: 300,
     buttons: {
-        fire: { x: 300, y: 540, radius: 40 },
-        bomb: { x: 300, y: 460, radius: 30 },
         pause: { x: 330, y: 70, radius: 20 },
     },
     style: {
@@ -225,13 +218,10 @@ export const TOUCH_CONTROLS_CONFIG = {
         strokeColor: 0xffffff,
         strokeAlpha: 0.8,
         strokeWidth: 2,
-        activeColor: 0x00ff00,
-        activeAlpha: 0.8,
-        touchIndicator: {
-            outerRadius: 50,
-            innerRadius: 20,
-            color: 0xffffff,
-            alpha: 0.3,
-        },
+    },
+    bounds: {
+        paddingX: 20,
+        minY: 100,
+        maxYOffset: 50,
     },
 }

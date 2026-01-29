@@ -115,13 +115,13 @@ export class GameScene extends Scene {
 
     this._inputManager = new InputManager(this)
 
+    this.player = new Player(this, this._inputManager)
+
     if (this._inputManager.isTouchDevice()) {
-      this._touchControlsSystem = new TouchControlsSystem(this, this._inputManager)
+      this._touchControlsSystem = new TouchControlsSystem(this, this.player)
     }
 
     this.events.on('pause-button-pressed', this.togglePause, this)
-
-    this.player = new Player(this, this._inputManager)
 
     this._playerPowerUpState = new PlayerPowerUpState(this)
     this.events.on('ui-ready', () => {
