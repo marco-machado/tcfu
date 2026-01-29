@@ -211,6 +211,8 @@ export const TOUCH_CONTROLS_CONFIG = {
     doubleTapThreshold: 300,
     buttons: {
         pause: { x: 330, y: 70, radius: 20 },
+        left: { x: 50, y: 420, radius: 40 },
+        right: { x: 310, y: 420, radius: 40 },
     },
     style: {
         fillColor: 0x333333,

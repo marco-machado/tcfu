@@ -118,7 +118,7 @@ export class GameScene extends Scene {
     this.player = new Player(this, this._inputManager)
 
     if (this._inputManager.isTouchDevice()) {
-      this._touchControlsSystem = new TouchControlsSystem(this, this.player)
+      this._touchControlsSystem = new TouchControlsSystem(this, this.player, this._inputManager)
     }
 
     this.events.on('pause-button-pressed', this.togglePause, this)
