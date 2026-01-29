@@ -2,6 +2,7 @@ import { Scene } from "phaser"
 import { BACKGROUND_CONFIG, GAME_CONFIG, GAME_STATE_CONFIG } from "../config/GameConfig"
 import { Player } from "../entities/Player"
 import { PowerUp, PowerUpType } from "../entities/powerups"
+import { EnemyMovementSystem } from "../systems/EnemyMovementSystem"
 import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem"
 import { EnemyWeaponsSystem } from "../systems/EnemyWeaponsSystem"
 import { GameStateSystem } from "../systems/GameStateSystem"
@@ -21,6 +22,7 @@ export class GameScene extends Scene {
   private _playerWeaponSystem: PlayerWeaponsSystem & ISystem
   private _enemyWeaponsSystem: EnemyWeaponsSystem & ISystem
   private _enemySpawnerSystem: EnemySpawnerSystem & ISystem
+  private _enemyMovementSystem: EnemyMovementSystem & ISystem
   private _gameStateSystem: GameStateSystem & ISystem
   private _waveSystem: WaveSystem & ISystem
   private _playerPowerUpState: PlayerPowerUpState
@@ -131,6 +133,7 @@ export class GameScene extends Scene {
     )
     this._waveSystem = new WaveSystem(this)
     this._enemySpawnerSystem = new EnemySpawnerSystem(this, this.enemiesGroup)
+    this._enemyMovementSystem = new EnemyMovementSystem(this, this.enemiesGroup)
     this._enemyWeaponsSystem = new EnemyWeaponsSystem(
       this,
       this.enemiesGroup,
@@ -244,6 +247,9 @@ export class GameScene extends Scene {
 
     if (this._enemySpawnerSystem) {
       this._enemySpawnerSystem.destroy()
+    }
+    if (this._enemyMovementSystem) {
+      this._enemyMovementSystem.destroy()
     }
     if (this._playerWeaponSystem) {
       this._playerWeaponSystem.destroy()
@@ -370,6 +376,14 @@ export class GameScene extends Scene {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error destroying enemy spawner system:", error)
+      }
+    }
+    if (this._enemyMovementSystem && this._enemyMovementSystem.destroy) {
+      try {
+        this._enemyMovementSystem.destroy()
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error destroying enemy movement system:", error)
       }
     }
     if (this._enemyWeaponsSystem && this._enemyWeaponsSystem.destroy) {

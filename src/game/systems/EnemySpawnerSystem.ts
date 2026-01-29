@@ -101,6 +101,8 @@ export class EnemySpawnerSystem implements ISystem {
         if (enemy.body && enemy.body instanceof Phaser.Physics.Arcade.Body) {
           enemy.body.setVelocityY(this.enemyVelocity)
         }
+
+        this.scene.events.emit('enemy-spawned', enemy)
       }
     }
   }
