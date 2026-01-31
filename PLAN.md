@@ -24,7 +24,7 @@
 - High score persistence
 
 ### Known Issues
-- [ ] Object pooling referenced but not fully implemented
+- [ ] Object pooling not implemented
 
 ---
 

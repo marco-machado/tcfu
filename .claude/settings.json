@@ -1,5 +1,20 @@
 {
-  "enabledPlugins": {
-    "code-review@claude-plugins-official": true
+  "enabledPlugins": {},
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx eslint --fix --quiet \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "npm run typecheck 2>&1 | head -20"
+          }
+        ]
+      }
+    ]
   }
 }

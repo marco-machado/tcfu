@@ -38,6 +38,12 @@ Four-scene system:
 3. **GameScene**: Main gameplay - spawns entities, manages systems, handles collisions, pause/bomb controls
 4. **UIScene**: HUD overlay launched alongside GameScene with multiple display sections
 
+### Input System
+
+- **InputManager** (`src/game/input/InputManager.ts`): Unified input handling for keyboard and touch, provides `getCursorState()` returning directional + space input from either source
+- **TouchControlsSystem** (`src/game/systems/TouchControlsSystem.ts`): Mobile touch controls with drag-to-move player, double-tap to fire, pause/bomb buttons
+- Touch configuration in `TOUCH_CONTROLS_CONFIG` (GameConfig.ts): button positions, double-tap threshold, visual style
+
 ### Entity System
 
 #### Player
@@ -59,7 +65,7 @@ Base class: `src/game/entities/powerups/PowerUp.ts` - Three categories: `INSTANT
 **Permanent (Stackable):**
 | Type | Effect | Max Stacks |
 |------|--------|------------|
-| FireRateUp | Reduces cooldown 150ms/stack | 4 (min 200ms) |
+| FireRateUp | Reduces cooldown 200ms/stack | 3 (min 200ms) |
 | DamageUp | 1.5x damage multiplier/stack | 3 |
 | SpreadShot | 3-angle spread pattern (-8, 0, +8 degrees) | 1 |
 | SpeedUp | Adds movement speed bonus | 3 |
@@ -128,6 +134,7 @@ Scene-based Phaser events coordinate between systems:
 
 ### Game Controls
 
+**Keyboard:**
 | Key | Action |
 |-----|--------|
 | Arrow Keys | Move player |
@@ -137,20 +144,31 @@ Scene-based Phaser events coordinate between systems:
 | R | Restart (game over screen) |
 | M | Main menu (pause/game over) |
 
+**Touch (mobile):**
+| Gesture | Action |
+|---------|--------|
+| Drag anywhere | Move player (follows touch offset) |
+| Double-tap | Fire weapon |
+| Pause button (top-right) | Pause/Resume game |
+| Left button (bottom-left) | Activate bomb |
+| Right button (bottom-right) | Fire weapon |
+
 Debug keys (when `GAME_CONFIG.debug = true`): Keys 1-0 spawn specific powerups for testing
 
 ### UI Elements
 
-**HUD (Top Row):**
-- Lives (top-left): `Lives: 3`
+**HUD (Top Area):**
 - Wave (top-center): `Wave 1`
 - Score (top-right): `Score: 0`
 
-**Powerup Status Row (Second Row):**
-- Bombs: `BOM: ###` (filled/empty circles for 0-3)
-- Damage: `DMG: ###` (stack indicators)
-- Fire Rate: `FR: ####` (stack indicators)
-- Speed: `SPD: ###` (stack indicators)
+**Stat Bars (Left Side, Vertical Layout):**
+- Lives: Ship icons (max 5 displayed, then `+N` overflow text)
+- Bombs: Orange segmented bar (3 segments max)
+- Damage: Red segmented bar (3 segments max)
+- Fire Rate: Yellow/orange segmented bar (3 segments max)
+- Speed: Cyan segmented bar (3 segments max)
+
+Each stat uses icon + segmented bar, configured in `UI_CONFIG.hud.statBar`
 
 **Timed Effects Display (Bottom):**
 - Horizontal bar for each active timed effect
@@ -176,6 +194,10 @@ Debug keys (when `GAME_CONFIG.debug = true`): Keys 1-0 spawn specific powerups f
 - Spritesheets configured in `public/assets/data/assets.json` (frameWidth/frameHeight)
 - Animations defined in `public/assets/data/animations.json` (key, frames, frameRate, repeat)
 - Asset keys use kebab-case
+
+### Utilities
+
+- **HighScoreManager** (`src/game/utils/HighScoreManager.ts`): LocalStorage persistence for high scores
 
 ## Code Style
 

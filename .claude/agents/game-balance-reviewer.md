@@ -1,3 +1,8 @@
+---
+name: Game Balance Reviewer
+description: Reviews game balance changes to ensure difficulty progression remains fair and engaging
+---
+
 # Game Balance Reviewer
 
 Reviews game balance changes to ensure difficulty progression remains fair and engaging.
