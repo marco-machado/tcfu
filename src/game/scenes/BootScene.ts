@@ -1,5 +1,5 @@
 import { Scene } from "phaser"
-import { GAME_CONFIG } from "../config/GameConfig"
+import { BOOT_CONFIG, GAME_CONFIG } from "../config/GameConfig"
 
 export class BootScene extends Scene {
     private background?: Phaser.GameObjects.TileSprite
@@ -48,29 +48,27 @@ export class BootScene extends Scene {
     }
 
     #createLoadingBar() {
-        const barWidth = 200
-        const barHeight = 10
-        const x = (GAME_CONFIG.width - barWidth) / 2
-        const y = GAME_CONFIG.height - 60
+        const { width, height, offsetFromBottom, backgroundColor } = BOOT_CONFIG.loadingBar
+        const x = (GAME_CONFIG.width - width) / 2
+        const y = GAME_CONFIG.height - offsetFromBottom
 
         this.loadingBar = this.add.graphics()
-        this.loadingBar.fillStyle(0x333333, 1)
-        this.loadingBar.fillRect(x, y, barWidth, barHeight)
+        this.loadingBar.fillStyle(backgroundColor, 1)
+        this.loadingBar.fillRect(x, y, width, height)
     }
 
     #updateLoadingBar(progress: number) {
         if (!this.loadingBar) return
 
-        const barWidth = 200
-        const barHeight = 10
-        const x = (GAME_CONFIG.width - barWidth) / 2
-        const y = GAME_CONFIG.height - 60
+        const { width, height, offsetFromBottom, backgroundColor, fillColor } = BOOT_CONFIG.loadingBar
+        const x = (GAME_CONFIG.width - width) / 2
+        const y = GAME_CONFIG.height - offsetFromBottom
 
         this.loadingBar.clear()
-        this.loadingBar.fillStyle(0x333333, 1)
-        this.loadingBar.fillRect(x, y, barWidth, barHeight)
-        this.loadingBar.fillStyle(0xffffff, 1)
-        this.loadingBar.fillRect(x, y, barWidth * progress, barHeight)
+        this.loadingBar.fillStyle(backgroundColor, 1)
+        this.loadingBar.fillRect(x, y, width, height)
+        this.loadingBar.fillStyle(fillColor, 1)
+        this.loadingBar.fillRect(x, y, width * progress, height)
     }
 
     #createAnimations() {

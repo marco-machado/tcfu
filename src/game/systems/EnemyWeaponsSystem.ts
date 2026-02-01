@@ -67,7 +67,7 @@ export class EnemyWeaponsSystem implements ISystem {
     }
 
     private assignEnemyId(enemy: Phaser.GameObjects.GameObject): number {
-        const id = Math.random() * 1000000
+        const id = Math.random() * WEAPON_CONFIG.enemy.uniqueIdRange
         ;(enemy as any).__enemyId = id
         return id
     }
