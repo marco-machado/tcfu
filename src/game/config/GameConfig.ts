@@ -28,6 +28,7 @@ export const PLAYER_CONFIG = {
 }
 
 export const ENEMY_CONFIG = {
+    initialY: -150,
     klaedScout: {
         body: { width: 24, height: 26, offsetX: -12, offsetY: -18 },
     },

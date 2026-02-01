@@ -1,6 +1,8 @@
+import { ENEMY_CONFIG } from '../config/GameConfig'
+
 export class Enemy extends Phaser.GameObjects.Container {
     constructor(scene: Phaser.Scene) {
-        super(scene, 0, -150);
+        super(scene, 0, ENEMY_CONFIG.initialY)
 
         // Add this container to the scene
         this.scene.add.existing(this);
