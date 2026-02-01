@@ -1,0 +1,1 @@
+Specify -> Clarify -> Plan -> Checklist -> Tasks -> Analyze -> Implement
