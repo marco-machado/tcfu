@@ -69,7 +69,7 @@ Players receive clear visual feedback when they damage enemies, helping them und
 - **FR-001**: Enemies MUST have a health point value that determines how much damage they can take before being destroyed
 - **FR-002**: Player projectiles MUST deal damage to enemies instead of instantly destroying them
 - **FR-003**: Enemies MUST be destroyed when their health reaches zero or below
-- **FR-004**: The damage multiplier powerup MUST increase the damage dealt by player projectiles
+- **FR-004**: The damage multiplier powerup MUST increase the damage dealt by player projectiles. Final damage = floor(base_damage × multiplier), rounding down fractional values.
 - **FR-005**: Enemy health MUST scale with wave progression to maintain challenge
 - **FR-006**: Enemies MUST display a visual hit effect when taking damage but surviving
 - **FR-007**: The bomb/screen-clear ability MUST instantly destroy all enemies regardless of their remaining health
@@ -81,7 +81,7 @@ Players receive clear visual feedback when they damage enemies, helping them und
 
 - **Enemy Health**: A numeric value representing how much damage an enemy can absorb. Each enemy type defines a base health value. Current health is tracked per enemy instance.
 - **Damage Value**: The amount of health points removed when a projectile hits an enemy. Base damage is 1, modified by the damage multiplier powerup.
-- **Wave Health Scaling**: Linear formula: `enemy_health = base_health + (wave_number - 1)`. Wave 1 = base health, Wave 10 = base health + 9.
+- **Wave Health Scaling**: Linear formula: `enemy_health = base_health + (wave_number - 1)` where `base_health` is defined per enemy type (e.g., KlaedScout = 2). Wave 1 = base health, Wave 10 = base health + 9.
 - **Damage Calculation**: Final damage = `floor(base_damage × damage_multiplier)`. Fractional values always round down.
 
 ## Success Criteria *(mandatory)*
@@ -92,7 +92,7 @@ Players receive clear visual feedback when they damage enemies, helping them und
 - **SC-002**: Players can visually distinguish between damaging an enemy and destroying an enemy
 - **SC-003**: Enemies on Wave 10 require noticeably more hits to destroy than enemies on Wave 1
 - **SC-004**: All existing powerups continue to function as documented (fire rate, spread shot, damage multiplier, etc.)
-- **SC-005**: Game performance remains smooth with 20+ enemies on screen, each tracking health state
+- **SC-005**: Game maintains 60 FPS with 20+ enemies on screen, each tracking health state (per constitution Performance First principle)
 - **SC-006**: Bomb ability clears all enemies in under 0.5 seconds regardless of their health values
 
 ## Clarifications

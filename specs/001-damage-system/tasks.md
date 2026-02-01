@@ -69,7 +69,7 @@
 
 - [ ] T010 [US2] Define BASE_HEALTH constant (2) in KlaedScout class in src/game/entities/KlaedScout.ts
 - [ ] T011 [US2] Add import for ENEMY_HEALTH_CONFIG in src/game/systems/EnemySpawnerSystem.ts
-- [ ] T012 [US2] Call enemy.initHealth() with baseHealth and currentWave after enemy creation in EnemySpawnerSystem.spawnFormation() in src/game/systems/EnemySpawnerSystem.ts
+- [ ] T012 [US2] Call enemy.initHealth() with baseHealth and currentWave after enemy creation in EnemySpawnerSystem.spawnFormation() (wave number available via this.currentWave property set by wave-started event listener) in src/game/systems/EnemySpawnerSystem.ts
 
 **Checkpoint**: Enemy health now scales with wave number - difficulty progression functional
 
