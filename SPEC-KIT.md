@@ -6,6 +6,8 @@
 
 ## Plan
 
+- Run the command and review generated documentation.
+
 ## Checklist
 
 ## Tasks
