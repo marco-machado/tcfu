@@ -23,7 +23,7 @@
 
 **Purpose**: Add configuration constants needed by all user stories
 
-- [ ] T001 Add ENEMY_HEALTH_CONFIG to src/game/config/GameConfig.ts with baseHealth, scaling, and hitFlash settings
+- [X] T001 Add ENEMY_HEALTH_CONFIG to src/game/config/GameConfig.ts with baseHealth, scaling, and hitFlash settings
 
 ---
 
@@ -33,9 +33,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Add health and maxHealth protected properties to Enemy base class in src/game/entities/Enemy.ts
-- [ ] T003 Add initHealth(baseHealth, waveNumber) method to Enemy class in src/game/entities/Enemy.ts
-- [ ] T004 Add isDead() method to Enemy class returning health <= 0 in src/game/entities/Enemy.ts
+- [X] T002 Add health and maxHealth protected properties to Enemy base class in src/game/entities/Enemy.ts
+- [X] T003 Add initHealth(baseHealth, waveNumber) method to Enemy class in src/game/entities/Enemy.ts
+- [X] T004 Add isDead() method to Enemy class returning health <= 0 in src/game/entities/Enemy.ts
 
 **Checkpoint**: Enemy health infrastructure ready - user story implementation can now begin
 
@@ -49,11 +49,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Add takeDamage(amount) method to Enemy class that reduces health in src/game/entities/Enemy.ts
-- [ ] T006 [US1] Update projectile-enemy collision handler in src/game/scenes/GameScene.ts to use damage system instead of instant destroy
-- [ ] T007 [US1] Modify collision handler to call enemy.takeDamage() with Math.floor(projectile.damage) in src/game/scenes/GameScene.ts
-- [ ] T008 [US1] Modify collision handler to only destroy enemy and emit enemy-destroyed event when enemy.isDead() returns true in src/game/scenes/GameScene.ts
-- [ ] T009 [US1] Add import for Enemy type in GameScene.ts if not already present
+- [X] T005 [US1] Add takeDamage(amount) method to Enemy class that reduces health in src/game/entities/Enemy.ts
+- [X] T006 [US1] Update projectile-enemy collision handler in src/game/scenes/GameScene.ts to use damage system instead of instant destroy
+- [X] T007 [US1] Modify collision handler to call enemy.takeDamage() with Math.floor(projectile.damage) in src/game/scenes/GameScene.ts
+- [X] T008 [US1] Modify collision handler to only destroy enemy and emit enemy-destroyed event when enemy.isDead() returns true in src/game/scenes/GameScene.ts
+- [X] T009 [US1] Add import for Enemy type in GameScene.ts if not already present
 
 **Checkpoint**: Enemies now survive multiple hits based on health - core damage system functional
 
@@ -67,9 +67,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Define BASE_HEALTH constant (2) in KlaedScout class in src/game/entities/KlaedScout.ts
-- [ ] T011 [US2] Add import for ENEMY_HEALTH_CONFIG in src/game/systems/EnemySpawnerSystem.ts
-- [ ] T012 [US2] Call enemy.initHealth() with baseHealth and currentWave after enemy creation in EnemySpawnerSystem.spawnFormation() (wave number available via this.currentWave property set by wave-started event listener) in src/game/systems/EnemySpawnerSystem.ts
+- [X] T010 [US2] Define BASE_HEALTH constant (2) in KlaedScout class in src/game/entities/KlaedScout.ts
+- [X] T011 [US2] Add import for ENEMY_HEALTH_CONFIG in src/game/systems/EnemySpawnerSystem.ts
+- [X] T012 [US2] Call enemy.initHealth() with baseHealth and currentWave after enemy creation in EnemySpawnerSystem.spawnFormation() (wave number available via this.currentWave property set by wave-started event listener) in src/game/systems/EnemySpawnerSystem.ts
 
 **Checkpoint**: Enemy health now scales with wave number - difficulty progression functional
 
@@ -83,9 +83,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Add import for ENEMY_HEALTH_CONFIG in src/game/entities/Enemy.ts
-- [ ] T014 [US3] Add triggerHitFlash() method to Enemy class that tints child sprites white for configured duration in src/game/entities/Enemy.ts
-- [ ] T015 [US3] Update takeDamage() to call triggerHitFlash() when enemy survives (isDead() returns false) in src/game/entities/Enemy.ts
+- [X] T013 [US3] Add import for ENEMY_HEALTH_CONFIG in src/game/entities/Enemy.ts
+- [X] T014 [US3] Add triggerHitFlash() method to Enemy class that tints child sprites white for configured duration in src/game/entities/Enemy.ts
+- [X] T015 [US3] Update takeDamage() to call triggerHitFlash() when enemy survives (isDead() returns false) in src/game/entities/Enemy.ts
 
 **Checkpoint**: Visual hit feedback now appears when enemies survive damage
 

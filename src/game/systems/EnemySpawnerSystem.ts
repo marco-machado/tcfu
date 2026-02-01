@@ -95,6 +95,7 @@ export class EnemySpawnerSystem implements ISystem {
 
         const enemy = new KlaedScout(this.scene)
         enemy.setPosition(x, y)
+        enemy.initHealth(KlaedScout.BASE_HEALTH, this.currentWave)
 
         this.enemiesGroup.add(enemy)
 

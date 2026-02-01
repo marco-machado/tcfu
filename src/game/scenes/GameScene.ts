@@ -1,7 +1,9 @@
 import { Scene } from "phaser"
 import { BACKGROUND_CONFIG, GAME_CONFIG, GAME_STATE_CONFIG } from "../config/GameConfig"
+import { Enemy } from "../entities/Enemy"
 import { Player } from "../entities/Player"
 import { PowerUp, PowerUpType } from "../entities/powerups"
+import { PlayerProjectile } from "../entities/weapons/PlayerProjectile"
 import { InputManager } from "../input/InputManager"
 import { EnemySpawnerSystem } from "../systems/EnemySpawnerSystem"
 import { EnemyWeaponsSystem } from "../systems/EnemyWeaponsSystem"
@@ -178,15 +180,22 @@ export class GameScene extends Scene {
       this.enemiesGroup,
       (obj1, obj2) => {
         try {
-          const enemyX = 'x' in obj2 ? obj2.x : 0
-          const enemyY = 'y' in obj2 ? obj2.y : 0
-          obj1.destroy()
-          obj2.destroy()
-          this.events.emit('enemy-destroyed', {
-            points: GAME_STATE_CONFIG.scorePerEnemy,
-            x: enemyX,
-            y: enemyY,
-          })
+          const projectile = obj1 as PlayerProjectile
+          const enemy = obj2 as Enemy
+          const enemyX = enemy.x
+          const enemyY = enemy.y
+
+          enemy.takeDamage(Math.floor(projectile.damage))
+          projectile.destroy()
+
+          if (enemy.isDead()) {
+            enemy.destroy()
+            this.events.emit('enemy-destroyed', {
+              points: GAME_STATE_CONFIG.scorePerEnemy,
+              x: enemyX,
+              y: enemyY,
+            })
+          }
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error("Error in projectile-enemy collision:", error)

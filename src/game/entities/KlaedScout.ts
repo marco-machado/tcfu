@@ -1,7 +1,9 @@
-import { ENEMY_CONFIG } from "../config/GameConfig";
+import { ENEMY_CONFIG, ENEMY_HEALTH_CONFIG } from "../config/GameConfig";
 import { Enemy } from "./Enemy";
 
 export class KlaedScout extends Enemy {
+    static readonly BASE_HEALTH = ENEMY_HEALTH_CONFIG.klaedScout.baseHealth
+
     private ship: Phaser.GameObjects.Sprite;
     private engine: Phaser.GameObjects.Sprite;
 
