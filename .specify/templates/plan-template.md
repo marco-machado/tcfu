@@ -102,3 +102,35 @@ directories captured above]
 |-----------|------------|-------------------------------------|
 | [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
 | [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+
+## Critical Path
+
+> **Phase 2 output**: Identifies the longest dependency chain and bottleneck steps
+
+**Longest Chain**: [Number of steps in critical path]
+
+| Step | Description | Blocks |
+|------|-------------|--------|
+| [step #] | [what it does] | [steps that depend on it] |
+
+**Bottleneck Steps** (blocks 3+ downstream steps):
+- [List any steps that are critical bottlenecks]
+
+## Testing Approach
+
+> **Phase 2 output**: Verification strategy for each component
+
+| Component | Verification Method | Success Criteria |
+|-----------|-------------------|------------------|
+| [entity/integration] | [unit/integration/manual] | [what confirms it works] |
+
+## Delivery Strategy
+
+> **Phase 2 output**: Fill if feature can be delivered incrementally
+
+**MVP Boundary**: [Minimum slice that provides user value, or "N/A - atomic feature"]
+
+**Incremental Slices** (if applicable):
+1. [First deliverable slice]
+2. [Second deliverable slice]
+3. [Full feature]
