@@ -1,5 +1,5 @@
 import { Scene } from "phaser"
-import { GAME_CONFIG, GAME_STATE_CONFIG, POWERUP_CONFIG, UI_CONFIG } from "../config/GameConfig"
+import { ANIMATION_CONFIG, GAME_CONFIG, GAME_STATE_CONFIG, POWERUP_CONFIG, UI_CONFIG } from "../config/GameConfig"
 import { PowerUpType } from "../entities/powerups"
 import { PermanentModifiers } from "../systems/PlayerPowerUpState"
 import { HighScoreManager } from "../utils/HighScoreManager"
@@ -199,22 +199,24 @@ export class UIScene extends Scene {
         this.waveText.setText(`Wave ${data.currentWave}`)
 
         if (data.currentWave > 1) {
+            const { scaleFrom, scaleTo, scaleDuration, scaleHold } = ANIMATION_CONFIG.waveAnnouncement
             this.tweens.add({
                 targets: this.waveText,
-                scale: { from: 1, to: 1.8 },
-                duration: 200,
+                scale: { from: scaleFrom, to: scaleTo },
+                duration: scaleDuration,
                 ease: 'Back.easeOut',
                 yoyo: true,
-                hold: 100
+                hold: scaleHold
             })
             let previousColor: string | null = null
+            const { counterDuration, counterColorThreshold, colorBelowThreshold, colorAboveThreshold } = ANIMATION_CONFIG.waveAnnouncement
             this.tweens.addCounter({
                 from: 0,
                 to: 100,
-                duration: 500,
+                duration: counterDuration,
                 onUpdate: (tween) => {
                     const value = tween.getValue() ?? 0
-                    const newColor = value < 50 ? '#ffff00' : '#ffffff'
+                    const newColor = value < counterColorThreshold ? colorBelowThreshold : colorAboveThreshold
                     if (newColor !== previousColor) {
                         this.waveText.setStyle({ color: newColor })
                         previousColor = newColor
@@ -236,15 +238,15 @@ export class UIScene extends Scene {
         }
 
         const container = this.add.container(0, 0)
-        const label = this.add.text(0, -8, this.getPowerUpShortName(data.type), {
+        const label = this.add.text(0, UI_CONFIG.hud.timedEffectLabelOffsetY, this.getPowerUpShortName(data.type), {
             fontFamily: 'KenVector Future',
             fontSize: '10px',
             color: this.getPowerUpColor(data.type)
         }).setOrigin(0.5)
 
-        const { timedEffectBarWidth, timedEffectBarHeight, timedEffectBarBgColor } = UI_CONFIG.hud
-        const progressBg = this.add.rectangle(0, 4, timedEffectBarWidth, timedEffectBarHeight, timedEffectBarBgColor)
-        const progressBar = this.add.rectangle(0, 4, timedEffectBarWidth, timedEffectBarHeight, this.getPowerUpColorHex(data.type))
+        const { timedEffectBarWidth, timedEffectBarHeight, timedEffectBarBgColor, timedEffectProgressOffsetY } = UI_CONFIG.hud
+        const progressBg = this.add.rectangle(0, timedEffectProgressOffsetY, timedEffectBarWidth, timedEffectBarHeight, timedEffectBarBgColor)
+        const progressBar = this.add.rectangle(0, timedEffectProgressOffsetY, timedEffectBarWidth, timedEffectBarHeight, this.getPowerUpColorHex(data.type))
         progressBar.setOrigin(0.5)
 
         container.add([label, progressBg, progressBar])

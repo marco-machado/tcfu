@@ -5,6 +5,16 @@ export const GAME_CONFIG = {
     debug: true,
 }
 
+export const BOOT_CONFIG = {
+    loadingBar: {
+        width: 200,
+        height: 10,
+        offsetFromBottom: 60,
+        backgroundColor: 0x333333,
+        fillColor: 0xffffff,
+    },
+}
+
 export const PHYSICS_CONFIG = {
     gravity: { x: 0, y: 0 },
     debug: false,
@@ -48,6 +58,7 @@ export const WEAPON_CONFIG = {
         projectileBody: { width: 4, height: 12, offsetX: 0, offsetY: 0 },
         firstShootingWave: 3,
         cleanupOffsetY: 50,
+        uniqueIdRange: 1000000,
     },
 }
 
@@ -162,6 +173,8 @@ export const UI_CONFIG = {
         timedEffectSpacing: 50,
         timedEffectCleanupDuration: 200,
         timedEffectCleanupScale: 0.5,
+        timedEffectLabelOffsetY: -8,
+        timedEffectProgressOffsetY: 4,
         lives: {
             x: 15,
             y: 20,
@@ -230,6 +243,16 @@ export const ANIMATION_CONFIG = {
         flashDuration: 100,
         flashRepeatDivisor: 200,
     },
+    waveAnnouncement: {
+        scaleFrom: 1,
+        scaleTo: 1.8,
+        scaleDuration: 200,
+        scaleHold: 100,
+        counterDuration: 500,
+        counterColorThreshold: 50,
+        colorBelowThreshold: '#ffff00',
+        colorAboveThreshold: '#ffffff',
+    },
 }
 
 export const TOUCH_CONTROLS_CONFIG = {
@@ -250,5 +273,10 @@ export const TOUCH_CONTROLS_CONFIG = {
         paddingX: 20,
         minY: 100,
         maxYOffset: 50,
+    },
+    buttonLabels: {
+        fontSizeThreshold: 25,
+        largeFontSize: '14px',
+        smallFontSize: '10px',
     },
 }

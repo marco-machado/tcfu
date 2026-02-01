@@ -99,7 +99,7 @@ export class TouchControlsSystem implements ISystem {
     private drawButton(x: number, y: number, radius: number, label: string) {
         if (!this.graphics || !this.scene) return
 
-        const { style } = TOUCH_CONTROLS_CONFIG
+        const { style, buttonLabels } = TOUCH_CONTROLS_CONFIG
 
         this.graphics.fillStyle(style.fillColor, style.fillAlpha)
         this.graphics.fillCircle(x, y, radius)
@@ -107,7 +107,7 @@ export class TouchControlsSystem implements ISystem {
         this.graphics.lineStyle(style.strokeWidth, style.strokeColor, style.strokeAlpha)
         this.graphics.strokeCircle(x, y, radius)
 
-        const fontSize = radius > 25 ? '14px' : '10px'
+        const fontSize = radius > buttonLabels.fontSizeThreshold ? buttonLabels.largeFontSize : buttonLabels.smallFontSize
         const text = this.scene.add.text(x, y, label, {
             fontSize,
             color: '#ffffff',
