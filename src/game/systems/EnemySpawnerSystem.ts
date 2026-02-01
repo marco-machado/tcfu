@@ -93,9 +93,12 @@ export class EnemySpawnerSystem implements ISystem {
         const x = startX + col * spacingX
         const y = WAVE_CONFIG.spawner.spawnY - row * spacingY
 
-        const enemy = new KlaedScout(this.scene)
+        const enemy = new KlaedScout(this.scene, this.currentWave)
         enemy.setPosition(x, y)
-        enemy.initHealth(KlaedScout.BASE_HEALTH, this.currentWave)
+
+        if (!enemy.active || enemy.isDead()) {
+          throw new Error(`Enemy spawned in invalid state`)
+        }
 
         this.enemiesGroup.add(enemy)
 

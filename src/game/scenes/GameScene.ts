@@ -159,19 +159,16 @@ export class GameScene extends Scene {
       this.player,
       this.enemiesGroup,
       (_player, enemy) => {
-        try {
-          if (this.player.getIsInvincible() || this._playerPowerUpState.isInvincible()) return
-          if (this._playerPowerUpState.consumeShield()) {
-            enemy.destroy()
-            return
-          }
+        if (this.player.getIsInvincible() || this._playerPowerUpState.isInvincible()) return
+
+        if (this._playerPowerUpState.consumeShield()) {
           enemy.destroy()
-          this.events.emit('player-hit')
-          this.player.triggerInvincibility(GAME_STATE_CONFIG.playerInvincibilityDuration)
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error("Error in player-enemy collision:", error)
+          return
         }
+
+        enemy.destroy()
+        this.events.emit('player-hit')
+        this.player.triggerInvincibility(GAME_STATE_CONFIG.playerInvincibilityDuration)
       }
     )
 
@@ -179,26 +176,21 @@ export class GameScene extends Scene {
       this.playerProjectilesGroup,
       this.enemiesGroup,
       (obj1, obj2) => {
-        try {
-          const projectile = obj1 as PlayerProjectile
-          const enemy = obj2 as Enemy
-          const enemyX = enemy.x
-          const enemyY = enemy.y
+        const projectile = obj1 as PlayerProjectile
+        const enemy = obj2 as Enemy
+        const enemyX = enemy.x
+        const enemyY = enemy.y
 
-          enemy.takeDamage(Math.floor(projectile.damage))
-          projectile.destroy()
+        enemy.takeDamage(Math.floor(projectile.damage))
+        projectile.destroy()
 
-          if (enemy.isDead()) {
-            enemy.destroy()
-            this.events.emit('enemy-destroyed', {
-              points: GAME_STATE_CONFIG.scorePerEnemy,
-              x: enemyX,
-              y: enemyY,
-            })
-          }
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error("Error in projectile-enemy collision:", error)
+        if (enemy.isDead()) {
+          enemy.destroy()
+          this.events.emit('enemy-destroyed', {
+            points: GAME_STATE_CONFIG.scorePerEnemy,
+            x: enemyX,
+            y: enemyY,
+          })
         }
       }
     )
@@ -207,19 +199,16 @@ export class GameScene extends Scene {
       this.player,
       this.enemyProjectilesGroup,
       (_player, projectile) => {
-        try {
-          if (this.player.getIsInvincible() || this._playerPowerUpState.isInvincible()) return
-          if (this._playerPowerUpState.consumeShield()) {
-            projectile.destroy()
-            return
-          }
+        if (this.player.getIsInvincible() || this._playerPowerUpState.isInvincible()) return
+
+        if (this._playerPowerUpState.consumeShield()) {
           projectile.destroy()
-          this.events.emit('player-hit')
-          this.player.triggerInvincibility(GAME_STATE_CONFIG.playerInvincibilityDuration)
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error("Error in enemy-projectile-player collision:", error)
+          return
         }
+
+        projectile.destroy()
+        this.events.emit('player-hit')
+        this.player.triggerInvincibility(GAME_STATE_CONFIG.playerInvincibilityDuration)
       }
     )
 
@@ -227,35 +216,40 @@ export class GameScene extends Scene {
       this.player,
       this.powerUpsGroup,
       (_player, powerUp) => {
-        try {
-          if (powerUp instanceof PowerUp) {
-            powerUp.onCollect(this)
-            this.events.emit('powerup-collected', { type: powerUp.type })
-            powerUp.destroy()
-          }
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error("Error in player-powerup collision:", error)
-        }
+        if (!(powerUp instanceof PowerUp)) return
+
+        powerUp.onCollect(this)
+        this.events.emit('powerup-collected', { type: powerUp.type })
+        powerUp.destroy()
       }
     )
 
     this.events.on('screen-clear-activated', () => {
       const enemies = [...this.enemiesGroup.getChildren()]
       enemies.forEach((enemy) => {
-        const enemyX = 'x' in enemy ? enemy.x : 0
-        const enemyY = 'y' in enemy ? enemy.y : 0
-        enemy.destroy()
-        this.events.emit('enemy-destroyed', {
-          points: GAME_STATE_CONFIG.scorePerEnemy,
-          x: enemyX,
-          y: enemyY,
-        })
+        try {
+          const enemyX = 'x' in enemy ? enemy.x : 0
+          const enemyY = 'y' in enemy ? enemy.y : 0
+          enemy.destroy()
+          this.events.emit('enemy-destroyed', {
+            points: GAME_STATE_CONFIG.scorePerEnemy,
+            x: enemyX,
+            y: enemyY,
+          })
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Error destroying enemy during screen clear:', error)
+        }
       })
 
       const projectiles = [...this.enemyProjectilesGroup.getChildren()]
       projectiles.forEach((projectile) => {
-        projectile.destroy()
+        try {
+          projectile.destroy()
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Error destroying projectile during screen clear:', error)
+        }
       })
     })
   }
@@ -382,88 +376,38 @@ export class GameScene extends Scene {
     }
 
     // Destroy systems
-    if (this._playerWeaponSystem && this._playerWeaponSystem.destroy) {
-      try {
-        this._playerWeaponSystem.destroy();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying player weapon system:", error);
-      }
+    if (this._playerWeaponSystem?.destroy) {
+      this._playerWeaponSystem.destroy()
     }
-    if (this._enemySpawnerSystem && this._enemySpawnerSystem.destroy) {
-      try {
-        this._enemySpawnerSystem.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying enemy spawner system:", error)
-      }
+    if (this._enemySpawnerSystem?.destroy) {
+      this._enemySpawnerSystem.destroy()
     }
-    if (this._enemyWeaponsSystem && this._enemyWeaponsSystem.destroy) {
-      try {
-        this._enemyWeaponsSystem.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying enemy weapons system:", error)
-      }
+    if (this._enemyWeaponsSystem?.destroy) {
+      this._enemyWeaponsSystem.destroy()
     }
-    if (this._gameStateSystem && this._gameStateSystem.destroy) {
-      try {
-        this._gameStateSystem.destroy();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying game state system:", error);
-      }
+    if (this._gameStateSystem?.destroy) {
+      this._gameStateSystem.destroy()
     }
-    if (this._waveSystem && this._waveSystem.destroy) {
-      try {
-        this._waveSystem.destroy();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying wave system:", error);
-      }
+    if (this._waveSystem?.destroy) {
+      this._waveSystem.destroy()
     }
-    if (this._powerUpSystem && this._powerUpSystem.destroy) {
-      try {
-        this._powerUpSystem.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying power-up system:", error)
-      }
+    if (this._powerUpSystem?.destroy) {
+      this._powerUpSystem.destroy()
     }
-    if (this._playerPowerUpState && this._playerPowerUpState.destroy) {
-      try {
-        this._playerPowerUpState.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying player power-up state:", error)
-      }
+    if (this._playerPowerUpState?.destroy) {
+      this._playerPowerUpState.destroy()
     }
     if (this._touchControlsSystem) {
-      try {
-        this._touchControlsSystem.destroy()
-        this._touchControlsSystem = null
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying touch controls system:", error)
-      }
+      this._touchControlsSystem.destroy()
+      this._touchControlsSystem = null
     }
     if (this._inputManager) {
-      try {
-        this._inputManager.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying input manager:", error)
-      }
+      this._inputManager.destroy()
     }
 
     // Destroy player
     if (this.player?.destroy) {
-      try {
-        this.player.destroy();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying player:", error);
-      }
+      this.player.destroy()
     }
 
     // Clear physics groups

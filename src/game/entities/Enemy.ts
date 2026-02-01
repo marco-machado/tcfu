@@ -1,11 +1,23 @@
 import { ENEMY_CONFIG, ENEMY_HEALTH_CONFIG } from '../config/GameConfig'
 
 export class Enemy extends Phaser.GameObjects.Container {
-    protected health: number = 1
-    protected maxHealth: number = 1
+    private health: number
+    private maxHealth: number
+    private hitFlashTimer: Phaser.Time.TimerEvent | null = null
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, baseHealth: number, waveNumber: number) {
         super(scene, 0, ENEMY_CONFIG.initialY)
+
+        if (!Number.isFinite(baseHealth) || baseHealth <= 0) {
+            throw new Error(`Enemy: Invalid baseHealth ${baseHealth}`)
+        }
+        if (!Number.isInteger(waveNumber) || waveNumber < 1) {
+            throw new Error(`Enemy: Invalid waveNumber ${waveNumber}`)
+        }
+
+        const healthPerWave = ENEMY_HEALTH_CONFIG.scaling.healthPerWave
+        this.maxHealth = baseHealth + (waveNumber - 1) * healthPerWave
+        this.health = this.maxHealth
 
         this.scene.add.existing(this);
         this.scene.physics.add.existing(this);
@@ -15,30 +27,42 @@ export class Enemy extends Phaser.GameObjects.Container {
         }, this);
     }
 
-    initHealth(baseHealth: number, waveNumber: number): void {
-        this.maxHealth = baseHealth + (waveNumber - 1) * ENEMY_HEALTH_CONFIG.scaling.healthPerWave
-        this.health = this.maxHealth
-    }
-
     isDead(): boolean {
         return this.health <= 0
     }
 
     takeDamage(amount: number): void {
+        if (!Number.isFinite(amount) || amount < 0) {
+            throw new Error(`Enemy.takeDamage: Invalid damage ${amount}`)
+        }
+
         this.health -= amount
         if (!this.isDead()) {
             this.triggerHitFlash()
         }
     }
 
+    getHealth(): number {
+        return this.health
+    }
+
+    getMaxHealth(): number {
+        return this.maxHealth
+    }
+
     protected triggerHitFlash(): void {
+        if (this.hitFlashTimer) {
+            this.hitFlashTimer.remove()
+        }
+
         const { tintColor, duration } = ENEMY_HEALTH_CONFIG.hitFlash
         this.each((child: Phaser.GameObjects.GameObject) => {
             if (child instanceof Phaser.GameObjects.Sprite) {
                 child.setTint(tintColor)
             }
         })
-        this.scene.time.delayedCall(duration, () => {
+
+        this.hitFlashTimer = this.scene.time.delayedCall(duration, () => {
             if (this.active) {
                 this.each((child: Phaser.GameObjects.GameObject) => {
                     if (child instanceof Phaser.GameObjects.Sprite) {
@@ -46,10 +70,14 @@ export class Enemy extends Phaser.GameObjects.Container {
                     }
                 })
             }
+            this.hitFlashTimer = null
         })
     }
 
     protected cleanup() {
-        // Override in subclasses for specific cleanup
+        if (this.hitFlashTimer) {
+            this.hitFlashTimer.remove()
+            this.hitFlashTimer = null
+        }
     }
 }
