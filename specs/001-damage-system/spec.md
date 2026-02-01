@@ -81,7 +81,8 @@ Players receive clear visual feedback when they damage enemies, helping them und
 
 - **Enemy Health**: A numeric value representing how much damage an enemy can absorb. Each enemy type defines a base health value. Current health is tracked per enemy instance.
 - **Damage Value**: The amount of health points removed when a projectile hits an enemy. Base damage is 1, modified by the damage multiplier powerup.
-- **Wave Health Scaling**: A multiplier or additive bonus applied to enemy base health based on current wave number.
+- **Wave Health Scaling**: Linear formula: `enemy_health = base_health + (wave_number - 1)`. Wave 1 = base health, Wave 10 = base health + 9.
+- **Damage Calculation**: Final damage = `floor(base_damage × damage_multiplier)`. Fractional values always round down.
 
 ## Success Criteria *(mandatory)*
 
@@ -94,10 +95,19 @@ Players receive clear visual feedback when they damage enemies, helping them und
 - **SC-005**: Game performance remains smooth with 20+ enemies on screen, each tracking health state
 - **SC-006**: Bomb ability clears all enemies in under 0.5 seconds regardless of their health values
 
+## Clarifications
+
+### Session 2026-02-01
+
+- Q: What should be the base health value for the KlaedScout enemy on Wave 1? → A: 2 HP (dies in 2 base hits)
+- Q: How should enemy health scale with wave progression? → A: Linear: +1 HP per wave
+- Q: How should fractional damage from stacked multipliers be handled? → A: Floor (round down)
+
 ## Assumptions
 
-- Base enemy health will be tuned to require 2-3 hits with base damage on Wave 1 (specific values determined during implementation)
-- Health scaling per wave will be linear or logarithmic to prevent late-game enemies from becoming bullet sponges
+- KlaedScout base health is 2 HP on Wave 1, requiring 2 hits with base damage to destroy
+- Health scaling is linear: +1 HP per wave (Wave 1 = 2 HP, Wave 10 = 11 HP for KlaedScout)
+- Damage uses floor rounding: 1 base × 1.5x multiplier = 1 damage (not 2)
 - The existing damage multiplier powerup (up to 3 stacks, 1.5x per stack) will directly multiply projectile damage
 - Hit visual feedback will use a simple tint flash (no new sprite assets required)
 - Enemy health bars are NOT in scope for this feature (may be a future enhancement)
