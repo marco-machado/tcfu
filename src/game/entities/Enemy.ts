@@ -1,11 +1,11 @@
-import { ENEMY_HEALTH_CONFIG } from "../config/GameConfig"
+import { ENEMY_CONFIG, ENEMY_HEALTH_CONFIG } from '../config/GameConfig'
 
 export class Enemy extends Phaser.GameObjects.Container {
     protected health: number = 1
     protected maxHealth: number = 1
 
     constructor(scene: Phaser.Scene) {
-        super(scene, 0, -150);
+        super(scene, 0, ENEMY_CONFIG.initialY)
 
         this.scene.add.existing(this);
         this.scene.physics.add.existing(this);
