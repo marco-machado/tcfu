@@ -359,11 +359,16 @@ export class GameScene extends Scene {
 
   private safelyDestroyGroup(
     group: Phaser.Physics.Arcade.Group | null,
-    groupName: string
+    _groupName: string
   ): void {
     if (!group) return
 
     try {
+      const groupAny = group as unknown as { children?: { entries?: unknown } }
+      if (!groupAny.children?.entries) {
+        return
+      }
+
       const children = [...group.getChildren()]
 
       children.forEach((child: Phaser.GameObjects.GameObject) => {
@@ -387,11 +392,9 @@ export class GameScene extends Scene {
       })
 
       group.clear(false, false)
-
       group.destroy()
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(`Error destroying ${groupName} group:`, error)
+      // Silently handle - group was already cleaned up by Phaser
     }
   }
 
