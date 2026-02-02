@@ -49,8 +49,10 @@ export const ENEMY_HEALTH_CONFIG = {
         healthPerWave: 1,
     },
     hitFlash: {
-        tintColor: 0xffffff,
-        duration: 100,
+        tintColor: 0xff4444,
+        duration: 200,
+        flashAlpha: 0.4,
+        scaleBounce: 0.15,
     },
 }
 

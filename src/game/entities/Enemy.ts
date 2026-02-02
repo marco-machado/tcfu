@@ -4,6 +4,7 @@ export class Enemy extends Phaser.GameObjects.Container {
     private health: number
     private maxHealth: number
     private hitFlashTimer: Phaser.Time.TimerEvent | null = null
+    private hitFlashTween: Phaser.Tweens.Tween | null = null
 
     constructor(scene: Phaser.Scene, baseHealth: number, waveNumber: number) {
         super(scene, 0, ENEMY_CONFIG.initialY)
@@ -36,7 +37,7 @@ export class Enemy extends Phaser.GameObjects.Container {
             throw new Error(`Enemy.takeDamage: Invalid damage ${amount}`)
         }
 
-        this.health -= amount
+        this.health = Math.max(0, this.health - amount)
         if (!this.isDead()) {
             this.triggerHitFlash()
         }
@@ -54,13 +55,38 @@ export class Enemy extends Phaser.GameObjects.Container {
         if (this.hitFlashTimer) {
             this.hitFlashTimer.remove()
         }
+        if (this.hitFlashTween) {
+            this.hitFlashTween.destroy()
+        }
 
-        const { tintColor, duration } = ENEMY_HEALTH_CONFIG.hitFlash
+        const { tintColor, duration, flashAlpha, scaleBounce } = ENEMY_HEALTH_CONFIG.hitFlash
+
         this.each((child: Phaser.GameObjects.GameObject) => {
             if (child instanceof Phaser.GameObjects.Sprite) {
                 child.setTint(tintColor)
             }
         })
+
+        this.hitFlashTween = this.scene.tweens.add({
+            targets: this,
+            alpha: flashAlpha,
+            duration: duration / 2,
+            yoyo: true,
+            onComplete: () => {
+                this.alpha = 1
+                this.hitFlashTween = null
+            }
+        })
+
+        if (scaleBounce > 0) {
+            this.scene.tweens.add({
+                targets: this,
+                scale: 1 + scaleBounce,
+                duration: duration / 2,
+                yoyo: true,
+                ease: 'Quad.easeOut'
+            })
+        }
 
         this.hitFlashTimer = this.scene.time.delayedCall(duration, () => {
             if (this.active) {
@@ -78,6 +104,10 @@ export class Enemy extends Phaser.GameObjects.Container {
         if (this.hitFlashTimer) {
             this.hitFlashTimer.remove()
             this.hitFlashTimer = null
+        }
+        if (this.hitFlashTween) {
+            this.hitFlashTween.destroy()
+            this.hitFlashTween = null
         }
     }
 }
