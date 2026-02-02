@@ -187,7 +187,7 @@ export class GameScene extends Scene {
           const enemyX = enemy.x
           const enemyY = enemy.y
 
-          enemy.takeDamage(Math.floor(projectile.damage))
+          enemy.takeDamage(projectile.damage)
           projectile.destroy()
 
           if (enemy.isDead()) {

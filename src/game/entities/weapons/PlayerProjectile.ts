@@ -11,7 +11,7 @@ export class PlayerProjectile extends Phaser.GameObjects.Sprite {
         damageMultiplier: number = 1
     ) {
         super(scene, x, y, 'player-bullet')
-        this.damage = damageMultiplier
+        this.damage = Math.ceil(WEAPON_CONFIG.player.baseDamage * damageMultiplier)
 
         group.add(this, true)
 

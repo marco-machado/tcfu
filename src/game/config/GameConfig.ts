@@ -58,6 +58,7 @@ export const ENEMY_HEALTH_CONFIG = {
 
 export const WEAPON_CONFIG = {
     player: {
+        baseDamage: 1,
         cooldown: 800,
         spawnOffsetY: -20,
         velocityY: -400,
