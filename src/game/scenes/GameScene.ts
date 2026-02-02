@@ -17,11 +17,11 @@ import { WaveSystem } from "../systems/WaveSystem"
 
 export class GameScene extends Scene {
   private player: Player
-  private playerProjectilesGroup: Phaser.Physics.Arcade.Group
-  private enemyProjectilesGroup: Phaser.Physics.Arcade.Group
-  private enemiesGroup: Phaser.Physics.Arcade.Group
+  private playerProjectilesGroup: Phaser.Physics.Arcade.Group | null
+  private enemyProjectilesGroup: Phaser.Physics.Arcade.Group | null
+  private enemiesGroup: Phaser.Physics.Arcade.Group | null
   private background: Phaser.GameObjects.TileSprite
-  private powerUpsGroup: Phaser.Physics.Arcade.Group
+  private powerUpsGroup: Phaser.Physics.Arcade.Group | null
   private _playerWeaponSystem: PlayerWeaponsSystem & ISystem
   private _enemyWeaponsSystem: EnemyWeaponsSystem & ISystem
   private _enemySpawnerSystem: EnemySpawnerSystem & ISystem
@@ -245,32 +245,36 @@ export class GameScene extends Scene {
     )
 
     this.events.on('screen-clear-activated', () => {
-      const enemies = [...this.enemiesGroup.getChildren()]
-      enemies.forEach((enemy) => {
-        try {
-          const enemyX = 'x' in enemy ? enemy.x : 0
-          const enemyY = 'y' in enemy ? enemy.y : 0
-          enemy.destroy()
-          this.events.emit('enemy-destroyed', {
-            points: GAME_STATE_CONFIG.scorePerEnemy,
-            x: enemyX,
-            y: enemyY,
-          })
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('Error destroying enemy during screen clear:', error)
-        }
-      })
+      if (this.enemiesGroup) {
+        const enemies = [...this.enemiesGroup.getChildren()]
+        enemies.forEach((enemy) => {
+          try {
+            const enemyX = 'x' in enemy ? enemy.x : 0
+            const enemyY = 'y' in enemy ? enemy.y : 0
+            enemy.destroy()
+            this.events.emit('enemy-destroyed', {
+              points: GAME_STATE_CONFIG.scorePerEnemy,
+              x: enemyX,
+              y: enemyY,
+            })
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('Error destroying enemy during screen clear:', error)
+          }
+        })
+      }
 
-      const projectiles = [...this.enemyProjectilesGroup.getChildren()]
-      projectiles.forEach((projectile) => {
-        try {
-          projectile.destroy()
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('Error destroying projectile during screen clear:', error)
-        }
-      })
+      if (this.enemyProjectilesGroup) {
+        const projectiles = [...this.enemyProjectilesGroup.getChildren()]
+        projectiles.forEach((projectile) => {
+          try {
+            projectile.destroy()
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('Error destroying projectile during screen clear:', error)
+          }
+        })
+      }
     })
   }
 
@@ -302,15 +306,17 @@ export class GameScene extends Scene {
       this.player.disableInput();
     }
 
-    this.enemiesGroup.getChildren().forEach((enemy) => {
-      if (enemy instanceof Phaser.GameObjects.Container) {
-        enemy.each((child: Phaser.GameObjects.GameObject) => {
-          if (child instanceof Phaser.GameObjects.Sprite && child.anims) {
-            child.anims.stop();
-          }
-        });
-      }
-    });
+    if (this.enemiesGroup) {
+      this.enemiesGroup.getChildren().forEach((enemy) => {
+        if (enemy instanceof Phaser.GameObjects.Container) {
+          enemy.each((child: Phaser.GameObjects.GameObject) => {
+            if (child instanceof Phaser.GameObjects.Sprite && child.anims) {
+              child.anims.stop();
+            }
+          });
+        }
+      });
+    }
 
     this.physics.pause();
   }
@@ -349,6 +355,44 @@ export class GameScene extends Scene {
   private activateBomb() {
     if (this.isGameOver || this.isPaused) return;
     this.events.emit('bomb-activated');
+  }
+
+  private safelyDestroyGroup(
+    group: Phaser.Physics.Arcade.Group | null,
+    groupName: string
+  ): void {
+    if (!group) return
+
+    try {
+      const children = [...group.getChildren()]
+
+      children.forEach((child: Phaser.GameObjects.GameObject) => {
+        if (child && child.active) {
+          try {
+            if ('anims' in child) {
+              const sprite = child as Phaser.GameObjects.Sprite
+              sprite.anims?.stop()
+            }
+
+            this.tweens?.getTweensOf(child)?.forEach(tween => {
+              tween.stop()
+              tween.remove()
+            })
+
+            child.destroy()
+          } catch (childError) {
+            // Continue with other children if one fails
+          }
+        }
+      })
+
+      group.clear(false, false)
+
+      group.destroy()
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`Error destroying ${groupName} group:`, error)
+    }
   }
 
   shutdown() {
@@ -465,42 +509,22 @@ export class GameScene extends Scene {
       this.player.destroy()
     }
 
-    // Clear physics groups
-    if (this.playerProjectilesGroup) {
-      try {
-        this.playerProjectilesGroup.clear(true, true);
-        this.playerProjectilesGroup.destroy();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying player projectiles group:", error);
-      }
+    // Pause physics to prevent updates during cleanup
+    if (this.physics?.world) {
+      this.physics.world.pause()
     }
-    if (this.enemiesGroup) {
-      try {
-        this.enemiesGroup.clear(true, true)
-        this.enemiesGroup.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying enemies group:", error)
-      }
-    }
-    if (this.enemyProjectilesGroup) {
-      try {
-        this.enemyProjectilesGroup.clear(true, true)
-        this.enemyProjectilesGroup.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying enemy projectiles group:", error)
-      }
-    }
-    if (this.powerUpsGroup) {
-      try {
-        this.powerUpsGroup.clear(true, true)
-        this.powerUpsGroup.destroy()
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error destroying power-ups group:", error)
-      }
-    }
+
+    // Clear physics groups (in reverse dependency order)
+    this.safelyDestroyGroup(this.powerUpsGroup, "PowerUps")
+    this.powerUpsGroup = null
+
+    this.safelyDestroyGroup(this.enemyProjectilesGroup, "EnemyProjectiles")
+    this.enemyProjectilesGroup = null
+
+    this.safelyDestroyGroup(this.enemiesGroup, "Enemies")
+    this.enemiesGroup = null
+
+    this.safelyDestroyGroup(this.playerProjectilesGroup, "PlayerProjectiles")
+    this.playerProjectilesGroup = null
   }
 }
