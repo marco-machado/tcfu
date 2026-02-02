@@ -20,7 +20,7 @@
 | initHealth | `(baseHealth: number, waveNumber: number) => void` | Sets maxHealth = baseHealth + (waveNumber - 1), health = maxHealth |
 | takeDamage | `(amount: number) => void` | Reduces health by amount, triggers hit flash if alive |
 | isDead | `() => boolean` | Returns true if health <= 0 |
-| triggerHitFlash | `() => void` | Applies white tint to child sprites for 100ms |
+| triggerHitFlash | `() => void` | Applies red tint (0xff4444) to child sprites for 200ms with scale bounce effect |
 
 **State Transitions**:
 
@@ -90,8 +90,10 @@ export const ENEMY_HEALTH_CONFIG = {
         healthPerWave: 1,        // +1 HP per wave
     },
     hitFlash: {
-        tintColor: 0xffffff,     // White
-        duration: 100,           // milliseconds
+        tintColor: 0xff4444,     // Red tint for better contrast on dark sprites
+        duration: 200,           // milliseconds (12 frames at 60fps)
+        flashAlpha: 0.4,         // Alpha value during flash
+        scaleBounce: 0.15,       // Scale multiplier for bounce effect
     },
 }
 ```
@@ -135,7 +137,7 @@ export const ENEMY_HEALTH_CONFIG = {
 - `maxHealth = baseHealth + (waveNumber - 1)` is always >= baseHealth
 
 ### Damage Application
-- `amount` is floored before application: `Math.floor(projectile.damage)`
+- `amount` is ceiled during calculation: `Math.ceil(baseDamage * damageMultiplier)`
 - Minimum damage per hit is 1 (base damage with no powerups)
 - Health cannot go below 0 (clamped in logic, but isDead() check handles negative)
 
@@ -155,15 +157,15 @@ enemyHealth = ENEMY_HEALTH_CONFIG.klaedScout.baseHealth
 
 ### Damage Multiplier Stacks
 ```
-finalDamage = floor(baseDamage × damageMultiplier)
+finalDamage = ceil(baseDamage × damageMultiplier)
 ```
 
-| Stacks | Multiplier | floor(1 × mult) |
-|--------|------------|-----------------|
+| Stacks | Multiplier | ceil(1 × mult) |
+|--------|------------|----------------|
 | 0 | 1.0 | 1 |
-| 1 | 1.5 | 1 |
-| 2 | 2.25 | 2 |
-| 3 | 3.375 | 3 |
+| 1 | 1.5 | 2 |
+| 2 | 2.25 | 3 |
+| 3 | 3.375 | 4 |
 
 ### Combat Examples
 

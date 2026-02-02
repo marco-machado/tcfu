@@ -69,7 +69,7 @@ Players receive clear visual feedback when they damage enemies, helping them und
 - **FR-001**: Enemies MUST have a health point value that determines how much damage they can take before being destroyed
 - **FR-002**: Player projectiles MUST deal damage to enemies instead of instantly destroying them
 - **FR-003**: Enemies MUST be destroyed when their health reaches zero or below
-- **FR-004**: The damage multiplier powerup MUST increase the damage dealt by player projectiles. Final damage = floor(base_damage × multiplier), rounding down fractional values.
+- **FR-004**: The damage multiplier powerup MUST increase the damage dealt by player projectiles. Final damage = ceil(base_damage × multiplier), rounding up fractional values to ensure immediate impact.
 - **FR-005**: Enemy health MUST scale with wave progression to maintain challenge
 - **FR-006**: Enemies MUST display a visual hit effect when taking damage but surviving
 - **FR-007**: The bomb/screen-clear ability MUST instantly destroy all enemies regardless of their remaining health
@@ -82,7 +82,7 @@ Players receive clear visual feedback when they damage enemies, helping them und
 - **Enemy Health**: A numeric value representing how much damage an enemy can absorb. Each enemy type defines a base health value. Current health is tracked per enemy instance.
 - **Damage Value**: The amount of health points removed when a projectile hits an enemy. Base damage is 1, modified by the damage multiplier powerup.
 - **Wave Health Scaling**: Linear formula: `enemy_health = base_health + (wave_number - 1)` where `base_health` is defined per enemy type (e.g., KlaedScout = 2). Wave 1 = base health, Wave 10 = base health + 9.
-- **Damage Calculation**: Final damage = `floor(base_damage × damage_multiplier)`. Fractional values always round down.
+- **Damage Calculation**: Final damage = `ceil(base_damage × damage_multiplier)`. Fractional values always round up to ensure the first damage powerup provides immediate 2 damage (not 1).
 
 ## Success Criteria *(mandatory)*
 
@@ -101,7 +101,7 @@ Players receive clear visual feedback when they damage enemies, helping them und
 
 - Q: What should be the base health value for the KlaedScout enemy on Wave 1? → A: 2 HP (dies in 2 base hits)
 - Q: How should enemy health scale with wave progression? → A: Linear: +1 HP per wave
-- Q: How should fractional damage from stacked multipliers be handled? → A: Floor (round down)
+- Q: How should fractional damage from stacked multipliers be handled? → A: Ceil (round up) to ensure immediate impact from first damage powerup (1×1.5 = 1.5 → ceil = 2)
 
 ## Assumptions
 

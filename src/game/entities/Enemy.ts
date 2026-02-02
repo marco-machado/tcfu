@@ -5,6 +5,7 @@ export class Enemy extends Phaser.GameObjects.Container {
     private maxHealth: number
     private hitFlashTimer: Phaser.Time.TimerEvent | null = null
     private hitFlashTween: Phaser.Tweens.Tween | null = null
+    private scaleTween: Phaser.Tweens.Tween | null = null
 
     constructor(scene: Phaser.Scene, baseHealth: number, waveNumber: number) {
         super(scene, 0, ENEMY_CONFIG.initialY)
@@ -79,7 +80,7 @@ export class Enemy extends Phaser.GameObjects.Container {
         })
 
         if (scaleBounce > 0) {
-            this.scene.tweens.add({
+            this.scaleTween = this.scene.tweens.add({
                 targets: this,
                 scale: 1 + scaleBounce,
                 duration: duration / 2,
@@ -108,6 +109,10 @@ export class Enemy extends Phaser.GameObjects.Container {
         if (this.hitFlashTween) {
             this.hitFlashTween.destroy()
             this.hitFlashTween = null
+        }
+        if (this.scaleTween) {
+            this.scaleTween.destroy()
+            this.scaleTween = null
         }
     }
 }
