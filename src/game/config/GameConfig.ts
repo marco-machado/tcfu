@@ -41,8 +41,24 @@ export const ENEMY_CONFIG = {
     },
 }
 
+export const ENEMY_HEALTH_CONFIG = {
+    klaedScout: {
+        baseHealth: 2,
+    },
+    scaling: {
+        healthPerWave: 1,
+    },
+    hitFlash: {
+        tintColor: 0xff4444,
+        duration: 200,
+        flashAlpha: 0.4,
+        scaleBounce: 0.15,
+    },
+}
+
 export const WEAPON_CONFIG = {
     player: {
+        baseDamage: 1,
         cooldown: 800,
         spawnOffsetY: -20,
         velocityY: -400,

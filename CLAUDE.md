@@ -218,3 +218,10 @@ No test runner configured. If adding tests:
 
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`
 - Run `npm run lint` and `npm run typecheck` before committing
+
+## Active Technologies
+- TypeScript 5.x + Phaser 3.90.0 (Arcade Physics) (001-damage-system)
+- N/A (in-memory enemy health state) (001-damage-system)
+
+## Recent Changes
+- 001-damage-system: Added TypeScript 5.x + Phaser 3.90.0 (Arcade Physics)
