@@ -8,6 +8,10 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) for commit mess
 
 Common types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `build`, `perf`, `style`.
 
+## Live Testing
+
+Use the `playwright-cli` skill to test your changes in a browser.
+
 ## Agent skills
 
 ### Issue tracker
