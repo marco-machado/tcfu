@@ -1,5 +1,22 @@
-import { RESPAWN, STREAM_BASE_SPEED } from './constants'
-import type { ShipId, World } from './types'
+import { MAX_ENEMIES, MAX_PLAYER_BULLETS, PLAYER_HITBOX_R, RESPAWN, STREAM_BASE_SPEED } from './constants'
+import type { Enemy, PlayerBullet, ShipId, World } from './types'
+
+function emptyBullet(): PlayerBullet {
+  return { active: false, x: 0, y: 0, vy: 0, r: 0.12, damage: 1 }
+}
+
+function emptyEnemy(): Enemy {
+  return {
+    active: false,
+    kind: 'drone',
+    x: 0,
+    y: 0,
+    vy: 0,
+    r: 0,
+    hp: 0,
+    points: 0,
+  }
+}
 
 export function createWorld(shipId: ShipId = 'vanguard'): World {
   const maxHp = shipId === 'striker' ? 2 : 3
@@ -21,6 +38,8 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       shield: shipId === 'aegis',
       iFrames: 0,
       shipId,
+      fireCooldown: 0,
+      hitboxR: PLAYER_HITBOX_R,
     },
     session: {
       score: 0,
@@ -30,6 +49,10 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       paused: false,
     },
     streamSpeed: STREAM_BASE_SPEED,
+    playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyBullet),
+    enemies: Array.from({ length: MAX_ENEMIES }, emptyEnemy),
+    spawnTimer: 0,
+    spawnLane: 0,
   }
 }
 

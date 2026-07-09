@@ -1,8 +1,10 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import { BoxGeometry, type Group, type Mesh } from 'three'
-import { BAND } from '../sim/constants'
+import { BoxGeometry, type Group, type InstancedMesh, type Mesh, Object3D } from 'three'
+import { BAND, MAX_ENEMIES, MAX_PLAYER_BULLETS } from '../sim/constants'
 import { getWorld } from '../sim/world'
+
+const _proxy = new Object3D()
 
 export function Playfield() {
   const width = BAND.maxX - BAND.minX
@@ -30,6 +32,8 @@ export function Playfield() {
 
       <StreamMarkers />
       <PlayerMesh />
+      <PlayerBulletInstances />
+      <EnemyInstances />
     </group>
   )
 }
@@ -83,5 +87,83 @@ function PlayerMesh() {
         roughness={0.35}
       />
     </mesh>
+  )
+}
+
+function PlayerBulletInstances() {
+  const mesh = useRef<InstancedMesh>(null)
+
+  useFrame(() => {
+    const inst = mesh.current
+    if (!inst) return
+    const bullets = getWorld().playerBullets
+    let i = 0
+    for (const b of bullets) {
+      if (!b.active) continue
+      _proxy.position.set(b.x, b.y, 0.25)
+      _proxy.scale.setScalar(1)
+      _proxy.updateMatrix()
+      inst.setMatrixAt(i, _proxy.matrix)
+      i++
+    }
+    for (; i < MAX_PLAYER_BULLETS; i++) {
+      _proxy.position.set(0, -100, 0)
+      _proxy.scale.setScalar(0)
+      _proxy.updateMatrix()
+      inst.setMatrixAt(i, _proxy.matrix)
+    }
+    inst.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, MAX_PLAYER_BULLETS]}>
+      <sphereGeometry args={[0.12, 8, 8]} />
+      <meshStandardMaterial
+        color="#dff6ff"
+        emissive="#88ddff"
+        emissiveIntensity={1.2}
+        metalness={0.2}
+        roughness={0.3}
+      />
+    </instancedMesh>
+  )
+}
+
+function EnemyInstances() {
+  const mesh = useRef<InstancedMesh>(null)
+
+  useFrame(() => {
+    const inst = mesh.current
+    if (!inst) return
+    const enemies = getWorld().enemies
+    let i = 0
+    for (const e of enemies) {
+      if (!e.active) continue
+      _proxy.position.set(e.x, e.y, 0.2)
+      _proxy.scale.set(1, 1, 1)
+      _proxy.updateMatrix()
+      inst.setMatrixAt(i, _proxy.matrix)
+      i++
+    }
+    for (; i < MAX_ENEMIES; i++) {
+      _proxy.position.set(0, -100, 0)
+      _proxy.scale.setScalar(0)
+      _proxy.updateMatrix()
+      inst.setMatrixAt(i, _proxy.matrix)
+    }
+    inst.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, MAX_ENEMIES]}>
+      <boxGeometry args={[0.7, 0.7, 0.35]} />
+      <meshStandardMaterial
+        color="#e07040"
+        emissive="#802010"
+        emissiveIntensity={0.55}
+        metalness={0.4}
+        roughness={0.45}
+      />
+    </instancedMesh>
   )
 }

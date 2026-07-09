@@ -22,6 +22,7 @@ export function RunHud() {
     <div className="hud">
       <div className="hud-top">
         <span>SCORE {Math.floor(s.score)}</span>
+        <span>KILLS {s.kills}</span>
         <span>WAVE {s.wave}</span>
         <span>BOMBS {p.bombs}</span>
       </div>
