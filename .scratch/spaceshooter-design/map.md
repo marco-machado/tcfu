@@ -28,16 +28,17 @@ A written design package ready to implement: stack and architecture boundaries, 
 ## Decisions so far
 
 - [Design artifact shape](issues/01-design-artifact-shape.md) — Package is `docs/design/DESIGN.md` + `catalogs/*` + sparse `docs/adr/` + research notes; fixed DESIGN outline; seven required catalogs; done = implementable defaults, not perfect balance.
+- [Core loop and scoring](issues/02-core-loop-and-scoring.md) — Title→Hangar→Run→Results; 3 lives × 3 HP; wave index endless; score from kills/waves/pickups/clean-wave (no passive time); ship unlocks by single-run score; top-10 local high scores; meta currency paid at Results.
 
 ## Not yet specified
 
 - Audio / music direction and implementation approach
 - Performance budgets and target hardware profile for hi-fi web
-- Save-data shape for meta unlocks and local high scores (detail)
+- Save-data shape for meta unlocks (high-score table fields/size locked in Core loop; meta inventory schema still open)
 - Accessibility (colorblind, reduce flash, remapping beyond defaults)
 - Whether a bomb/special resource exists beside weapons and powerups
 - Exact content volume targets (ship count, pattern count) once catalogs start
-- Pause, time-scale, and focus-loss behavior edge cases
+- Pause/focus edge cases beyond basic pause + auto-pause on blur (already locked in Core loop)
 
 ## Out of scope
 
