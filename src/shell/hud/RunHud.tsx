@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSessionStore } from '../../app/sessionStore'
 import { scrapForRun } from '../../sim/constants'
 import { scrapEarnMultFromRanks } from '../../sim/metaModifiers'
+import { bossBarFromWorld } from '../../sim/step'
 import { getWorld } from '../../sim/world'
 import { nextWeaponTierThreshold, weaponTierForWCells, WEAPON_TIER_MAX } from '../../sim/weapons'
 
@@ -32,6 +33,8 @@ export function RunHud() {
   if (p.rateUp > 0) timed.push(`OVR ${p.rateUp.toFixed(1)}s`)
   if (p.spreadUp > 0) timed.push(`OPT ${p.spreadUp.toFixed(1)}s`)
   if (p.scoreMult > 0) timed.push(`BTY ${p.scoreMult.toFixed(1)}s`)
+  const boss = bossBarFromWorld(w)
+  const bossPct = boss && boss.maxHp > 0 ? Math.max(0, Math.min(1, boss.hp / boss.maxHp)) : 0
 
   return (
     <div className="hud">
@@ -42,6 +45,16 @@ export function RunHud() {
         <span>BOMBS {p.bombs}</span>
       </div>
       <div className="hud-mid">
+        {boss ? (
+          <div className="boss-bar">
+            <span className="boss-label">
+              COLOSSUS {Math.ceil(boss.hp)}/{boss.maxHp}
+            </span>
+            <div className="boss-track">
+              <div className="boss-fill" style={{ width: `${bossPct * 100}%` }} />
+            </div>
+          </div>
+        ) : null}
         {timed.length > 0 ? <span className="hud-timed">{timed.join(' · ')}</span> : null}
       </div>
       <div className="hud-bottom">

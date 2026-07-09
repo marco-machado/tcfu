@@ -14,9 +14,18 @@ export type ScreenId =
 
 export type Vec2 = { x: number; y: number }
 
-export type EnemyKind = 'drone' | 'dart' | 'gunner'
+export type EnemyKind = 'drone' | 'dart' | 'gunner' | 'sidecar' | 'razor' | 'prism' | 'colossus'
 export type EnemyClass = 'fodder' | 'grunt' | 'elite' | 'set_piece'
 export type PowerupType = 'shield' | 'bomb_stock' | 'repair' | 'rate_up' | 'spread_up' | 'score_mult'
+export type ShotStyle =
+  | 'none'
+  | 'down'
+  | 'spread3'
+  | 'side_pair'
+  | 'aimed_burst'
+  | 'ring8'
+  | 'boss_spray'
+export type EnemyPhase = 'none' | 'spray' | 'pause'
 
 export type PlayerState = {
   x: number
@@ -70,7 +79,12 @@ export type Enemy = {
   y: number
   vy: number
   r: number
+  /** AABB half-width; 0 means circle hitbox using r. */
+  halfW: number
+  /** AABB half-height; 0 means circle hitbox using r. */
+  halfH: number
   hp: number
+  maxHp: number
   points: number
   contactDamage: number
   fireCooldown: number
@@ -78,8 +92,12 @@ export type Enemy = {
   bulletSpeed: number
   path: PathId
   pathPhase: number
+  /** Target lane X for strafe-enter paths. */
+  laneX: number
   waveId: number
-  shotStyle: 'none' | 'down' | 'spread3'
+  shotStyle: ShotStyle
+  phase: EnemyPhase
+  phaseElapsed: number
   /** Seconds alive; contact damage arms after CONTACT_ARM_TIME. */
   age: number
 }

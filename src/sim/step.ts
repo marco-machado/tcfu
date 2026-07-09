@@ -1,7 +1,8 @@
 import type { Commands } from '../input/commands'
-import { circleCircle } from './collision'
+import { circleAabb, circleCircle } from './collision'
 import {
   BOMB_DAMAGE,
+  COLOSSUS,
   CONTACT_ARM_TIME,
   CULL_X_MAX,
   CULL_Y_MIN,
@@ -23,11 +24,15 @@ import {
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
   POWERUP_SCORE,
+  PRISM,
   RATE_UP_COOLDOWN_MULT,
   RATE_UP_DURATION,
+  RAZOR,
   RESPAWN,
   SCORE_MULT_DURATION,
   SCORE_MULT_KILL,
+  SET_PIECE_STREAM_MULT,
+  SIDECAR,
   SPAWN_Y,
   SPREAD_UP_DURATION,
   SPREAD_UP_OFFSET,
@@ -42,7 +47,7 @@ import {
   waveClearBonus,
   waveMultiplier,
 } from './constants'
-import { patternForWave, type PathId, type SpawnEvent } from './patterns'
+import { isSetPieceWave, patternForWave, type PathId, type SpawnEvent } from './patterns'
 import type {
   Enemy,
   EnemyBullet,
@@ -240,13 +245,43 @@ function applyPlayerDamage(world: World, amount: number): void {
 }
 
 function kindStats(kind: EnemyKind) {
+  if (kind === 'colossus') return COLOSSUS
+  if (kind === 'prism') return PRISM
+  if (kind === 'razor') return RAZOR
+  if (kind === 'sidecar') return SIDECAR
   if (kind === 'gunner') return GUNNER
   if (kind === 'dart') return DART
   return DRONE
 }
 
 function classForKind(kind: EnemyKind): EnemyClass {
-  return kind === 'gunner' ? 'grunt' : 'fodder'
+  if (kind === 'colossus') return 'set_piece'
+  if (kind === 'razor' || kind === 'prism') return 'elite'
+  if (kind === 'gunner' || kind === 'sidecar') return 'grunt'
+  return 'fodder'
+}
+
+function hitsEnemy(bullet: { x: number; y: number; r: number }, e: Enemy): boolean {
+  if (e.halfW > 0 && e.halfH > 0) {
+    return circleAabb(
+      { x: bullet.x, y: bullet.y, r: bullet.r },
+      { x: e.x, y: e.y, w: e.halfW * 2, h: e.halfH * 2 },
+    )
+  }
+  return circleCircle({ x: bullet.x, y: bullet.y, r: bullet.r }, { x: e.x, y: e.y, r: e.r })
+}
+
+function hitsPlayerBody(player: { x: number; y: number; hitboxR: number }, e: Enemy): boolean {
+  if (e.halfW > 0 && e.halfH > 0) {
+    return circleAabb(
+      { x: player.x, y: player.y, r: player.hitboxR },
+      { x: e.x, y: e.y, w: e.halfW * 2, h: e.halfH * 2 },
+    )
+  }
+  return circleCircle(
+    { x: player.x, y: player.y, r: player.hitboxR },
+    { x: e.x, y: e.y, r: e.r },
+  )
 }
 
 function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: number): void {
@@ -258,17 +293,30 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
   e.active = true
   e.kind = event.kind
   e.class = classForKind(event.kind)
-  e.x = event.x
+  e.laneX = event.x
   e.y = event.y
   e.r = stats.r
+  e.halfW = event.kind === 'colossus' ? COLOSSUS.halfW : 0
+  e.halfH = event.kind === 'colossus' ? COLOSSUS.halfH : 0
   e.hp = Math.max(1, Math.round(stats.hp * hpScale))
+  e.maxHp = e.hp
   e.points = stats.points
   e.contactDamage = stats.contactDamage
   e.path = event.path
   e.pathPhase = 0
   e.waveId = wave
   e.age = 0
+  e.phase = 'none'
+  e.phaseElapsed = 0
   e.vy = -streamSpeed
+
+  if (event.path === 'strafe_enter_left') {
+    e.x = -11
+  } else if (event.path === 'strafe_enter_right') {
+    e.x = 11
+  } else {
+    e.x = event.x
+  }
 
   if (event.kind === 'drone') {
     e.fireInterval = 0
@@ -280,11 +328,33 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
     e.fireCooldown = e.fireInterval * 0.4
     e.bulletSpeed = DART.bulletSpeed * shotScale
     e.shotStyle = 'down'
-  } else {
+  } else if (event.kind === 'gunner') {
     e.fireInterval = GUNNER.fireInterval * cdScale
     e.fireCooldown = e.fireInterval * 0.5
     e.bulletSpeed = GUNNER.bulletSpeed * shotScale
     e.shotStyle = 'spread3'
+  } else if (event.kind === 'sidecar') {
+    e.fireInterval = SIDECAR.fireInterval * cdScale
+    e.fireCooldown = e.fireInterval * 0.4
+    e.bulletSpeed = SIDECAR.bulletSpeed * shotScale
+    e.shotStyle = 'side_pair'
+  } else if (event.kind === 'razor') {
+    e.fireInterval = RAZOR.fireInterval * cdScale
+    e.fireCooldown = e.fireInterval * 0.5
+    e.bulletSpeed = RAZOR.bulletSpeed * shotScale
+    e.shotStyle = 'aimed_burst'
+  } else if (event.kind === 'prism') {
+    e.fireInterval = PRISM.fireInterval * cdScale
+    e.fireCooldown = e.fireInterval * 0.5
+    e.bulletSpeed = PRISM.bulletSpeed * shotScale
+    e.shotStyle = 'ring8'
+  } else {
+    e.fireInterval = COLOSSUS.fireInterval * cdScale
+    e.fireCooldown = 0.4
+    e.bulletSpeed = COLOSSUS.bulletSpeed * shotScale
+    e.shotStyle = 'boss_spray'
+    e.phase = 'spray'
+    e.phaseElapsed = 0
   }
 
   if (event.path === 'dive') {
@@ -296,7 +366,9 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
 
 function beginWave(world: World, waveIndex: number): void {
   world.session.wave = waveIndex
-  world.streamSpeed = streamSpeedForWave(waveIndex)
+  let speed = streamSpeedForWave(waveIndex)
+  if (isSetPieceWave(waveIndex)) speed *= SET_PIECE_STREAM_MULT
+  world.streamSpeed = speed
   world.waves.phase = 'spawning'
   world.waves.patternElapsed = 0
   world.waves.nextEventIndex = 0
@@ -509,39 +581,95 @@ function stepEnemyBullets(world: World, dt: number): void {
   }
 }
 
+function spawnEnemyBullet(
+  world: World,
+  x: number,
+  y: number,
+  vx: number,
+  vy: number,
+): boolean {
+  const bullet = acquireEnemyBullet(world)
+  if (!bullet) return false
+  bullet.active = true
+  bullet.x = x
+  bullet.y = y
+  bullet.vx = vx
+  bullet.vy = vy
+  bullet.r = ENEMY_BULLET_R
+  bullet.damage = ENEMY_BULLET_DAMAGE
+  return true
+}
+
 function fireEnemyShot(world: World, e: Enemy): void {
   if (e.shotStyle === 'none') return
 
   if (e.shotStyle === 'down') {
-    const bullet = acquireEnemyBullet(world)
-    if (!bullet) return
-    bullet.active = true
-    bullet.x = e.x
-    bullet.y = e.y
-    bullet.vx = 0
-    bullet.vy = -e.bulletSpeed
-    bullet.r = ENEMY_BULLET_R
-    bullet.damage = ENEMY_BULLET_DAMAGE
+    spawnEnemyBullet(world, e.x, e.y, 0, -e.bulletSpeed)
+    return
+  }
+
+  if (e.shotStyle === 'side_pair') {
+    spawnEnemyBullet(world, e.x, e.y, -e.bulletSpeed, 0)
+    spawnEnemyBullet(world, e.x, e.y, e.bulletSpeed, 0)
+    return
+  }
+
+  if (e.shotStyle === 'aimed_burst') {
+    const px = world.player.x
+    const py = world.player.y
+    const dx = px - e.x
+    const dy = py - e.y
+    const base = Math.atan2(dx, -dy)
+    const count = RAZOR.burstCount
+    const spread = 0.28
+    for (let i = 0; i < count; i++) {
+      const u = i / (count - 1)
+      const a = base + (u - 0.5) * spread
+      spawnEnemyBullet(world, e.x, e.y, Math.sin(a) * e.bulletSpeed, -Math.cos(a) * e.bulletSpeed)
+    }
+    return
+  }
+
+  if (e.shotStyle === 'ring8') {
+    const count = PRISM.ringCount
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2
+      spawnEnemyBullet(world, e.x, e.y, Math.cos(a) * e.bulletSpeed, Math.sin(a) * e.bulletSpeed)
+    }
+    return
+  }
+
+  if (e.shotStyle === 'boss_spray') {
+    const angles = [-0.55, -0.28, 0, 0.28, 0.55]
+    for (const a of angles) {
+      spawnEnemyBullet(world, e.x, e.y, Math.sin(a) * e.bulletSpeed, -Math.cos(a) * e.bulletSpeed)
+    }
     return
   }
 
   const angles = [-0.35, 0, 0.35]
   for (const a of angles) {
-    const bullet = acquireEnemyBullet(world)
-    if (!bullet) break
-    bullet.active = true
-    bullet.x = e.x
-    bullet.y = e.y
-    bullet.vx = Math.sin(a) * e.bulletSpeed
-    bullet.vy = -Math.cos(a) * e.bulletSpeed
-    bullet.r = ENEMY_BULLET_R
-    bullet.damage = ENEMY_BULLET_DAMAGE
+    spawnEnemyBullet(world, e.x, e.y, Math.sin(a) * e.bulletSpeed, -Math.cos(a) * e.bulletSpeed)
   }
 }
 
 function advancePath(e: Enemy, dt: number, streamSpeed: number): void {
-  const path: PathId = e.path
   e.pathPhase += dt
+
+  if (e.path === 'strafe_enter_left' || e.path === 'strafe_enter_right') {
+    const speed = 10
+    const dx = e.laneX - e.x
+    if (Math.abs(dx) > 0.15) {
+      e.x += Math.sign(dx) * Math.min(Math.abs(dx), speed * dt)
+      e.vy = -streamSpeed * 0.35
+      e.y += e.vy * dt
+      return
+    }
+    e.x = e.laneX
+    e.path = 'drift_down'
+  }
+
+  const path: PathId = e.path
 
   if (path === 'drift_down') {
     e.vy = -streamSpeed
@@ -571,13 +699,31 @@ function advancePath(e: Enemy, dt: number, streamSpeed: number): void {
   }
 }
 
+function stepEnemyPhase(e: Enemy, dt: number): void {
+  if (e.shotStyle !== 'boss_spray') return
+  e.phaseElapsed += dt
+  if (e.phase === 'spray' && e.phaseElapsed >= COLOSSUS.sprayDuration) {
+    e.phase = 'pause'
+    e.phaseElapsed = 0
+    e.fireCooldown = 999
+    return
+  }
+  if (e.phase === 'pause' && e.phaseElapsed >= COLOSSUS.pauseDuration) {
+    e.phase = 'spray'
+    e.phaseElapsed = 0
+    e.fireCooldown = 0
+  }
+}
+
 function stepEnemies(world: World, dt: number): void {
   for (const e of world.enemies) {
     if (!e.active) continue
     e.age += dt
     advancePath(e, dt, world.streamSpeed)
+    stepEnemyPhase(e, dt)
 
-    if (e.fireInterval > 0) {
+    const canFire = e.shotStyle !== 'boss_spray' || e.phase === 'spray'
+    if (canFire && e.fireInterval > 0) {
       e.fireCooldown -= dt
       if (e.fireCooldown <= 0) {
         fireEnemyShot(world, e)
@@ -585,7 +731,10 @@ function stepEnemies(world: World, dt: number): void {
       }
     }
 
-    if (e.y < CULL_Y_MIN || Math.abs(e.x) > CULL_X_MAX) {
+    const holdSetPiece = e.kind === 'colossus' && e.y <= HOLD_Y + 0.05
+    const entering =
+      e.path === 'strafe_enter_left' || e.path === 'strafe_enter_right'
+    if (!holdSetPiece && !entering && (e.y < CULL_Y_MIN || Math.abs(e.x) > CULL_X_MAX)) {
       e.active = false
     }
   }
@@ -597,7 +746,7 @@ function stepPlayerBulletHits(world: World): void {
     for (const e of world.enemies) {
       if (!e.active) continue
       if (b.hitEnemyIds.includes(e.id)) continue
-      if (!circleCircle({ x: b.x, y: b.y, r: b.r }, { x: e.x, y: e.y, r: e.r })) continue
+      if (!hitsEnemy(b, e)) continue
 
       e.hp -= b.damage
       b.hitEnemyIds.push(e.id)
@@ -621,7 +770,7 @@ function stepPlayerHazards(world: World): void {
   for (const e of world.enemies) {
     if (!e.active) continue
     if (e.age < CONTACT_ARM_TIME) continue
-    if (!circleCircle({ x: p.x, y: p.y, r: p.hitboxR }, { x: e.x, y: e.y, r: e.r })) continue
+    if (!hitsPlayerBody(p, e)) continue
     damage = Math.max(damage, e.contactDamage)
   }
 
@@ -633,6 +782,17 @@ function stepPlayerHazards(world: World): void {
   }
 
   if (damage > 0) applyPlayerDamage(world, damage)
+}
+
+/** Boss bar read model: set-piece with highest maxHp, if any active. */
+export function bossBarFromWorld(world: World): { hp: number; maxHp: number } | null {
+  let best: Enemy | null = null
+  for (const e of world.enemies) {
+    if (!e.active || e.class !== 'set_piece') continue
+    if (!best || e.maxHp > best.maxHp) best = e
+  }
+  if (!best) return null
+  return { hp: Math.max(0, best.hp), maxHp: best.maxHp }
 }
 
 function stepDeathHold(world: World, dt: number): void {

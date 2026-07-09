@@ -43,8 +43,8 @@ export const PLAYER_DECEL = 50
 export const CAMERA_FOV = 40
 
 export const MAX_PLAYER_BULLETS = 64
-export const MAX_ENEMY_BULLETS = 96
-export const MAX_ENEMIES = 48
+export const MAX_ENEMY_BULLETS = 160
+export const MAX_ENEMIES = 64
 export const MAX_POWERUPS = 3
 export const POWERUP_R = 0.35
 /** Flat score awarded for collecting a powerup; gameplay effect remains primary. */
@@ -108,6 +108,50 @@ export const GUNNER = {
   fireInterval: 1.4,
   bulletSpeed: 6,
 } as const
+
+export const SIDECAR = {
+  hp: 5,
+  points: 350,
+  r: 0.55,
+  contactDamage: 1,
+  fireInterval: 1.2,
+  bulletSpeed: 7,
+} as const
+
+export const RAZOR = {
+  hp: 20,
+  points: 1200,
+  r: 0.7,
+  contactDamage: 1,
+  fireInterval: 1.6,
+  bulletSpeed: 9,
+  burstCount: 5,
+} as const
+
+export const PRISM = {
+  hp: 28,
+  points: 1500,
+  r: 0.7,
+  contactDamage: 1,
+  fireInterval: 2.2,
+  bulletSpeed: 7,
+  ringCount: 8,
+} as const
+
+export const COLOSSUS = {
+  hp: 100,
+  points: 5000,
+  halfW: 1.0,
+  halfH: 0.6,
+  r: 1.2,
+  contactDamage: 2,
+  fireInterval: 0.55,
+  bulletSpeed: 7,
+  sprayDuration: 3,
+  pauseDuration: 2,
+} as const
+
+export const SET_PIECE_STREAM_MULT = 0.85
 
 export const ENEMY_BULLET_R = 0.15
 export const ENEMY_BULLET_DAMAGE = 1

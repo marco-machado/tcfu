@@ -33,7 +33,10 @@ function emptyEnemy(_: unknown, id: number): Enemy {
     y: 0,
     vy: 0,
     r: 0,
+    halfW: 0,
+    halfH: 0,
     hp: 0,
+    maxHp: 0,
     points: 0,
     contactDamage: 1,
     fireCooldown: 0,
@@ -41,8 +44,11 @@ function emptyEnemy(_: unknown, id: number): Enemy {
     bulletSpeed: 0,
     path: 'drift_down',
     pathPhase: 0,
+    laneX: 0,
     waveId: 0,
     shotStyle: 'none',
+    phase: 'none',
+    phaseElapsed: 0,
     age: 0,
   }
 }

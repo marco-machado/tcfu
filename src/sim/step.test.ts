@@ -14,6 +14,8 @@ import {
   STREAM_BASE_SPEED,
   WAVE_CLEAR_WINDOW,
   WAVE_GAP,
+  BOMB_DAMAGE,
+  SET_PIECE_STREAM_MULT,
   playerMoveBounds,
   scrapForRun,
   streamSpeedForWave,
@@ -28,7 +30,7 @@ import {
   type MetaModifiers,
 } from './metaModifiers'
 import { buildRunSummary } from './summary'
-import { isRunReadyForResults, stepWorld } from './step'
+import { bossBarFromWorld, isRunReadyForResults, stepWorld } from './step'
 import { weaponTierForWCells } from './weapons'
 import { createWorld as createWorldBase, getWorld, resetWorld, setWorld } from './world'
 import type { PowerupType, World } from './types'
@@ -98,7 +100,10 @@ function placeDrone(world: World, x: number, y: number): World['enemies'][number
   slot.y = y
   slot.vy = 0
   slot.r = 0.4
+  slot.halfW = 0
+  slot.halfH = 0
   slot.hp = 1
+  slot.maxHp = 1
   slot.points = 100
   slot.contactDamage = 1
   slot.fireCooldown = 0
@@ -106,9 +111,72 @@ function placeDrone(world: World, x: number, y: number): World['enemies'][number
   slot.bulletSpeed = 0
   slot.path = 'drift_down'
   slot.pathPhase = 0
+  slot.laneX = x
   slot.waveId = world.session.wave
   slot.shotStyle = 'none'
+  slot.phase = 'none'
+  slot.phaseElapsed = 0
   slot.age = CONTACT_ARM_TIME
+  return slot
+}
+
+function placeKind(
+  world: World,
+  kind: World['enemies'][number]['kind'],
+  x: number,
+  y: number,
+): World['enemies'][number] {
+  const slot = placeDrone(world, x, y)
+  slot.kind = kind
+  if (kind === 'sidecar') {
+    slot.class = 'grunt'
+    slot.hp = 5
+    slot.maxHp = 5
+    slot.points = 350
+    slot.r = 0.55
+    slot.fireInterval = 1.2
+    slot.fireCooldown = 0
+    slot.bulletSpeed = 7
+    slot.shotStyle = 'side_pair'
+  } else if (kind === 'razor') {
+    slot.class = 'elite'
+    slot.hp = 20
+    slot.maxHp = 20
+    slot.points = 1200
+    slot.r = 0.7
+    slot.fireInterval = 1.6
+    slot.fireCooldown = 0
+    slot.bulletSpeed = 9
+    slot.shotStyle = 'aimed_burst'
+    slot.path = 'hold_and_shot'
+  } else if (kind === 'prism') {
+    slot.class = 'elite'
+    slot.hp = 28
+    slot.maxHp = 28
+    slot.points = 1500
+    slot.r = 0.7
+    slot.fireInterval = 2.2
+    slot.fireCooldown = 0
+    slot.bulletSpeed = 7
+    slot.shotStyle = 'ring8'
+    slot.path = 'hold_and_shot'
+  } else if (kind === 'colossus') {
+    slot.class = 'set_piece'
+    slot.hp = 100
+    slot.maxHp = 100
+    slot.points = 5000
+    slot.r = 1.2
+    slot.halfW = 1
+    slot.halfH = 0.6
+    slot.contactDamage = 2
+    slot.fireInterval = 0.55
+    slot.fireCooldown = 0
+    slot.bulletSpeed = 7
+    slot.shotStyle = 'boss_spray'
+    slot.phase = 'spray'
+    slot.phaseElapsed = 0
+    slot.path = 'hold_and_shot'
+  }
   return slot
 }
 
@@ -1286,5 +1354,148 @@ describe('meta modifiers at Run start', () => {
     stepWorld(world, FIXED_DT, bombOnly())
     expect(activePowerups(world)).toHaveLength(0)
     expect(world.powerupDryElapsed).toBeGreaterThanOrEqual(35)
+  })
+})
+
+describe('content depth combat', () => {
+  it('sidecar fires left/right side shots', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placeKind(world, 'sidecar', 0, 10)
+    stepWorld(world, FIXED_DT, idle())
+    const bullets = activeEnemyBullets(world)
+    expect(bullets.length).toBeGreaterThanOrEqual(2)
+    expect(bullets.some((b) => b.vx < 0)).toBe(true)
+    expect(bullets.some((b) => b.vx > 0)).toBe(true)
+  })
+
+  it('razor aimed burst does not home after spawn', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.x = 3
+    world.player.y = 3
+    placeKind(world, 'razor', 0, 12)
+    stepWorld(world, FIXED_DT, idle())
+    const first = activeEnemyBullets(world).map((b) => ({ vx: b.vx, vy: b.vy }))
+    expect(first.length).toBe(5)
+    world.player.x = -4
+    steps(world, 10, idle())
+    const later = activeEnemyBullets(world)
+    for (let i = 0; i < Math.min(first.length, later.length); i++) {
+      expect(later[i].vx).toBeCloseTo(first[i].vx, 5)
+      expect(later[i].vy).toBeCloseTo(first[i].vy, 5)
+    }
+  })
+
+  it('prism fires an 8-bullet ring', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placeKind(world, 'prism', 0, 12)
+    stepWorld(world, FIXED_DT, idle())
+    expect(activeEnemyBullets(world)).toHaveLength(8)
+  })
+
+  it('colossus contact deals heavy 2 and AABB takes bullet hits', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    // Keep both inside the movement band so stepPlayer does not pull the ship away.
+    world.player.x = 0
+    world.player.y = 4
+    const boss = placeKind(world, 'colossus', 0, 4)
+    boss.path = 'drift_down'
+    boss.vy = 0
+    boss.age = CONTACT_ARM_TIME + FIXED_DT
+    // Zero stream so drift does not separate bodies this step.
+    world.streamSpeed = 0
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.hp).toBe(world.player.maxHp - 2)
+
+    const world2 = createWorld('vanguard')
+    suspendWaves(world2)
+    world2.player.x = 0
+    world2.player.y = 4
+    const boss2 = placeKind(world2, 'colossus', 0, 5)
+    boss2.path = 'drift_down'
+    boss2.age = CONTACT_ARM_TIME + FIXED_DT
+    const hp0 = boss2.hp
+    steps(world2, 20, fireOnly())
+    expect(boss2.hp).toBeLessThan(hp0)
+  })
+
+  it('bomb damages colossus by bomb damage amount', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const boss = placeKind(world, 'colossus', 0, 8)
+    const hp0 = boss.hp
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(boss.hp).toBe(hp0 - BOMB_DAMAGE)
+  })
+
+  it('colossus pauses fire after spray window', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const boss = placeKind(world, 'colossus', 0, 12)
+    boss.y = 12
+    steps(world, Math.floor(3.1 / FIXED_DT), idle())
+    expect(boss.phase).toBe('pause')
+    // Clear in-flight bullets so only new spawns would increase the count.
+    for (const b of world.enemyBullets) b.active = false
+    steps(world, Math.floor(0.6 / FIXED_DT), idle())
+    expect(activeEnemyBullets(world)).toHaveLength(0)
+  })
+
+  it('new kinds award class W-cells', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placeKind(world, 'sidecar', 0, 8)
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(world.player.wCells).toBe(2)
+
+    const elite = createWorld('vanguard')
+    suspendWaves(elite)
+    const razor = placeKind(elite, 'razor', 0, 8)
+    razor.hp = 1
+    stepWorld(elite, FIXED_DT, bombOnly())
+    expect(elite.player.wCells).toBe(5)
+
+    const setp = createWorld('vanguard')
+    suspendWaves(setp)
+    const boss = placeKind(setp, 'colossus', 0, 8)
+    boss.hp = 1
+    stepWorld(setp, FIXED_DT, bombOnly())
+    expect(setp.player.wCells).toBe(15)
+  })
+
+  it('set-piece waves use stream × 0.85', () => {
+    const world = createWorld('vanguard')
+    world.waves.suspended = false
+    world.session.wave = 9
+    world.waves.phase = 'gap'
+    world.waves.gapElapsed = WAVE_GAP
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.session.wave).toBe(10)
+    expect(world.streamSpeed).toBeCloseTo(streamSpeedForWave(10) * SET_PIECE_STREAM_MULT, 5)
+  })
+
+  it('boss bar reports set-piece HP and clears when none active', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    expect(bossBarFromWorld(world)).toBeNull()
+    const boss = placeKind(world, 'colossus', 0, 10)
+    boss.hp = 40
+    expect(bossBarFromWorld(world)).toEqual({ hp: 40, maxHp: 100 })
+    boss.active = false
+    expect(bossBarFromWorld(world)).toBeNull()
+  })
+
+  it('strafe-enter moves toward lane X', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const e = placeDrone(world, -3, 16)
+    e.path = 'strafe_enter_left'
+    e.laneX = -3
+    e.x = -11
+    steps(world, 60, idle())
+    expect(e.x).toBeCloseTo(-3, 1)
   })
 })

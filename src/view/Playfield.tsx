@@ -348,6 +348,10 @@ const KIND_VISUAL: Record<EnemyKind, KindVisual> = {
   drone: { color: '#e87840', emissive: '#a03010', sx: 0.85, sy: 0.7, sz: 0.4 },
   dart: { color: '#f0c040', emissive: '#a07010', sx: 0.45, sy: 1.05, sz: 0.3 },
   gunner: { color: '#d04050', emissive: '#801020', sx: 1.15, sy: 0.9, sz: 0.5 },
+  sidecar: { color: '#e06090', emissive: '#901040', sx: 1.2, sy: 0.75, sz: 0.45 },
+  razor: { color: '#c050ff', emissive: '#7010b0', sx: 1.35, sy: 1.1, sz: 0.55 },
+  prism: { color: '#50e0d0', emissive: '#108070', sx: 1.3, sy: 1.3, sz: 0.55 },
+  colossus: { color: '#ff6060', emissive: '#a01010', sx: 2.0, sy: 1.2, sz: 0.7 },
 }
 
 function EnemyKindInstances({ kind }: { kind: EnemyKind }) {
@@ -399,6 +403,10 @@ function EnemyInstances() {
       <EnemyKindInstances kind="drone" />
       <EnemyKindInstances kind="dart" />
       <EnemyKindInstances kind="gunner" />
+      <EnemyKindInstances kind="sidecar" />
+      <EnemyKindInstances kind="razor" />
+      <EnemyKindInstances kind="prism" />
+      <EnemyKindInstances kind="colossus" />
     </group>
   )
 }

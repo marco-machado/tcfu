@@ -48,6 +48,22 @@ _Avoid_: Shop, store, loadout screen
 A hand-authored spawn choreography of enemies and hazards, reusable under a difficulty curve.
 _Avoid_: Level, stage, procedural swarm (unless explicitly procedural)
 
+**Playlist band**:
+A wave-index range that selects wave patterns from a fixed pool (intro, early, mid, late).
+_Avoid_: Stage, chapter, act
+
+**Elite**:
+Enemy class for tankier, denser-threat foes (for example razor and prism). Not a wave type.
+_Avoid_: Boss (reserved for set-piece framing in UI copy only), mini-boss as a separate mode
+
+**Set-piece**:
+A wave highlight encounter featuring a set_piece-class threat (Colossus patterns), scheduled on fixed wave multiples.
+_Avoid_: Boss level, stage, mission, campaign fight
+
+**Boss bar**:
+Run HUD hit-point readout shown while a set-piece enemy is active. Not a separate game mode.
+_Avoid_: Boss stage UI, mission objective bar
+
 **Endless survival**:
 The sole mode: continuous escalating threat until death; no campaign stages as the primary structure.
 _Avoid_: Story mode, mission select

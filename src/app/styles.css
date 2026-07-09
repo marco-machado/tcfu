@@ -139,6 +139,35 @@ button:disabled {
   letter-spacing: 0.04em;
 }
 
+.boss-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 12rem;
+  max-width: 18rem;
+  pointer-events: none;
+}
+
+.boss-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: #ffb0a0;
+  text-align: center;
+}
+
+.boss-track {
+  height: 0.45rem;
+  background: #1a1014;
+  border: 1px solid #803040;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.boss-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c03030, #ff7060);
+}
+
 .overlay {
   position: absolute;
   inset: 0;
