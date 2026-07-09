@@ -50,6 +50,13 @@ export const POWERUP_R = 0.35
 /** Flat score awarded for collecting a powerup; gameplay effect remains primary. */
 export const POWERUP_SCORE = 50
 
+export const RATE_UP_COOLDOWN_MULT = 0.75
+export const RATE_UP_DURATION = 8
+export const SPREAD_UP_DURATION = 8
+export const SPREAD_UP_OFFSET = 0.5
+export const SCORE_MULT_DURATION = 10
+export const SCORE_MULT_KILL = 2
+
 export const PULSE_T0 = {
   cooldown: 0.18,
   bulletSpeed: 18,

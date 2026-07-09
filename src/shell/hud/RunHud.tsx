@@ -25,6 +25,10 @@ export function RunHud() {
   const nextTier = nextWeaponTierThreshold(p.wCells)
   const weaponTier = weaponTierForWCells(p.wCells)
   const tierPips = '●'.repeat(weaponTier) + '○'.repeat(WEAPON_TIER_MAX - weaponTier)
+  const timed: string[] = []
+  if (p.rateUp > 0) timed.push(`OVR ${p.rateUp.toFixed(1)}s`)
+  if (p.spreadUp > 0) timed.push(`OPT ${p.spreadUp.toFixed(1)}s`)
+  if (p.scoreMult > 0) timed.push(`BTY ${p.scoreMult.toFixed(1)}s`)
 
   return (
     <div className="hud">
@@ -34,7 +38,9 @@ export function RunHud() {
         <span>WAVE {s.wave}</span>
         <span>BOMBS {p.bombs}</span>
       </div>
-      <div />
+      <div className="hud-mid">
+        {timed.length > 0 ? <span className="hud-timed">{timed.join(' · ')}</span> : null}
+      </div>
       <div className="hud-bottom">
         <span>
           HP {'●'.repeat(Math.max(0, p.hp))}

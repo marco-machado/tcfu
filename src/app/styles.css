@@ -127,6 +127,18 @@ button:disabled {
   gap: 1rem;
 }
 
+.hud-mid {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 0.35rem;
+}
+
+.hud-timed {
+  color: #f0d060;
+  letter-spacing: 0.04em;
+}
+
 .overlay {
   position: absolute;
   inset: 0;

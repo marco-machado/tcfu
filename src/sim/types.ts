@@ -32,6 +32,9 @@ export type PlayerState = {
   shipId: ShipId
   fireCooldown: number
   hitboxR: number
+  rateUp: number
+  spreadUp: number
+  scoreMult: number
 }
 
 export type PlayerBullet = {

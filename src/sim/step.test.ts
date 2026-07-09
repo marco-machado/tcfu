@@ -720,3 +720,212 @@ describe('sim world step wave director', () => {
     )
   })
 })
+
+describe('sim world step timed powerups', () => {
+  it('Overclock multiplies the current tier cooldown by 0.75 for eight seconds', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'rate_up', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.rateUp).toBeCloseTo(8, 5)
+    expect(world.session.score).toBe(50)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(world.player.fireCooldown).toBeCloseTo(0.135, 5)
+  })
+
+  it('Overclock applies after the resolved weapon tier cooldown', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.wCells = 20
+    placePowerup(world, 'rate_up', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(world.player.fireCooldown).toBeCloseTo(0.1125, 5)
+  })
+
+  it('a second Overclock refreshes duration rather than stacking the multiplier', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'rate_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    steps(world, Math.floor(3 / FIXED_DT), idle())
+    expect(world.player.rateUp).toBeLessThan(5.1)
+
+    placePowerup(world, 'rate_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.rateUp).toBeCloseTo(8, 5)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(world.player.fireCooldown).toBeCloseTo(0.135, 5)
+  })
+
+  it('Overclock expires and restores the base tier cooldown', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'rate_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    steps(world, Math.ceil(8 / FIXED_DT), idle())
+    expect(world.player.rateUp).toBe(0)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(world.player.fireCooldown).toBeCloseTo(0.18, 5)
+  })
+
+  it('Options adds exactly two damage-1 side shots on the normal weapon cooldown', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'spread_up', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.spreadUp).toBeCloseTo(8, 5)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    const bullets = activeBullets(world)
+    expect(bullets).toHaveLength(3)
+    const side = bullets.filter((b) => b.x !== world.player.x)
+    expect(side).toHaveLength(2)
+    expect(side.every((b) => b.damage === 1)).toBe(true)
+    expect(side.every((b) => b.vy > 0)).toBe(true)
+    expect(world.player.fireCooldown).toBeCloseTo(0.18, 5)
+  })
+
+  it('Options is additive to a multi-shot weapon tier pattern', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.wCells = 50
+    placePowerup(world, 'spread_up', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(activeBullets(world)).toHaveLength(4)
+  })
+
+  it('a second Options refreshes duration rather than adding further side shots', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'spread_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    steps(world, Math.floor(2 / FIXED_DT), idle())
+
+    placePowerup(world, 'spread_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.spreadUp).toBeCloseTo(8, 5)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(activeBullets(world)).toHaveLength(3)
+  })
+
+  it('Options expires and stops spawning side shots', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'spread_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    steps(world, Math.ceil(8 / FIXED_DT), idle())
+    expect(world.player.spreadUp).toBe(0)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(activeBullets(world)).toHaveLength(1)
+  })
+
+  it('Bounty doubles kill score for ten seconds and refreshes without stacking to 4x', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'score_mult', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.scoreMult).toBeCloseTo(10, 5)
+    expect(world.session.score).toBe(50)
+
+    placeDrone(world, world.player.x, world.player.y + 1)
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+    expect(world.session.score).toBe(250)
+    expect(world.player.wCells).toBe(1)
+
+    steps(world, Math.floor(4 / FIXED_DT), idle())
+    placePowerup(world, 'score_mult', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.scoreMult).toBeCloseTo(10, 5)
+
+    const scoreBefore = world.session.score
+    placeDrone(world, world.player.x, world.player.y + 1)
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 12, idle())
+    expect(world.session.score).toBe(scoreBefore + 200)
+  })
+
+  it('Bounty does not double pickup score, wave-clear bonus, or W-cells', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.session.wave = 1
+    world.waves.waveSpawned = 1
+    world.waves.waveKilled = 0
+    world.waves.phase = 'await_clear'
+    world.waves.clearElapsed = 0
+    world.waves.clearAwarded = false
+    placePowerup(world, 'score_mult', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.session.score).toBe(50)
+
+    const enemy = placeDrone(world, world.player.x, world.player.y + 1)
+    enemy.waveId = 1
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+    expect(world.player.wCells).toBe(1)
+    expect(world.session.score).toBe(50 + 200)
+
+    world.waves.suspended = false
+    world.waves.phase = 'await_clear'
+    world.waves.clearElapsed = 0
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.session.score).toBe(50 + 200 + waveClearBonus(1))
+  })
+
+  it('Bounty expires and kill score returns to the wave multiplier only', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'score_mult', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    steps(world, Math.ceil(10 / FIXED_DT), idle())
+    expect(world.player.scoreMult).toBe(0)
+
+    const scoreBefore = world.session.score
+    placeDrone(world, world.player.x, world.player.y + 1)
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+    expect(world.session.score).toBe(scoreBefore + 100)
+  })
+
+  it('Overclock and Options can be active together', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'rate_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    placePowerup(world, 'spread_up', world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.player.rateUp).toBeGreaterThan(7)
+    expect(world.player.spreadUp).toBeCloseTo(8, 5)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(activeBullets(world)).toHaveLength(3)
+    expect(world.player.fireCooldown).toBeCloseTo(0.135, 5)
+  })
+
+  it('timed powerups reset on a new Run', () => {
+    const dirty = createWorld('vanguard')
+    dirty.player.rateUp = 4
+    dirty.player.spreadUp = 3
+    dirty.player.scoreMult = 5
+    setWorld(dirty)
+
+    const fresh = resetWorld('vanguard')
+    expect(fresh.player.rateUp).toBe(0)
+    expect(fresh.player.spreadUp).toBe(0)
+    expect(fresh.player.scoreMult).toBe(0)
+  })
+})

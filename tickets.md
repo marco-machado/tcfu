@@ -32,11 +32,11 @@ Tracer-bullet implementation tickets for [the powerups and W-cells specification
 
 **Blocked by:** Collectible instant powerups.
 
-- [ ] Overclock applies a 0.75 multiplier after the current tier's base cooldown for eight seconds and refreshes rather than stacks.
-- [ ] Options adds exactly two damage-1 side shots on the normal resolved cooldown for eight seconds and refreshes rather than adds further shots.
-- [ ] Bounty doubles kill score for ten seconds, refreshes rather than becomes four-times, and does not affect W-cells, pickup score, wave-clear rewards, or Scrap.
-- [ ] The Run HUD visibly reports all active timed effects and their remaining durations.
-- [ ] Simulation tests cover each effect, expiry, refresh, interaction with tiered weapons, and Bounty's score boundary.
+- [x] Overclock applies a 0.75 multiplier after the current tier's base cooldown for eight seconds and refreshes rather than stacks.
+- [x] Options adds exactly two damage-1 side shots on the normal resolved cooldown for eight seconds and refreshes rather than adds further shots.
+- [x] Bounty doubles kill score for ten seconds, refreshes rather than becomes four-times, and does not affect W-cells, pickup score, wave-clear rewards, or Scrap.
+- [x] The Run HUD visibly reports all active timed effects and their remaining durations.
+- [x] Simulation tests cover each effect, expiry, refresh, interaction with tiered weapons, and Bounty's score boundary.
 
 ## Powerup drop economy and authored guarantee
 

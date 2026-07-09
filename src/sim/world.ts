@@ -67,6 +67,9 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       shipId,
       fireCooldown: 0,
       hitboxR: PLAYER_HITBOX_R,
+      rateUp: 0,
+      spreadUp: 0,
+      scoreMult: 0,
     },
     session: {
       score: 0,

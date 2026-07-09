@@ -21,8 +21,14 @@ import {
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
   POWERUP_SCORE,
+  RATE_UP_COOLDOWN_MULT,
+  RATE_UP_DURATION,
   RESPAWN,
+  SCORE_MULT_DURATION,
+  SCORE_MULT_KILL,
   SPAWN_Y,
+  SPREAD_UP_DURATION,
+  SPREAD_UP_OFFSET,
   WAVE_CLEAR_WINDOW,
   WAVE_GAP,
   enemyFireCooldownScale,
@@ -40,6 +46,12 @@ import { weaponFor, weaponTierForWCells } from './weapons'
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v))
+}
+
+function tickTimer(remaining: number, dt: number): number {
+  if (remaining <= 0) return 0
+  const next = remaining - dt
+  return next <= 1e-9 ? 0 : next
 }
 
 function acquirePlayerBullet(world: World): PlayerBullet | null {
@@ -68,6 +80,9 @@ function applyPowerup(world: World, powerup: Powerup): void {
   if (powerup.type === 'shield') player.shield = true
   if (powerup.type === 'bomb_stock') player.bombs = Math.min(player.maxBombs, player.bombs + 1)
   if (powerup.type === 'repair') player.hp = Math.min(player.maxHp, player.hp + 1)
+  if (powerup.type === 'rate_up') player.rateUp = RATE_UP_DURATION
+  if (powerup.type === 'spread_up') player.spreadUp = SPREAD_UP_DURATION
+  if (powerup.type === 'score_mult') player.scoreMult = SCORE_MULT_DURATION
   world.session.score += POWERUP_SCORE
 }
 
@@ -101,7 +116,9 @@ function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId
   world.session.kills += 1
   world.player.wCells += wCellsForEnemy(enemy.class)
   const mult = waveMultiplier(enemy.waveId > 0 ? enemy.waveId : world.session.wave)
-  world.session.score += Math.floor(enemy.points * mult)
+  let killScore = enemy.points * mult
+  if (world.player.scoreMult > 0) killScore *= SCORE_MULT_KILL
+  world.session.score += Math.floor(killScore)
   if (enemy.waveId === world.session.wave) {
     world.waves.waveKilled += 1
   }
@@ -319,6 +336,33 @@ function stepPlayer(world: World, dt: number, commands: Commands): void {
 
   if (p.iFrames > 0) p.iFrames = Math.max(0, p.iFrames - dt)
   if (p.fireCooldown > 0) p.fireCooldown = Math.max(0, p.fireCooldown - dt)
+  p.rateUp = tickTimer(p.rateUp, dt)
+  p.spreadUp = tickTimer(p.spreadUp, dt)
+  p.scoreMult = tickTimer(p.scoreMult, dt)
+}
+
+function spawnPlayerShot(
+  world: World,
+  x: number,
+  y: number,
+  vx: number,
+  vy: number,
+  r: number,
+  damage: number,
+  pierce: number,
+): boolean {
+  const slot = acquirePlayerBullet(world)
+  if (!slot) return false
+  slot.active = true
+  slot.x = x
+  slot.y = y
+  slot.vx = vx
+  slot.vy = vy
+  slot.r = r
+  slot.damage = damage
+  slot.pierce = pierce
+  slot.hitEnemyIds = []
+  return true
 }
 
 function stepFire(world: World, commands: Commands): void {
@@ -329,19 +373,18 @@ function stepFire(world: World, commands: Commands): void {
   if (world.playerBullets.filter((b) => !b.active).length < weapon.shots.length) return
 
   for (const shot of weapon.shots) {
-    const slot = acquirePlayerBullet(world)
-    if (!slot) return
-    slot.active = true
-    slot.x = p.x + shot.offsetX
-    slot.y = p.y
-    slot.vx = shot.vx
-    slot.vy = shot.vy
-    slot.r = shot.r
-    slot.damage = shot.damage
-    slot.pierce = shot.pierce
-    slot.hitEnemyIds = []
+    if (!spawnPlayerShot(world, p.x + shot.offsetX, p.y, shot.vx, shot.vy, shot.r, shot.damage, shot.pierce)) return
   }
-  p.fireCooldown = weapon.cooldown
+
+  if (p.spreadUp > 0) {
+    const primary = weapon.shots[0]!
+    const speed = Math.max(...weapon.shots.map((s) => Math.hypot(s.vx, s.vy)))
+    const r = primary.r
+    spawnPlayerShot(world, p.x - SPREAD_UP_OFFSET, p.y, 0, speed, r, 1, 0)
+    spawnPlayerShot(world, p.x + SPREAD_UP_OFFSET, p.y, 0, speed, r, 1, 0)
+  }
+
+  p.fireCooldown = p.rateUp > 0 ? weapon.cooldown * RATE_UP_COOLDOWN_MULT : weapon.cooldown
 }
 
 function stepBomb(world: World, commands: Commands): void {
