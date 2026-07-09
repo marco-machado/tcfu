@@ -30,15 +30,22 @@ A written design package ready to implement: stack and architecture boundaries, 
 - [Design artifact shape](issues/01-design-artifact-shape.md) — Package is `docs/design/DESIGN.md` + `catalogs/*` + sparse `docs/adr/` + research notes; fixed DESIGN outline; seven required catalogs; done = implementable defaults, not perfect balance.
 - [Core loop and scoring](issues/02-core-loop-and-scoring.md) — Title→Hangar→Run→Results; 3 lives × 3 HP; wave index endless; score from kills/waves/pickups/clean-wave (no passive time); ship unlocks by single-run score; top-10 local high scores; meta currency paid at Results.
 - [Spatial playfield model](issues/03-spatial-playfield.md) — XY planar play, perspective 4:3 ~40° FOV, movement band ±6×[1.5–7], game-driven world stream with mild wave ramp, Z cosmetic only, player hitbox r=0.35, tiny cosmetic camera sway.
+- [Combat and collision rules](issues/04-combat-and-collision.md) — 3 HP, i-frames 1s/2s respawn, shield buffer, bomb stock 2–5, XY circle/AABB layers, enemy HP classes, one damage event per frame, feedback requirements; hitstop off.
+- [R3F architecture research](issues/05-r3f-architecture.md) — Sim/view/shell split; fixed 1/60 step; world pools + Zustand for session; no setState in useFrame; simple 2D collision; see `docs/design/research/r3f-architecture.md`.
+- [Ship roster and kits](issues/06-ship-roster.md) — Four kits: vanguard (start), striker 25k, aegis 75k, phantom 150k; unique speed/hitbox/weapon/passive; shared systems; no loadout builder.
+- [Weapons, powerups, and run upgrades](issues/07-weapons-powerups-run-upgrades.md) — Four weapon lines tiers 0–3; W-cell auto tiers (20/50/100); six powerups with spawn weights/pity; catalogs weapons/powerups/run-upgrades.
+- [Meta-upgrade tree](issues/08-meta-upgrade-tree.md) — Scrap at Results; 4×3 branches (Arsenal/Hull/Salvage/Thrusters); small caps; ships still score-unlocked; `tcfu.meta` save.
+- [Wave patterns and difficulty curve](issues/09-wave-patterns-difficulty.md) — Authored patterns + pools; 7 enemy types; 24 patterns; HP/shot/density curves; set-piece @10 then every 10; intro waves 1–3 fixed.
+- [Art direction and hi-fi pipeline](issues/10-art-direction-pipeline.md) — Hi-fi PBR sci-fi, readability-first; bloom+vignette tiers; Tripo GLB + GPT-image-2 prompts in `docs/design/research/art-pipeline.md`.
+- [Input map and movement feel](issues/11-input-and-feel.md) — WASD/arrows + pad; hold fire; bomb edge; max 8 u/s, accel 40/decel 50; deadzone 0.15; default binds only; light rumble.
+- [UI shell and HUD](issues/12-ui-shell-and-hud.md) — 4:3 DOM shell; Title/Hangar/Run HUD/Pause/Results/High Scores/Settings; upgrade bay; quality tiers; read-only binds.
 
 ## Not yet specified
 
 - Audio / music direction and implementation approach
-- Performance budgets and target hardware profile for hi-fi web
-- Save-data shape for meta unlocks (high-score table fields/size locked in Core loop; meta inventory schema still open)
+- Performance budgets beyond quality tiers + 60fps Medium intent (see art research)
+- Save-data migrations / versioning beyond high scores + `tcfu.meta` ranks schema (schema locked in Meta-upgrade tree)
 - Accessibility (colorblind, reduce flash, remapping beyond defaults)
-- Whether a bomb/special resource exists beside weapons and powerups
-- Exact content volume targets (ship count, pattern count) once catalogs start
 - Pause/focus edge cases beyond basic pause + auto-pause on blur (already locked in Core loop)
 
 ## Out of scope
