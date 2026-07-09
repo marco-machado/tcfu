@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { scrapForRun } from '../../sim/constants'
 import { getWorld } from '../../sim/world'
+import { nextWeaponTierThreshold, weaponTierForWCells, WEAPON_TIER_MAX } from '../../sim/weapons'
 
 export function RunHud() {
   const [, tick] = useState(0)
@@ -21,6 +22,9 @@ export function RunHud() {
   const wavesCompleted = Math.max(0, s.wave - 1)
   const scrapEst = scrapForRun(s.score, wavesCompleted)
   const dying = s.runOver && s.endHold > 0
+  const nextTier = nextWeaponTierThreshold(p.wCells)
+  const weaponTier = weaponTierForWCells(p.wCells)
+  const tierPips = '●'.repeat(weaponTier) + '○'.repeat(WEAPON_TIER_MAX - weaponTier)
 
   return (
     <div className="hud">
@@ -38,7 +42,8 @@ export function RunHud() {
           {p.shield ? ' · SHIELD' : ''}
         </span>
         <span>
-          SCRAP ~{scrapEst} · TIER {p.weaponTier}
+          SCRAP ~{scrapEst} · TIER {tierPips} · W-CELLS {p.wCells}
+          {nextTier === null ? ' · MAX' : ` / ${nextTier}`}
         </span>
       </div>
       {s.paused && !dying && (

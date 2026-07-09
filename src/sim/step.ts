@@ -20,7 +20,6 @@ import {
   PLAYER_ACCEL,
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
-  PULSE_T0,
   RESPAWN,
   SPAWN_Y,
   WAVE_CLEAR_WINDOW,
@@ -35,7 +34,8 @@ import {
   waveMultiplier,
 } from './constants'
 import { patternForWave, type PathId, type SpawnEvent } from './patterns'
-import type { Enemy, EnemyBullet, EnemyKind, PlayerBullet, World } from './types'
+import type { Enemy, EnemyBullet, EnemyClass, EnemyKind, PlayerBullet, World } from './types'
+import { weaponFor, weaponTierForWCells } from './weapons'
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v))
@@ -66,11 +66,19 @@ function onPlayfield(x: number, y: number): boolean {
   return y >= CULL_Y_MIN && y <= SPAWN_Y && Math.abs(x) <= CULL_X_MAX
 }
 
-function awardKill(world: World, points: number, waveId: number): void {
+function wCellsForEnemy(enemyClass: EnemyClass): number {
+  if (enemyClass === 'set_piece') return 15
+  if (enemyClass === 'elite') return 5
+  if (enemyClass === 'grunt') return 2
+  return 1
+}
+
+function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId'>): void {
   world.session.kills += 1
-  const mult = waveMultiplier(waveId > 0 ? waveId : world.session.wave)
-  world.session.score += Math.floor(points * mult)
-  if (waveId === world.session.wave) {
+  world.player.wCells += wCellsForEnemy(enemy.class)
+  const mult = waveMultiplier(enemy.waveId > 0 ? enemy.waveId : world.session.wave)
+  world.session.score += Math.floor(enemy.points * mult)
+  if (enemy.waveId === world.session.wave) {
     world.waves.waveKilled += 1
   }
 }
@@ -131,6 +139,10 @@ function kindStats(kind: EnemyKind) {
   return DRONE
 }
 
+function classForKind(kind: EnemyKind): EnemyClass {
+  return kind === 'gunner' ? 'grunt' : 'fodder'
+}
+
 function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: number): void {
   const stats = kindStats(event.kind)
   const hpScale = enemyHpScale(wave)
@@ -139,6 +151,7 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
 
   e.active = true
   e.kind = event.kind
+  e.class = classForKind(event.kind)
   e.x = event.x
   e.y = event.y
   e.r = stats.r
@@ -288,16 +301,23 @@ function stepFire(world: World, commands: Commands): void {
   const p = world.player
   if (!commands.fire || p.fireCooldown > 0) return
 
-  const slot = acquirePlayerBullet(world)
-  if (!slot) return
+  const weapon = weaponFor(p.shipId, weaponTierForWCells(p.wCells))
+  if (world.playerBullets.filter((b) => !b.active).length < weapon.shots.length) return
 
-  slot.active = true
-  slot.x = p.x
-  slot.y = p.y
-  slot.vy = PULSE_T0.bulletSpeed
-  slot.r = PULSE_T0.bulletR
-  slot.damage = PULSE_T0.damage
-  p.fireCooldown = PULSE_T0.cooldown
+  for (const shot of weapon.shots) {
+    const slot = acquirePlayerBullet(world)
+    if (!slot) return
+    slot.active = true
+    slot.x = p.x + shot.offsetX
+    slot.y = p.y
+    slot.vx = shot.vx
+    slot.vy = shot.vy
+    slot.r = shot.r
+    slot.damage = shot.damage
+    slot.pierce = shot.pierce
+    slot.hitEnemyIds = []
+  }
+  p.fireCooldown = weapon.cooldown
 }
 
 function stepBomb(world: World, commands: Commands): void {
@@ -317,7 +337,7 @@ function stepBomb(world: World, commands: Commands): void {
     e.hp -= BOMB_DAMAGE
     if (e.hp <= 0) {
       e.active = false
-      awardKill(world, e.points, e.waveId)
+      awardKill(world, e)
     }
   }
 }
@@ -325,6 +345,7 @@ function stepBomb(world: World, commands: Commands): void {
 function stepPlayerBullets(world: World, dt: number): void {
   for (const b of world.playerBullets) {
     if (!b.active) continue
+    b.x += b.vx * dt
     b.y += b.vy * dt
     if (b.y > SPAWN_Y + 2 || b.y < CULL_Y_MIN || Math.abs(b.x) > CULL_X_MAX) {
       b.active = false
@@ -430,13 +451,16 @@ function stepPlayerBulletHits(world: World): void {
     if (!b.active) continue
     for (const e of world.enemies) {
       if (!e.active) continue
+      if (b.hitEnemyIds.includes(e.id)) continue
       if (!circleCircle({ x: b.x, y: b.y, r: b.r }, { x: e.x, y: e.y, r: e.r })) continue
 
       e.hp -= b.damage
-      b.active = false
+      b.hitEnemyIds.push(e.id)
+      if (b.pierce > 0) b.pierce -= 1
+      else b.active = false
       if (e.hp <= 0) {
         e.active = false
-        awardKill(world, e.points, e.waveId)
+        awardKill(world, e)
       }
       break
     }

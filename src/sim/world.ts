@@ -9,17 +9,19 @@ import {
 import type { Enemy, EnemyBullet, PlayerBullet, ShipId, World } from './types'
 
 function emptyPlayerBullet(): PlayerBullet {
-  return { active: false, x: 0, y: 0, vy: 0, r: 0.12, damage: 1 }
+  return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.12, damage: 1, pierce: 0, hitEnemyIds: [] }
 }
 
 function emptyEnemyBullet(): EnemyBullet {
   return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.15, damage: 1 }
 }
 
-function emptyEnemy(): Enemy {
+function emptyEnemy(_: unknown, id: number): Enemy {
   return {
+    id,
     active: false,
     kind: 'drone',
+    class: 'fodder',
     x: 0,
     y: 0,
     vy: 0,
@@ -53,7 +55,6 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       lives: 3,
       bombs: startBombs,
       maxBombs: 5,
-      weaponTier: 0,
       wCells: 0,
       shield: shipId === 'aegis',
       iFrames: 0,

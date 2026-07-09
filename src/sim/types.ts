@@ -13,6 +13,7 @@ export type ScreenId =
 export type Vec2 = { x: number; y: number }
 
 export type EnemyKind = 'drone' | 'dart' | 'gunner'
+export type EnemyClass = 'fodder' | 'grunt' | 'elite' | 'set_piece'
 
 export type PlayerState = {
   x: number
@@ -24,7 +25,6 @@ export type PlayerState = {
   lives: number
   bombs: number
   maxBombs: number
-  weaponTier: number
   wCells: number
   shield: boolean
   iFrames: number
@@ -37,9 +37,12 @@ export type PlayerBullet = {
   active: boolean
   x: number
   y: number
+  vx: number
   vy: number
   r: number
   damage: number
+  pierce: number
+  hitEnemyIds: number[]
 }
 
 export type EnemyBullet = {
@@ -53,8 +56,10 @@ export type EnemyBullet = {
 }
 
 export type Enemy = {
+  id: number
   active: boolean
   kind: EnemyKind
+  class: EnemyClass
   x: number
   y: number
   vy: number

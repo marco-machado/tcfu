@@ -19,6 +19,7 @@ import {
 } from './constants'
 import { INTRO_01 } from './patterns'
 import { isRunReadyForResults, stepWorld } from './step'
+import { weaponTierForWCells } from './weapons'
 import { createWorld, getWorld, resetWorld, setWorld } from './world'
 import type { World } from './types'
 
@@ -57,7 +58,9 @@ function suspendWaves(world: World): void {
 function placeDrone(world: World, x: number, y: number): World['enemies'][number] {
   const slot = world.enemies.find((e) => !e.active) ?? world.enemies[0]
   slot.active = true
+  slot.id = world.enemies.indexOf(slot)
   slot.kind = 'drone'
+  slot.class = 'fodder'
   slot.x = x
   slot.y = y
   slot.vy = 0
@@ -167,6 +170,181 @@ describe('sim world step combat offense', () => {
     expect(slot.active).toBe(false)
     expect(world.session.kills).toBe(1)
     expect(world.session.score).toBe(100)
+    expect(world.player.wCells).toBe(1)
+  })
+
+  it('awards W-cells from the defeated enemy class', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const elite = placeDrone(world, world.player.x, world.player.y + 1)
+    elite.class = 'elite'
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+
+    expect(world.player.wCells).toBe(5)
+  })
+
+  it.each([
+    ['fodder', 1],
+    ['grunt', 2],
+    ['elite', 5],
+    ['set_piece', 15],
+  ] as const)('awards %s W-cells for a %i bomb kill', (enemyClass, expectedWCells) => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const enemy = placeDrone(world, 0, 8)
+    enemy.class = enemyClass
+    enemy.hp = 3
+
+    stepWorld(world, FIXED_DT, bombOnly())
+
+    expect(world.player.wCells).toBe(expectedWCells)
+    expect(world.session.kills).toBe(1)
+  })
+
+  it.each([
+    ['fodder', 1],
+    ['grunt', 2],
+    ['elite', 5],
+    ['set_piece', 15],
+  ] as const)('awards %s W-cells exactly once for a %i bullet kill', (enemyClass, expectedWCells) => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const enemy = placeDrone(world, world.player.x, world.player.y + 1)
+    enemy.class = enemyClass
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+    expect(world.player.wCells).toBe(expectedWCells)
+
+    steps(world, 10, idle())
+    expect(world.player.wCells).toBe(expectedWCells)
+    expect(world.session.kills).toBe(1)
+  })
+
+  it('reaches Vanguard tier 1 at 20 W-cells and fires on its faster cooldown', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.wCells = 19
+    placeDrone(world, world.player.x, world.player.y + 1)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+    expect(weaponTierForWCells(world.player.wCells)).toBe(1)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    expect(world.player.fireCooldown).toBeCloseTo(0.15)
+  })
+
+  it('reaches Vanguard tier 2 at 50 W-cells and fires two parallel shots', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.wCells = 49
+    placeDrone(world, world.player.x, world.player.y + 1)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+    expect(weaponTierForWCells(world.player.wCells)).toBe(2)
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    const bullets = activeBullets(world)
+    expect(bullets).toHaveLength(2)
+    expect(bullets.map((b) => b.x).sort((a, b) => a - b)).toEqual([-0.25, 0.25])
+  })
+
+  it('derives the firing tier from cumulative W-cells', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.wCells = 50
+    stepWorld(world, FIXED_DT, fireOnly())
+
+    expect(activeBullets(world)).toHaveLength(2)
+  })
+
+  it('caps Run upgrades at tier 3 after 100 W-cells', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.wCells = 99
+    const enemy = placeDrone(world, world.player.x, world.player.y + 1)
+    enemy.class = 'set_piece'
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+
+    expect(world.player.wCells).toBe(114)
+    expect(weaponTierForWCells(world.player.wCells)).toBe(3)
+  })
+
+  it('starts each ship kit with its documented tier-0 shot pattern', () => {
+    const striker = createWorld('striker')
+    const aegis = createWorld('aegis')
+    const phantom = createWorld('phantom')
+    suspendWaves(striker)
+    suspendWaves(aegis)
+    suspendWaves(phantom)
+
+    stepWorld(striker, FIXED_DT, fireOnly())
+    stepWorld(aegis, FIXED_DT, fireOnly())
+    stepWorld(phantom, FIXED_DT, fireOnly())
+
+    expect(activeBullets(striker).map((b) => b.x).sort((a, b) => a - b)).toEqual([-0.3, 0.3])
+    expect(activeBullets(striker).every((b) => b.damage === 1.1)).toBe(true)
+    expect(activeBullets(aegis)).toHaveLength(2)
+    expect(activeBullets(phantom)[0]).toMatchObject({ r: 0.08, vy: 26 })
+  })
+
+  it.each([
+    ['vanguard', 0, 0, 1, 0.18, 18, 1, 0.12],
+    ['vanguard', 1, 20, 1, 0.15, 18, 1, 0.12],
+    ['vanguard', 2, 50, 2, 0.15, 18, 1, 0.12],
+    ['vanguard', 3, 100, 3, 0.14, 18, 1, 0.12],
+    ['striker', 0, 0, 2, 0.14, 20, 1.1, 0.12],
+    ['striker', 1, 20, 2, 0.12, 20, 1.1, 0.12],
+    ['striker', 2, 50, 2, 0.12, 22, 1.65, 0.12],
+    ['striker', 3, 100, 3, 0.11, 22, 1.65, 0.12],
+    ['aegis', 0, 0, 2, 0.22, 16, 1, 0.12],
+    ['aegis', 1, 20, 3, 0.2, 16, 1, 0.12],
+    ['aegis', 2, 50, 3, 0.18, 17, 1, 0.12],
+    ['aegis', 3, 100, 5, 0.18, 17, 1, 0.12],
+    ['phantom', 0, 0, 1, 0.1, 26, 1, 0.08],
+    ['phantom', 1, 20, 1, 0.08, 26, 1, 0.08],
+    ['phantom', 2, 50, 2, 0.08, 28, 1, 0.08],
+    ['phantom', 3, 100, 2, 0.07, 28, 1, 0.08],
+  ] as const)(
+    '%s tier %i resolves its catalog shot count and projectile statistics',
+    (shipId, tier, wCells, shotCount, cooldown, speed, damage, radius) => {
+      const world = createWorld(shipId)
+      suspendWaves(world)
+      world.player.wCells = wCells
+
+      stepWorld(world, FIXED_DT, fireOnly())
+
+      const bullets = activeBullets(world)
+      expect(weaponTierForWCells(world.player.wCells)).toBe(tier)
+      expect(world.player.fireCooldown).toBeCloseTo(cooldown)
+      expect(bullets).toHaveLength(shotCount)
+      for (const bullet of bullets) {
+        expect(Math.hypot(bullet.vx, bullet.vy)).toBeCloseTo(speed)
+        expect(bullet.damage).toBeCloseTo(damage)
+        expect(bullet.r).toBeCloseTo(radius)
+      }
+    },
+  )
+
+  it('lets a Phantom tier-3 bullet pierce a surviving enemy to hit a second enemy', () => {
+    const world = createWorld('phantom')
+    suspendWaves(world)
+    world.player.wCells = 100
+    const first = placeDrone(world, world.player.x - 0.15, world.player.y + 1)
+    const second = placeDrone(world, world.player.x - 0.15, world.player.y + 1.6)
+    first.hp = 3
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 6, idle())
+
+    expect(first.hp).toBe(1)
+    expect(second.active).toBe(false)
   })
 
   it('resetWorld clears bullets, enemies, score, and kills on the module world', () => {
@@ -175,6 +353,7 @@ describe('sim world step combat offense', () => {
     stepWorld(dirty, FIXED_DT, fireOnly())
     dirty.session.score = 500
     dirty.session.kills = 3
+    dirty.player.wCells = 50
     dirty.enemies[0].active = true
 
     const fresh = resetWorld('vanguard')
@@ -184,6 +363,8 @@ describe('sim world step combat offense', () => {
     expect(activeEnemyBullets(fresh)).toHaveLength(0)
     expect(fresh.session.score).toBe(0)
     expect(fresh.session.kills).toBe(0)
+    expect(fresh.player.wCells).toBe(0)
+    expect(weaponTierForWCells(fresh.player.wCells)).toBe(0)
     expect(fresh.session.runOver).toBe(false)
     expect(fresh.session.wave).toBe(1)
   })
@@ -268,6 +449,7 @@ describe('sim world step combat defense and terminal', () => {
     suspendWaves(world)
     world.player.hp = 1
     world.player.lives = 2
+    world.player.wCells = 50
     world.player.x = 4
     world.player.y = 5
     placeDrone(world, 4, 5)
@@ -285,6 +467,8 @@ describe('sim world step combat defense and terminal', () => {
     expect(far.active).toBe(true)
     expect(world.enemies[0].active).toBe(true)
     expect(world.session.runOver).toBe(false)
+    expect(world.player.wCells).toBe(50)
+    expect(weaponTierForWCells(world.player.wCells)).toBe(2)
   })
 
   it('final life loss sets runOver, holds before Results, freezes combat', () => {
@@ -354,6 +538,7 @@ describe('sim world step combat defense and terminal', () => {
     expect(foe.active).toBe(false)
     expect(world.session.kills).toBe(1)
     expect(world.session.score).toBe(100)
+    expect(world.player.wCells).toBe(1)
   })
 
   it('bomb with empty stock is a no-op', () => {
