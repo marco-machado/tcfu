@@ -57,6 +57,24 @@ export const SPREAD_UP_OFFSET = 0.5
 export const SCORE_MULT_DURATION = 10
 export const SCORE_MULT_KILL = 2
 
+export const POWERUP_PITY_SECONDS = 45
+export const DROP_CHANCE: Record<'fodder' | 'grunt' | 'elite' | 'set_piece', number> = {
+  fodder: 0.04,
+  grunt: 0.08,
+  elite: 0.25,
+  set_piece: 1,
+}
+
+/** Catalog weights (sum 100). Order is selection order for cumulative rolls. */
+export const DROP_WEIGHTS = [
+  { type: 'shield' as const, weight: 20 },
+  { type: 'bomb_stock' as const, weight: 15 },
+  { type: 'repair' as const, weight: 15 },
+  { type: 'rate_up' as const, weight: 20 },
+  { type: 'spread_up' as const, weight: 15 },
+  { type: 'score_mult' as const, weight: 15 },
+]
+
 export const PULSE_T0 = {
   cooldown: 0.18,
   bulletSpeed: 18,

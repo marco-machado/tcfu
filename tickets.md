@@ -44,8 +44,8 @@ Tracer-bullet implementation tickets for [the powerups and W-cells specification
 
 **Blocked by:** Collectible instant powerups.
 
-- [ ] Eligible kill drops use 4% fodder, 8% grunt, 25% elite, and guaranteed set-piece chances, then select the six powerups with the documented weights.
-- [ ] A deterministic random seam makes successful/failed rolls and weighted selection repeatable in simulation tests.
-- [ ] After 45 seconds with no powerup, the next grunt-or-higher kill forces a weighted drop unless the three-pickup cap prevents it; fodder kills do not consume the pity guarantee.
-- [ ] Intro_03 produces its authored forced Shield-or-Overclock pickup while respecting the on-field cap.
-- [ ] Simulation tests cover all probability boundaries, weights, cap behavior, pity eligibility, and the authored guarantee.
+- [x] Eligible kill drops use 4% fodder, 8% grunt, 25% elite, and guaranteed set-piece chances, then select the six powerups with the documented weights.
+- [x] A deterministic random seam makes successful/failed rolls and weighted selection repeatable in simulation tests.
+- [x] After 45 seconds with no powerup, the next grunt-or-higher kill forces a weighted drop unless the three-pickup cap prevents it; fodder kills do not consume the pity guarantee.
+- [x] Intro_03 produces its authored forced Shield-or-Overclock pickup while respecting the on-field cap.
+- [x] Simulation tests cover all probability boundaries, weights, cap behavior, pity eligibility, and the authored guarantee.

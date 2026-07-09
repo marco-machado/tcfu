@@ -7,6 +7,8 @@ import {
   CULL_Y_MIN,
   DART,
   DEATH_HOLD,
+  DROP_CHANCE,
+  DROP_WEIGHTS,
   DRONE,
   ENEMY_BULLET_DAMAGE,
   ENEMY_BULLET_R,
@@ -16,10 +18,12 @@ import {
   IFRAMES_HIT,
   IFRAMES_RESPAWN,
   IFRAMES_SHIELD,
+  MAX_POWERUPS,
   MERCY_CLEAR_R,
   PLAYER_ACCEL,
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
+  POWERUP_PITY_SECONDS,
   POWERUP_SCORE,
   RATE_UP_COOLDOWN_MULT,
   RATE_UP_DURATION,
@@ -41,7 +45,16 @@ import {
   waveMultiplier,
 } from './constants'
 import { patternForWave, type PathId, type SpawnEvent } from './patterns'
-import type { Enemy, EnemyBullet, EnemyClass, EnemyKind, PlayerBullet, Powerup, World } from './types'
+import type {
+  Enemy,
+  EnemyBullet,
+  EnemyClass,
+  EnemyKind,
+  PlayerBullet,
+  Powerup,
+  PowerupType,
+  World,
+} from './types'
 import { weaponFor, weaponTierForWCells } from './weapons'
 
 function clamp(v: number, min: number, max: number): number {
@@ -75,6 +88,57 @@ function acquireEnemy(world: World): Enemy | null {
   return null
 }
 
+function activePowerupCount(world: World): number {
+  let n = 0
+  for (const p of world.powerups) if (p.active) n += 1
+  return n
+}
+
+function acquirePowerup(world: World): Powerup | null {
+  for (const p of world.powerups) {
+    if (!p.active) return p
+  }
+  return null
+}
+
+function pickWeightedPowerup(world: World, types?: PowerupType[]): PowerupType {
+  if (types && types.length > 0) {
+    const idx = Math.min(types.length - 1, Math.floor(world.rng() * types.length))
+    return types[idx]!
+  }
+  const total = DROP_WEIGHTS.reduce((sum, entry) => sum + entry.weight, 0)
+  let roll = world.rng() * total
+  for (const entry of DROP_WEIGHTS) {
+    roll -= entry.weight
+    if (roll < 0) return entry.type
+  }
+  return DROP_WEIGHTS[DROP_WEIGHTS.length - 1]!.type
+}
+
+function spawnPowerup(world: World, type: PowerupType, x: number, y: number): boolean {
+  if (activePowerupCount(world) >= MAX_POWERUPS) return false
+  const slot = acquirePowerup(world)
+  if (!slot) return false
+  slot.active = true
+  slot.type = type
+  slot.x = x
+  slot.y = y
+  world.powerupDryElapsed = 0
+  return true
+}
+
+function tryDropOnKill(world: World, enemy: Pick<Enemy, 'class' | 'x' | 'y'>): void {
+  if (activePowerupCount(world) >= MAX_POWERUPS) return
+
+  const pityEligible = enemy.class === 'grunt' || enemy.class === 'elite' || enemy.class === 'set_piece'
+  const pityForce = pityEligible && world.powerupDryElapsed >= POWERUP_PITY_SECONDS
+  const chance = DROP_CHANCE[enemy.class]
+  if (!pityForce && world.rng() >= chance) return
+
+  const type = pickWeightedPowerup(world)
+  spawnPowerup(world, type, enemy.x, enemy.y)
+}
+
 function applyPowerup(world: World, powerup: Powerup): void {
   const player = world.player
   if (powerup.type === 'shield') player.shield = true
@@ -84,6 +148,7 @@ function applyPowerup(world: World, powerup: Powerup): void {
   if (powerup.type === 'spread_up') player.spreadUp = SPREAD_UP_DURATION
   if (powerup.type === 'score_mult') player.scoreMult = SCORE_MULT_DURATION
   world.session.score += POWERUP_SCORE
+  world.powerupDryElapsed = 0
 }
 
 function stepPowerups(world: World, dt: number): void {
@@ -112,7 +177,7 @@ function wCellsForEnemy(enemyClass: EnemyClass): number {
   return 1
 }
 
-function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId'>): void {
+function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId' | 'x' | 'y'>): void {
   world.session.kills += 1
   world.player.wCells += wCellsForEnemy(enemy.class)
   const mult = waveMultiplier(enemy.waveId > 0 ? enemy.waveId : world.session.wave)
@@ -122,6 +187,7 @@ function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId
   if (enemy.waveId === world.session.wave) {
     world.waves.waveKilled += 1
   }
+  tryDropOnKill(world, enemy)
 }
 
 function mercyClearEnemyBullets(world: World): void {
@@ -240,6 +306,7 @@ function beginWave(world: World, waveIndex: number): void {
   world.waves.clearAwarded = false
   world.waves.waveSpawned = 0
   world.waves.waveKilled = 0
+  world.waves.nextPowerupEventIndex = 0
 }
 
 function enterGap(world: World): void {
@@ -284,7 +351,18 @@ function stepWaves(world: World, dt: number): void {
       w.nextEventIndex += 1
     }
 
-    if (w.nextEventIndex >= pattern.events.length) {
+    const powerupEvents = pattern.powerupEvents ?? []
+    while (w.nextPowerupEventIndex < powerupEvents.length) {
+      const event = powerupEvents[w.nextPowerupEventIndex]!
+      if (w.patternElapsed < event.t) break
+      const type = pickWeightedPowerup(world, event.types)
+      spawnPowerup(world, type, event.x, event.y)
+      w.nextPowerupEventIndex += 1
+    }
+
+    const enemiesDone = w.nextEventIndex >= pattern.events.length
+    const powerupsDone = w.nextPowerupEventIndex >= powerupEvents.length
+    if (enemiesDone && powerupsDone) {
       w.phase = 'await_clear'
       w.clearElapsed = 0
       tryAwardClear(world)
@@ -573,6 +651,8 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
     stepDeathHold(world, dt)
     return
   }
+
+  world.powerupDryElapsed += dt
 
   stepPlayer(world, dt, commands)
   stepBomb(world, commands)

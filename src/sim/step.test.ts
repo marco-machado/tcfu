@@ -3,11 +3,13 @@ import { emptyCommands, type Commands } from '../input/commands'
 import {
   CONTACT_ARM_TIME,
   DEATH_HOLD,
+  DROP_WEIGHTS,
   FIXED_DT,
   IFRAMES_HIT,
   IFRAMES_RESPAWN,
   IFRAMES_SHIELD,
   MERCY_CLEAR_R,
+  POWERUP_PITY_SECONDS,
   RESPAWN,
   STREAM_BASE_SPEED,
   WAVE_CLEAR_WINDOW,
@@ -17,11 +19,31 @@ import {
   waveClearBonus,
   waveMultiplier,
 } from './constants'
-import { INTRO_01 } from './patterns'
+import { INTRO_01, INTRO_03 } from './patterns'
 import { isRunReadyForResults, stepWorld } from './step'
 import { weaponTierForWCells } from './weapons'
-import { createWorld, getWorld, resetWorld, setWorld } from './world'
-import type { World } from './types'
+import { createWorld as createWorldBase, getWorld, resetWorld, setWorld } from './world'
+import type { PowerupType, World } from './types'
+
+/** Default test RNG fails normal drop chance rolls (value always >= 0.04..0.25). */
+function createWorld(shipId: Parameters<typeof createWorldBase>[0] = 'vanguard'): World {
+  const world = createWorldBase(shipId)
+  world.rng = () => 0.99
+  return world
+}
+
+function sequenceRng(values: number[]): () => number {
+  let i = 0
+  return () => {
+    const v = values[i] ?? 0.99
+    i += 1
+    return v
+  }
+}
+
+function activePowerups(world: World) {
+  return world.powerups.filter((p) => p.active)
+}
 
 function fireOnly(partial: Partial<Commands> = {}): Commands {
   return { ...emptyCommands(), fire: true, ...partial }
@@ -924,8 +946,190 @@ describe('sim world step timed powerups', () => {
     setWorld(dirty)
 
     const fresh = resetWorld('vanguard')
+    fresh.rng = () => 0.99
     expect(fresh.player.rateUp).toBe(0)
     expect(fresh.player.spreadUp).toBe(0)
     expect(fresh.player.scoreMult).toBe(0)
+  })
+})
+
+describe('sim world step powerup drop economy', () => {
+  it.each([
+    ['fodder', 0.04, true],
+    ['fodder', 0.04, false],
+    ['grunt', 0.08, true],
+    ['grunt', 0.08, false],
+    ['elite', 0.25, true],
+    ['elite', 0.25, false],
+  ] as const)('rolls %s drops at chance %f (success=%s)', (enemyClass, chance, success) => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.rng = sequenceRng([success ? chance - 0.001 : chance, 0])
+    const enemy = placeDrone(world, 1, 8)
+    enemy.class = enemyClass
+
+    stepWorld(world, FIXED_DT, bombOnly())
+
+    expect(activePowerups(world)).toHaveLength(success ? 1 : 0)
+    if (success) {
+      expect(activePowerups(world)[0].type).toBe('shield')
+      expect(activePowerups(world)[0].x).toBeCloseTo(1)
+      expect(activePowerups(world)[0].y).toBeCloseTo(8 - world.streamSpeed * FIXED_DT)
+    }
+  })
+
+  it('guarantees a weighted drop on set-piece kills', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.rng = sequenceRng([0.5, 0])
+    const enemy = placeDrone(world, 2, 9)
+    enemy.class = 'set_piece'
+
+    stepWorld(world, FIXED_DT, bombOnly())
+
+    expect(activePowerups(world)).toHaveLength(1)
+    expect(activePowerups(world)[0].type).toBe('shield')
+  })
+
+  it('selects powerup types by catalog weights', () => {
+    const cumulative: { type: PowerupType; at: number }[] = []
+    let sum = 0
+    for (const entry of DROP_WEIGHTS) {
+      cumulative.push({ type: entry.type, at: sum })
+      sum += entry.weight
+    }
+    const total = sum
+
+    for (const entry of cumulative) {
+      const world = createWorld('vanguard')
+      suspendWaves(world)
+      world.rng = sequenceRng([0, (entry.at + 0.5) / total])
+      const enemy = placeDrone(world, 0, 8)
+      enemy.class = 'set_piece'
+      stepWorld(world, FIXED_DT, bombOnly())
+      expect(activePowerups(world)[0]?.type).toBe(entry.type)
+    }
+  })
+
+  it('skips new drops when three pickups are already on the field', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    placePowerup(world, 'shield', -2, 10)
+    placePowerup(world, 'repair', 0, 10)
+    placePowerup(world, 'bomb_stock', 2, 10)
+    world.rng = sequenceRng([0, 0])
+    const enemy = placeDrone(world, 0, 8)
+    enemy.class = 'set_piece'
+
+    stepWorld(world, FIXED_DT, bombOnly())
+
+    expect(activePowerups(world)).toHaveLength(3)
+  })
+
+  it('forces a weighted drop on the next grunt-or-higher kill after 45s dry', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.powerupDryElapsed = POWERUP_PITY_SECONDS
+    world.rng = sequenceRng([0])
+    const enemy = placeDrone(world, 0, 8)
+    enemy.class = 'grunt'
+
+    stepWorld(world, FIXED_DT, bombOnly())
+
+    expect(activePowerups(world)).toHaveLength(1)
+    expect(world.powerupDryElapsed).toBeLessThan(POWERUP_PITY_SECONDS)
+  })
+
+  it('fodder kills do not consume the pity guarantee', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.powerupDryElapsed = POWERUP_PITY_SECONDS
+    world.rng = sequenceRng([0.99])
+    const fodder = placeDrone(world, 0, 8)
+    fodder.class = 'fodder'
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(activePowerups(world)).toHaveLength(0)
+    expect(world.powerupDryElapsed).toBeGreaterThanOrEqual(POWERUP_PITY_SECONDS)
+
+    world.rng = sequenceRng([0])
+    const grunt = placeDrone(world, 1, 8)
+    grunt.class = 'grunt'
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(activePowerups(world)).toHaveLength(1)
+  })
+
+  it('pity force still respects the three-pickup cap and remains armed', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.powerupDryElapsed = POWERUP_PITY_SECONDS
+    placePowerup(world, 'shield', -2, 10)
+    placePowerup(world, 'repair', 0, 10)
+    placePowerup(world, 'bomb_stock', 2, 10)
+    world.rng = sequenceRng([0])
+    const enemy = placeDrone(world, 0, 8)
+    enemy.class = 'elite'
+
+    stepWorld(world, FIXED_DT, bombOnly())
+
+    expect(activePowerups(world)).toHaveLength(3)
+    expect(world.powerupDryElapsed).toBeGreaterThanOrEqual(POWERUP_PITY_SECONDS)
+  })
+
+  it('resets the dry timer when a powerup is collected', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.powerupDryElapsed = 20
+    placePowerup(world, 'shield', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.powerupDryElapsed).toBeLessThan(1)
+  })
+
+  it.each([
+    [0, 'rate_up'],
+    [0.6, 'shield'],
+  ] as const)('intro_03 authors forced Shield-or-Overclock (rng %f -> %s)', (roll, expected) => {
+    const world = createWorld('vanguard')
+    const event = INTRO_03.powerupEvents![0]!
+    world.session.wave = 3
+    world.streamSpeed = streamSpeedForWave(3)
+    world.waves.phase = 'spawning'
+    world.waves.patternElapsed = event.t - FIXED_DT
+    world.waves.nextEventIndex = INTRO_03.events.length
+    world.waves.nextPowerupEventIndex = 0
+    world.waves.waveSpawned = INTRO_03.events.length
+    world.rng = sequenceRng([roll])
+
+    stepWorld(world, FIXED_DT, idle())
+
+    const drops = activePowerups(world)
+    expect(drops).toHaveLength(1)
+    expect(drops[0].type).toBe(expected)
+    expect(drops[0].x).toBeCloseTo(event.x)
+    expect(drops[0].y).toBeCloseTo(event.y - world.streamSpeed * FIXED_DT)
+  })
+
+  it('intro_03 forced pickup respects the on-field cap', () => {
+    const world = createWorld('vanguard')
+    const event = INTRO_03.powerupEvents![0]!
+    world.session.wave = 3
+    world.streamSpeed = streamSpeedForWave(3)
+    world.waves.phase = 'spawning'
+    world.waves.patternElapsed = event.t - FIXED_DT
+    world.waves.nextEventIndex = INTRO_03.events.length
+    world.waves.nextPowerupEventIndex = 0
+    world.waves.waveSpawned = INTRO_03.events.length
+    placePowerup(world, 'repair', -2, 10)
+    placePowerup(world, 'bomb_stock', 0, 10)
+    placePowerup(world, 'score_mult', 2, 10)
+    world.rng = sequenceRng([0])
+
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(activePowerups(world)).toHaveLength(3)
+    expect(activePowerups(world).map((p) => p.type).sort()).toEqual(
+      ['bomb_stock', 'repair', 'score_mult'].sort(),
+    )
   })
 })

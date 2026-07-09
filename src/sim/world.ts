@@ -96,7 +96,10 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       clearAwarded: false,
       waveSpawned: 0,
       waveKilled: 0,
+      nextPowerupEventIndex: 0,
     },
+    powerupDryElapsed: 0,
+    rng: Math.random,
   }
 }
 

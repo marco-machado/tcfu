@@ -104,6 +104,7 @@ export type WaveDirector = {
   clearAwarded: boolean
   waveSpawned: number
   waveKilled: number
+  nextPowerupEventIndex: number
 }
 
 export type RunSession = {
@@ -119,6 +120,9 @@ export type RunSession = {
   deathFlash: number
 }
 
+/** Returns a value in [0, 1). Injectable for deterministic drop tests. */
+export type Rng = () => number
+
 export type World = {
   player: PlayerState
   session: RunSession
@@ -128,4 +132,7 @@ export type World = {
   enemies: Enemy[]
   powerups: Powerup[]
   waves: WaveDirector
+  /** Seconds since last powerup spawn or collection (pity dry spell). */
+  powerupDryElapsed: number
+  rng: Rng
 }

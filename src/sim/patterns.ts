@@ -1,4 +1,4 @@
-import type { EnemyKind } from './types'
+import type { EnemyKind, PowerupType } from './types'
 
 export type PathId = 'drift_down' | 'sine_x' | 'dive' | 'hold_and_shot'
 
@@ -10,9 +10,18 @@ export type SpawnEvent = {
   path: PathId
 }
 
+/** Authored forced pickup at pattern time; type is chosen among `types`. */
+export type PowerupSpawnEvent = {
+  t: number
+  x: number
+  y: number
+  types: PowerupType[]
+}
+
 export type WavePattern = {
   id: string
   events: SpawnEvent[]
+  powerupEvents?: PowerupSpawnEvent[]
 }
 
 function lineH(
@@ -75,6 +84,7 @@ export const INTRO_03: WavePattern = {
     { t: 0.0, kind: 'gunner', x: 2, y: 18, path: 'hold_and_shot' },
     ...lineH(1.5, 6, -5, 5, 'drone', 'drift_down'),
   ],
+  powerupEvents: [{ t: 3.0, x: 0, y: 14, types: ['rate_up', 'shield'] }],
 }
 
 export const EASY_LINE_DRONES: WavePattern = {
