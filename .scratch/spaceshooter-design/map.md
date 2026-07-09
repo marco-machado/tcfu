@@ -29,6 +29,7 @@ A written design package ready to implement: stack and architecture boundaries, 
 
 - [Design artifact shape](issues/01-design-artifact-shape.md) — Package is `docs/design/DESIGN.md` + `catalogs/*` + sparse `docs/adr/` + research notes; fixed DESIGN outline; seven required catalogs; done = implementable defaults, not perfect balance.
 - [Core loop and scoring](issues/02-core-loop-and-scoring.md) — Title→Hangar→Run→Results; 3 lives × 3 HP; wave index endless; score from kills/waves/pickups/clean-wave (no passive time); ship unlocks by single-run score; top-10 local high scores; meta currency paid at Results.
+- [Spatial playfield model](issues/03-spatial-playfield.md) — XY planar play, perspective 4:3 ~40° FOV, movement band ±6×[1.5–7], game-driven world stream with mild wave ramp, Z cosmetic only, player hitbox r=0.35, tiny cosmetic camera sway.
 
 ## Not yet specified
 
