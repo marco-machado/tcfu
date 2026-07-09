@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import { BoxGeometry, type Group, type InstancedMesh, type Mesh, Object3D } from 'three'
-import { BAND, MAX_ENEMIES, MAX_PLAYER_BULLETS } from '../sim/constants'
+import { BAND, MAX_ENEMIES, MAX_ENEMY_BULLETS, MAX_PLAYER_BULLETS } from '../sim/constants'
 import { getWorld } from '../sim/world'
 
 const _proxy = new Object3D()
@@ -33,6 +33,7 @@ export function Playfield() {
       <StreamMarkers />
       <PlayerMesh />
       <PlayerBulletInstances />
+      <EnemyBulletInstances />
       <EnemyInstances />
     </group>
   )
@@ -124,6 +125,45 @@ function PlayerBulletInstances() {
         emissiveIntensity={1.2}
         metalness={0.2}
         roughness={0.3}
+      />
+    </instancedMesh>
+  )
+}
+
+function EnemyBulletInstances() {
+  const mesh = useRef<InstancedMesh>(null)
+
+  useFrame(() => {
+    const inst = mesh.current
+    if (!inst) return
+    const bullets = getWorld().enemyBullets
+    let i = 0
+    for (const b of bullets) {
+      if (!b.active) continue
+      _proxy.position.set(b.x, b.y, 0.22)
+      _proxy.scale.setScalar(1)
+      _proxy.updateMatrix()
+      inst.setMatrixAt(i, _proxy.matrix)
+      i++
+    }
+    for (; i < MAX_ENEMY_BULLETS; i++) {
+      _proxy.position.set(0, -100, 0)
+      _proxy.scale.setScalar(0)
+      _proxy.updateMatrix()
+      inst.setMatrixAt(i, _proxy.matrix)
+    }
+    inst.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, MAX_ENEMY_BULLETS]}>
+      <sphereGeometry args={[0.14, 8, 8]} />
+      <meshStandardMaterial
+        color="#ff8866"
+        emissive="#cc3311"
+        emissiveIntensity={1.1}
+        metalness={0.2}
+        roughness={0.35}
       />
     </instancedMesh>
   )

@@ -10,7 +10,7 @@ export type ScreenId =
 
 export type Vec2 = { x: number; y: number }
 
-export type EnemyKind = 'drone'
+export type EnemyKind = 'drone' | 'dart'
 
 export type PlayerState = {
   x: number
@@ -40,6 +40,15 @@ export type PlayerBullet = {
   damage: number
 }
 
+export type EnemyBullet = {
+  active: boolean
+  x: number
+  y: number
+  vy: number
+  r: number
+  damage: number
+}
+
 export type Enemy = {
   active: boolean
   kind: EnemyKind
@@ -49,6 +58,10 @@ export type Enemy = {
   r: number
   hp: number
   points: number
+  contactDamage: number
+  fireCooldown: number
+  fireInterval: number
+  bulletSpeed: number
 }
 
 export type RunSession = {
@@ -57,6 +70,7 @@ export type RunSession = {
   kills: number
   elapsed: number
   paused: boolean
+  runOver: boolean
 }
 
 export type World = {
@@ -64,6 +78,7 @@ export type World = {
   session: RunSession
   streamSpeed: number
   playerBullets: PlayerBullet[]
+  enemyBullets: EnemyBullet[]
   enemies: Enemy[]
   spawnTimer: number
   spawnLane: number

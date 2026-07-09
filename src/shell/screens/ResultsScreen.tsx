@@ -12,12 +12,12 @@ export function ResultsScreen() {
         <div>
           <p>Score {lastRun.score}</p>
           <p className="muted">
-            Wave {lastRun.wave} · Kills {lastRun.kills} · Time {Math.floor(lastRun.timeSec)}s · Scrap{' '}
-            {lastRun.scrapEarned}
+            {lastRun.shipId} · Wave {lastRun.wave} · Kills {lastRun.kills} · Time{' '}
+            {Math.floor(lastRun.timeSec)}s · Scrap {lastRun.scrapEarned}
           </p>
         </div>
       ) : (
-        <p className="muted">No run data (scaffold — death flow not wired yet)</p>
+        <p className="muted">No run data</p>
       )}
       <div className="menu">
         <button type="button" onClick={startRun}>

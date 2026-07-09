@@ -1,19 +1,13 @@
 import { create } from 'zustand'
 import type { ScreenId, ShipId } from '../sim/types'
 import { loadLastShip, saveLastShip } from '../persist/lastShip'
-import { loadMeta, type MetaState } from '../persist/meta'
+import { loadMeta, saveMeta, type MetaState } from '../persist/meta'
 import { loadSettings, type Settings } from '../persist/settings'
-import { loadHighScores, type HighScoreEntry } from '../persist/highScores'
-import { resetWorld } from '../sim/world'
+import { loadHighScores, tryAddHighScore, type HighScoreEntry } from '../persist/highScores'
+import { buildRunSummary, type RunSummary } from '../sim/summary'
+import { getWorld, resetWorld } from '../sim/world'
 
-export type LastRunSummary = {
-  score: number
-  wave: number
-  kills: number
-  timeSec: number
-  shipId: ShipId
-  scrapEarned: number
-}
+export type LastRunSummary = RunSummary
 
 type SessionState = {
   screen: ScreenId
@@ -26,12 +20,13 @@ type SessionState = {
   selectShip: (shipId: ShipId) => void
   startRun: () => void
   endRun: (summary: LastRunSummary) => void
+  finishRunFromWorld: () => void
   setSettings: (settings: Settings) => void
   refreshMeta: () => void
   refreshHighScores: () => void
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
+export const useSessionStore = create<SessionState>((set, get) => ({
   screen: 'title',
   selectedShip: loadLastShip(),
   settings: loadSettings(),
@@ -44,11 +39,36 @@ export const useSessionStore = create<SessionState>((set) => ({
     set({ selectedShip: shipId })
   },
   startRun: () => {
-    const shipId = useSessionStore.getState().selectedShip
+    const shipId = get().selectedShip
     resetWorld(shipId)
     set({ screen: 'run', lastRun: null })
   },
   endRun: (summary) => set({ screen: 'results', lastRun: summary }),
+  finishRunFromWorld: () => {
+    if (get().screen !== 'run') return
+    const world = getWorld()
+    if (!world.session.runOver) return
+
+    const summary = buildRunSummary(world)
+    const meta = loadMeta()
+    meta.scrap += summary.scrapEarned
+    saveMeta(meta)
+
+    const highScores = tryAddHighScore({
+      score: summary.score,
+      shipId: summary.shipId,
+      wave: summary.wave,
+      timeSec: summary.timeSec,
+      timestamp: Date.now(),
+    })
+
+    set({
+      screen: 'results',
+      lastRun: summary,
+      meta,
+      highScores,
+    })
+  },
   setSettings: (settings) => set({ settings }),
   refreshMeta: () => set({ meta: loadMeta() }),
   refreshHighScores: () => set({ highScores: loadHighScores() }),

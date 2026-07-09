@@ -1,8 +1,19 @@
-import { MAX_ENEMIES, MAX_PLAYER_BULLETS, PLAYER_HITBOX_R, RESPAWN, STREAM_BASE_SPEED } from './constants'
-import type { Enemy, PlayerBullet, ShipId, World } from './types'
+import {
+  MAX_ENEMIES,
+  MAX_ENEMY_BULLETS,
+  MAX_PLAYER_BULLETS,
+  PLAYER_HITBOX_R,
+  RESPAWN,
+  STREAM_BASE_SPEED,
+} from './constants'
+import type { Enemy, EnemyBullet, PlayerBullet, ShipId, World } from './types'
 
-function emptyBullet(): PlayerBullet {
+function emptyPlayerBullet(): PlayerBullet {
   return { active: false, x: 0, y: 0, vy: 0, r: 0.12, damage: 1 }
+}
+
+function emptyEnemyBullet(): EnemyBullet {
+  return { active: false, x: 0, y: 0, vy: 0, r: 0.15, damage: 1 }
 }
 
 function emptyEnemy(): Enemy {
@@ -15,6 +26,10 @@ function emptyEnemy(): Enemy {
     r: 0,
     hp: 0,
     points: 0,
+    contactDamage: 1,
+    fireCooldown: 0,
+    fireInterval: 0,
+    bulletSpeed: 0,
   }
 }
 
@@ -47,9 +62,11 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       kills: 0,
       elapsed: 0,
       paused: false,
+      runOver: false,
     },
     streamSpeed: STREAM_BASE_SPEED,
-    playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyBullet),
+    playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyPlayerBullet),
+    enemyBullets: Array.from({ length: MAX_ENEMY_BULLETS }, emptyEnemyBullet),
     enemies: Array.from({ length: MAX_ENEMIES }, emptyEnemy),
     spawnTimer: 0,
     spawnLane: 0,
