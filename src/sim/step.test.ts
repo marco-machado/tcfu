@@ -15,19 +15,30 @@ import {
   WAVE_CLEAR_WINDOW,
   WAVE_GAP,
   playerMoveBounds,
+  scrapForRun,
   streamSpeedForWave,
   waveClearBonus,
   waveMultiplier,
 } from './constants'
 import { INTRO_01, INTRO_03 } from './patterns'
+import {
+  DEFAULT_META_MODIFIERS,
+  metaModifiersFromRanks,
+  scrapEarnMultFromRanks,
+  type MetaModifiers,
+} from './metaModifiers'
+import { buildRunSummary } from './summary'
 import { isRunReadyForResults, stepWorld } from './step'
 import { weaponTierForWCells } from './weapons'
 import { createWorld as createWorldBase, getWorld, resetWorld, setWorld } from './world'
 import type { PowerupType, World } from './types'
 
 /** Default test RNG fails normal drop chance rolls (value always >= 0.04..0.25). */
-function createWorld(shipId: Parameters<typeof createWorldBase>[0] = 'vanguard'): World {
-  const world = createWorldBase(shipId)
+function createWorld(
+  shipId: Parameters<typeof createWorldBase>[0] = 'vanguard',
+  meta: MetaModifiers = DEFAULT_META_MODIFIERS,
+): World {
+  const world = createWorldBase(shipId, meta)
   world.rng = () => 0.99
   return world
 }
@@ -1131,5 +1142,149 @@ describe('sim world step powerup drop economy', () => {
     expect(activePowerups(world).map((p) => p.type).sort()).toEqual(
       ['bomb_stock', 'repair', 'score_mult'].sort(),
     )
+  })
+})
+
+describe('meta modifiers at Run start', () => {
+  it('Arsenal multiplies kit weapon damage and stacks with Striker passive', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 3, hull: 0, salvage: 0, thrust: 0 })
+    const vanguard = createWorld('vanguard', meta)
+    suspendWaves(vanguard)
+    stepWorld(vanguard, FIXED_DT, fireOnly())
+    expect(activeBullets(vanguard)[0].damage).toBeCloseTo(1.15)
+
+    const striker = createWorld('striker', meta)
+    suspendWaves(striker)
+    stepWorld(striker, FIXED_DT, fireOnly())
+    expect(activeBullets(striker).every((b) => b.damage === 1.1 * 1.15)).toBe(true)
+  })
+
+  it('Arsenal does not buff Options side shots or bomb damage', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 3, hull: 0, salvage: 0, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    suspendWaves(world)
+    world.player.spreadUp = 8
+    stepWorld(world, FIXED_DT, fireOnly())
+    const side = activeBullets(world).filter((b) => Math.abs(b.x - world.player.x) > 0.1)
+    expect(side).toHaveLength(2)
+    expect(side.every((b) => b.damage === 1)).toBe(true)
+
+    const bombWorld = createWorld('vanguard', meta)
+    suspendWaves(bombWorld)
+    const enemy = placeDrone(bombWorld, 0, 8)
+    enemy.hp = 100
+    stepWorld(bombWorld, FIXED_DT, bombOnly())
+    expect(enemy.hp).toBe(95)
+  })
+
+  it('Arsenal rank 3 multiplies W-cell earn', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 3, hull: 0, salvage: 0, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    suspendWaves(world)
+    placeDrone(world, 0, 8)
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(world.player.wCells).toBeCloseTo(1.1)
+  })
+
+  it('Hull rank 1 extends hit i-frames only', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 1, salvage: 0, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    suspendWaves(world)
+    world.player.hp = 3
+    placeEnemyBullet(world, world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.iFrames).toBeCloseTo(IFRAMES_HIT + 0.15, 5)
+
+    const shieldWorld = createWorld('vanguard', meta)
+    suspendWaves(shieldWorld)
+    shieldWorld.player.shield = true
+    placeEnemyBullet(shieldWorld, shieldWorld.player.x, shieldWorld.player.y)
+    stepWorld(shieldWorld, FIXED_DT, idle())
+    expect(shieldWorld.player.iFrames).toBeCloseTo(IFRAMES_SHIELD, 5)
+  })
+
+  it('Hull rank 2 grants start shield and does not re-grant on respawn', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 2, salvage: 0, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    expect(world.player.shield).toBe(true)
+
+    suspendWaves(world)
+    world.player.hp = 1
+    world.player.shield = false
+    world.player.lives = 2
+    placeEnemyBullet(world, world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.lives).toBe(1)
+    expect(world.player.shield).toBe(false)
+    expect(world.player.iFrames).toBeCloseTo(IFRAMES_RESPAWN, 5)
+  })
+
+  it('Hull rank 3 raises max and starting bombs', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 3, salvage: 0, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    expect(world.player.maxBombs).toBe(6)
+    expect(world.player.bombs).toBe(3)
+  })
+
+  it('Salvage multiplies drop chance and shortens pity', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 0, salvage: 2, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    suspendWaves(world)
+    // base fodder 4% * 1.30 = 5.2%; rng 0.05 should succeed
+    world.rng = sequenceRng([0.05, 0])
+    placeDrone(world, 0, 8)
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(activePowerups(world)).toHaveLength(1)
+
+    const pity = createWorld('vanguard', meta)
+    suspendWaves(pity)
+    pity.powerupDryElapsed = 35
+    pity.rng = sequenceRng([0])
+    const grunt = placeDrone(pity, 0, 8)
+    grunt.class = 'grunt'
+    stepWorld(pity, FIXED_DT, bombOnly())
+    expect(activePowerups(pity)).toHaveLength(1)
+  })
+
+  it('Salvage rank 3 multiplies Scrap at Results from live ranks', () => {
+    const ranks = { arsenal: 0, hull: 0, salvage: 3, thrust: 0 }
+    const world = createWorld('vanguard', metaModifiersFromRanks(ranks))
+    world.session.score = 1000
+    world.session.wave = 3
+    const mult = scrapEarnMultFromRanks(ranks)
+    const summary = buildRunSummary(world, mult)
+    const base = Math.floor(1000 / 100) + Math.floor(2 * 5)
+    expect(scrapForRun(1000, 2, 1.15)).toBe(Math.floor(base * 1.15))
+    expect(summary.scrapEarned).toBe(Math.floor(base * 1.15))
+    expect(summary.scrapEarnMult).toBe(1.15)
+  })
+
+  it('Thrusters raise move speed and band max Y at rank 3', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 0, salvage: 0, thrust: 3 })
+    const world = createWorld('vanguard', meta)
+    suspendWaves(world)
+    const bounds = playerMoveBounds(0.5)
+    steps(world, 120, { ...emptyCommands(), moveY: 1 })
+    expect(world.player.y).toBeCloseTo(bounds.maxY, 4)
+    expect(bounds.maxY).toBeGreaterThan(playerMoveBounds(0).maxY)
+  })
+
+  it('Aegis with Hull rank 2 still has a single start shield', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 2, salvage: 0, thrust: 0 })
+    const world = createWorld('aegis', meta)
+    expect(world.player.shield).toBe(true)
+  })
+
+  it('Salvage pity still ignores fodder kills', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 0, salvage: 2, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    suspendWaves(world)
+    world.powerupDryElapsed = 35
+    world.rng = sequenceRng([0.99])
+    const fodder = placeDrone(world, 0, 8)
+    fodder.class = 'fodder'
+    stepWorld(world, FIXED_DT, bombOnly())
+    expect(activePowerups(world)).toHaveLength(0)
+    expect(world.powerupDryElapsed).toBeGreaterThanOrEqual(35)
   })
 })

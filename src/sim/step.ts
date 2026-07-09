@@ -15,7 +15,6 @@ import {
   GUNNER,
   HOLD_Y,
   IFRAMES_BOMB,
-  IFRAMES_HIT,
   IFRAMES_RESPAWN,
   IFRAMES_SHIELD,
   MAX_POWERUPS,
@@ -23,7 +22,6 @@ import {
   PLAYER_ACCEL,
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
-  POWERUP_PITY_SECONDS,
   POWERUP_SCORE,
   RATE_UP_COOLDOWN_MULT,
   RATE_UP_DURATION,
@@ -55,6 +53,7 @@ import type {
   PowerupType,
   World,
 } from './types'
+import { baseHitIFrames, shipMoveMult } from './metaModifiers'
 import { weaponFor, weaponTierForWCells } from './weapons'
 
 function clamp(v: number, min: number, max: number): number {
@@ -131,8 +130,8 @@ function tryDropOnKill(world: World, enemy: Pick<Enemy, 'class' | 'x' | 'y'>): v
   if (activePowerupCount(world) >= MAX_POWERUPS) return
 
   const pityEligible = enemy.class === 'grunt' || enemy.class === 'elite' || enemy.class === 'set_piece'
-  const pityForce = pityEligible && world.powerupDryElapsed >= POWERUP_PITY_SECONDS
-  const chance = DROP_CHANCE[enemy.class]
+  const pityForce = pityEligible && world.powerupDryElapsed >= world.meta.pitySeconds
+  const chance = Math.min(1, DROP_CHANCE[enemy.class] * world.meta.dropChanceMult)
   if (!pityForce && world.rng() >= chance) return
 
   const type = pickWeightedPowerup(world)
@@ -179,7 +178,7 @@ function wCellsForEnemy(enemyClass: EnemyClass): number {
 
 function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId' | 'x' | 'y'>): void {
   world.session.kills += 1
-  world.player.wCells += wCellsForEnemy(enemy.class)
+  world.player.wCells += wCellsForEnemy(enemy.class) * world.meta.wCellEarnMult
   const mult = waveMultiplier(enemy.waveId > 0 ? enemy.waveId : world.session.wave)
   let killScore = enemy.points * mult
   if (world.player.scoreMult > 0) killScore *= SCORE_MULT_KILL
@@ -213,7 +212,7 @@ function applyPlayerDamage(world: World, amount: number): void {
 
   p.hp -= amount
   if (p.hp > 0) {
-    p.iFrames = IFRAMES_HIT
+    p.iFrames = baseHitIFrames(p.shipId) + world.meta.hitIFramesBonus
     return
   }
 
@@ -380,8 +379,8 @@ function stepWaves(world: World, dt: number): void {
 
 function stepPlayer(world: World, dt: number, commands: Commands): void {
   const p = world.player
-  const maxSpeed = PLAYER_MAX_SPEED
-  const bounds = playerMoveBounds()
+  const maxSpeed = PLAYER_MAX_SPEED * shipMoveMult(p.shipId) * world.meta.moveSpeedMult
+  const bounds = playerMoveBounds(world.meta.bandMaxYBonus)
 
   let desiredX = commands.moveX * maxSpeed
   let desiredY = commands.moveY * maxSpeed
@@ -451,7 +450,8 @@ function stepFire(world: World, commands: Commands): void {
   if (world.playerBullets.filter((b) => !b.active).length < weapon.shots.length) return
 
   for (const shot of weapon.shots) {
-    if (!spawnPlayerShot(world, p.x + shot.offsetX, p.y, shot.vx, shot.vy, shot.r, shot.damage, shot.pierce)) return
+    const damage = shot.damage * world.meta.weaponDamageMult
+    if (!spawnPlayerShot(world, p.x + shot.offsetX, p.y, shot.vx, shot.vy, shot.r, damage, shot.pierce)) return
   }
 
   if (p.spreadUp > 0) {

@@ -172,16 +172,21 @@ export function scrapFromWaves(wavesCompleted: number): number {
   return Math.floor(wavesCompleted * 5)
 }
 
-export function scrapForRun(score: number, wavesCompleted: number): number {
+export function scrapBase(score: number, wavesCompleted: number): number {
   return scrapFromScore(score) + scrapFromWaves(wavesCompleted)
 }
 
+/** Scrap at Results: floor(base × Salvage scrap earn mult). */
+export function scrapForRun(score: number, wavesCompleted: number, scrapEarnMult = 1): number {
+  return Math.floor(scrapBase(score, wavesCompleted) * scrapEarnMult)
+}
+
 /** Movement clamp so the full player hull stays inside the band, with top safe margin. */
-export function playerMoveBounds() {
+export function playerMoveBounds(bandMaxYBonus = 0) {
   return {
     minX: BAND.minX + PLAYER_HULL.halfW,
     maxX: BAND.maxX - PLAYER_HULL.halfW,
     minY: BAND.minY + PLAYER_HULL.halfH,
-    maxY: BAND.maxY - PLAYER_HULL.halfH - BAND_TOP_SAFE,
+    maxY: BAND.maxY + bandMaxYBonus - PLAYER_HULL.halfH - BAND_TOP_SAFE,
   }
 }

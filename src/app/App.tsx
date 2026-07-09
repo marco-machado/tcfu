@@ -2,6 +2,7 @@ import { useSessionStore } from './sessionStore'
 import { Stage } from '../shell/Stage'
 import { TitleScreen } from '../shell/screens/TitleScreen'
 import { HangarScreen } from '../shell/screens/HangarScreen'
+import { UpgradeBayScreen } from '../shell/screens/UpgradeBayScreen'
 import { RunScreen } from '../shell/screens/RunScreen'
 import { ResultsScreen } from '../shell/screens/ResultsScreen'
 import { HighScoresScreen } from '../shell/screens/HighScoresScreen'
@@ -14,6 +15,7 @@ export function App() {
     <Stage>
       {screen === 'title' && <TitleScreen />}
       {screen === 'hangar' && <HangarScreen />}
+      {screen === 'upgradeBay' && <UpgradeBayScreen />}
       {screen === 'run' && <RunScreen />}
       {screen === 'results' && <ResultsScreen />}
       {screen === 'highScores' && <HighScoresScreen />}

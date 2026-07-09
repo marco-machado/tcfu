@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import type { ScreenId, ShipId } from '../sim/types'
 import { loadLastShip, saveLastShip } from '../persist/lastShip'
-import { loadMeta, saveMeta, type MetaState } from '../persist/meta'
+import { buyMetaRank, loadMeta, saveMeta, type MetaBranch, type MetaState } from '../persist/meta'
 import { loadSettings, type Settings } from '../persist/settings'
 import { loadHighScores, tryAddHighScore, type HighScoreEntry } from '../persist/highScores'
+import { metaModifiersFromRanks, scrapEarnMultFromRanks } from '../sim/metaModifiers'
 import { buildRunSummary, type RunSummary } from '../sim/summary'
 import { getWorld, resetWorld } from '../sim/world'
 
@@ -21,6 +22,7 @@ type SessionState = {
   startRun: () => void
   endRun: (summary: LastRunSummary) => void
   finishRunFromWorld: () => void
+  purchaseMetaRank: (branch: MetaBranch) => boolean
   setSettings: (settings: Settings) => void
   refreshMeta: () => void
   refreshHighScores: () => void
@@ -40,7 +42,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
   startRun: () => {
     const shipId = get().selectedShip
-    resetWorld(shipId)
+    const mods = metaModifiersFromRanks(get().meta.ranks)
+    resetWorld(shipId, mods)
     set({ screen: 'run', lastRun: null })
   },
   endRun: (summary) => set({ screen: 'results', lastRun: summary }),
@@ -49,8 +52,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const world = getWorld()
     if (!world.session.runOver || world.session.endHold > 0) return
 
-    const summary = buildRunSummary(world)
     const meta = loadMeta()
+    const summary = buildRunSummary(world, scrapEarnMultFromRanks(meta.ranks))
     meta.scrap += summary.scrapEarned
     saveMeta(meta)
 
@@ -68,6 +71,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       meta,
       highScores,
     })
+  },
+  purchaseMetaRank: (branch) => {
+    const next = buyMetaRank(get().meta, branch)
+    if (!next) return false
+    saveMeta(next)
+    set({ meta: next })
+    return true
   },
   setSettings: (settings) => set({ settings }),
   refreshMeta: () => set({ meta: loadMeta() }),

@@ -11,9 +11,10 @@ export type RunSummary = {
   scrapFromScore: number
   scrapFromWaves: number
   wavesCompleted: number
+  scrapEarnMult: number
 }
 
-export function buildRunSummary(world: World): RunSummary {
+export function buildRunSummary(world: World, scrapEarnMult = 1): RunSummary {
   const wavesCompleted = Math.max(0, world.session.wave - 1)
   const fromScore = scrapFromScore(world.session.score)
   const fromWaves = scrapFromWaves(wavesCompleted)
@@ -23,9 +24,10 @@ export function buildRunSummary(world: World): RunSummary {
     kills: world.session.kills,
     timeSec: world.session.elapsed,
     shipId: world.player.shipId,
-    scrapEarned: scrapForRun(world.session.score, wavesCompleted),
+    scrapEarned: scrapForRun(world.session.score, wavesCompleted, scrapEarnMult),
     scrapFromScore: fromScore,
     scrapFromWaves: fromWaves,
     wavesCompleted,
+    scrapEarnMult,
   }
 }

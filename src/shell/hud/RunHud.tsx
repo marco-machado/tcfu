@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useSessionStore } from '../../app/sessionStore'
 import { scrapForRun } from '../../sim/constants'
+import { scrapEarnMultFromRanks } from '../../sim/metaModifiers'
 import { getWorld } from '../../sim/world'
 import { nextWeaponTierThreshold, weaponTierForWCells, WEAPON_TIER_MAX } from '../../sim/weapons'
 
 export function RunHud() {
   const [, tick] = useState(0)
+  const metaRanks = useSessionStore((s) => s.meta.ranks)
 
   useEffect(() => {
     let id = 0
@@ -20,7 +23,7 @@ export function RunHud() {
   const p = w.player
   const s = w.session
   const wavesCompleted = Math.max(0, s.wave - 1)
-  const scrapEst = scrapForRun(s.score, wavesCompleted)
+  const scrapEst = scrapForRun(s.score, wavesCompleted, scrapEarnMultFromRanks(metaRanks))
   const dying = s.runOver && s.endHold > 0
   const nextTier = nextWeaponTierThreshold(p.wCells)
   const weaponTier = weaponTierForWCells(p.wCells)

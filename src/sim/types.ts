@@ -1,10 +1,12 @@
 import type { PathId } from './patterns'
+import type { MetaModifiers } from './metaModifiers'
 
 export type ShipId = 'vanguard' | 'striker' | 'aegis' | 'phantom'
 
 export type ScreenId =
   | 'title'
   | 'hangar'
+  | 'upgradeBay'
   | 'run'
   | 'results'
   | 'settings'
@@ -135,4 +137,6 @@ export type World = {
   /** Seconds since last powerup spawn or collection (pity dry spell). */
   powerupDryElapsed: number
   rng: Rng
+  /** Meta combat/payout snapshot frozen at Run start. */
+  meta: MetaModifiers
 }

@@ -166,6 +166,30 @@ button:disabled {
   gap: 0.5rem;
 }
 
+.bay-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.bay-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid #2a4a62;
+  border-radius: 6px;
+  background: #0a121c;
+}
+
+.bay-effect {
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
 .ship-card {
   text-align: left;
   min-height: 4.5rem;

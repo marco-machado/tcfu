@@ -47,11 +47,13 @@ export function HangarScreen() {
         <button type="button" onClick={startRun}>
           Launch
         </button>
+        <button type="button" onClick={() => setScreen('upgradeBay')}>
+          Upgrade bay
+        </button>
         <button type="button" onClick={() => setScreen('title')}>
           Back
         </button>
       </div>
-      <p className="muted">Upgrade bay UI comes later · meta data is wired in persist/</p>
     </div>
   )
 }

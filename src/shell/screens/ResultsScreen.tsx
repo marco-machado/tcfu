@@ -20,6 +20,9 @@ export function ResultsScreen() {
             <p className="muted scrap-note">
               Salvaged at debrief (not mid-run pickups): score/100 →{' '}
               {lastRun.scrapFromScore}, waves completed ×5 → {lastRun.scrapFromWaves}
+              {lastRun.scrapEarnMult > 1
+                ? ` · Salvage ×${lastRun.scrapEarnMult.toFixed(2)}`
+                : ''}
             </p>
           </div>
         </div>

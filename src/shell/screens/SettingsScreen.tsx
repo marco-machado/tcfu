@@ -67,7 +67,7 @@ export function SettingsScreen() {
         <button
           type="button"
           onClick={() => {
-            if (confirm('Reset all meta upgrades and scrap?')) {
+            if (confirm('Reset all meta upgrades and Scrap?')) {
               resetMeta()
               refreshMeta()
             }

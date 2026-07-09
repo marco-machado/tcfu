@@ -8,6 +8,7 @@ import {
   RESPAWN,
   streamSpeedForWave,
 } from './constants'
+import { DEFAULT_META_MODIFIERS, type MetaModifiers } from './metaModifiers'
 import type { Enemy, EnemyBullet, PlayerBullet, Powerup, ShipId, World } from './types'
 
 function emptyPlayerBullet(): PlayerBullet {
@@ -46,9 +47,16 @@ function emptyEnemy(_: unknown, id: number): Enemy {
   }
 }
 
-export function createWorld(shipId: ShipId = 'vanguard'): World {
+export function createWorld(
+  shipId: ShipId = 'vanguard',
+  meta: MetaModifiers = DEFAULT_META_MODIFIERS,
+): World {
   const maxHp = shipId === 'striker' ? 2 : 3
-  const startBombs = shipId === 'aegis' ? 3 : 2
+  const kitStartBombs = shipId === 'aegis' ? 3 : 2
+  const kitMaxBombs = 5
+  const maxBombs = kitMaxBombs + meta.bombMaxBonus
+  const startBombs = Math.min(kitStartBombs + meta.bombStartBonus, maxBombs)
+  const kitStartShield = shipId === 'aegis'
 
   return {
     player: {
@@ -60,9 +68,9 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       maxHp,
       lives: 3,
       bombs: startBombs,
-      maxBombs: 5,
+      maxBombs,
       wCells: 0,
-      shield: shipId === 'aegis',
+      shield: kitStartShield || meta.startRunShield,
       iFrames: 0,
       shipId,
       fireCooldown: 0,
@@ -100,6 +108,7 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
     },
     powerupDryElapsed: 0,
     rng: Math.random,
+    meta: { ...meta },
   }
 }
 
@@ -113,7 +122,10 @@ export function setWorld(next: World): void {
   world = next
 }
 
-export function resetWorld(shipId: ShipId = 'vanguard'): World {
-  world = createWorld(shipId)
+export function resetWorld(
+  shipId: ShipId = 'vanguard',
+  meta: MetaModifiers = DEFAULT_META_MODIFIERS,
+): World {
+  world = createWorld(shipId, meta)
   return world
 }

@@ -28,9 +28,21 @@ _Avoid_: Upgrade (reserved for run upgrade and meta upgrade)
 An in-run tier improvement to the current ship or weapon that resets when the run ends.
 _Avoid_: Level-up (RPG), permanent unlock
 
+**Scrap**:
+Persistent meta currency earned at Results and spent only in the Upgrade bay.
+_Avoid_: Coins, gold, currency (vague), W-cells (run-scoped)
+
 **Meta upgrade**:
-A persistent progression node that survives across runs (including the meta-upgrade tree and ship unlocks by score milestones).
-_Avoid_: Powerup, run upgrade
+One rank on the persistent Scrap tree (Arsenal, Hull, Salvage, or Thrusters). Survives across Runs.
+_Avoid_: Powerup, run upgrade, ship unlock (score milestones, not Scrap)
+
+**Meta rank**:
+Owned level 0–3 on one meta-upgrade branch; buying rank N requires owning N−1.
+_Avoid_: Level, tier (reserved for weapon/run upgrades)
+
+**Upgrade bay**:
+Hangar surface where the player spends Scrap on meta upgrades.
+_Avoid_: Shop, store, loadout screen
 
 **Wave pattern**:
 A hand-authored spawn choreography of enemies and hazards, reusable under a difficulty curve.
