@@ -34,6 +34,7 @@ function emptyEnemy(): Enemy {
     pathPhase: 0,
     waveId: 0,
     shotStyle: 'none',
+    age: 0,
   }
 }
 
@@ -67,6 +68,8 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       elapsed: 0,
       paused: false,
       runOver: false,
+      endHold: 0,
+      deathFlash: 0,
     },
     streamSpeed: streamSpeedForWave(1),
     playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyPlayerBullet),

@@ -1,4 +1,4 @@
-import { scrapForRun } from './constants'
+import { scrapForRun, scrapFromScore, scrapFromWaves } from './constants'
 import type { World } from './types'
 
 export type RunSummary = {
@@ -8,10 +8,15 @@ export type RunSummary = {
   timeSec: number
   shipId: World['player']['shipId']
   scrapEarned: number
+  scrapFromScore: number
+  scrapFromWaves: number
+  wavesCompleted: number
 }
 
 export function buildRunSummary(world: World): RunSummary {
   const wavesCompleted = Math.max(0, world.session.wave - 1)
+  const fromScore = scrapFromScore(world.session.score)
+  const fromWaves = scrapFromWaves(wavesCompleted)
   return {
     score: Math.floor(world.session.score),
     wave: world.session.wave,
@@ -19,5 +24,8 @@ export function buildRunSummary(world: World): RunSummary {
     timeSec: world.session.elapsed,
     shipId: world.player.shipId,
     scrapEarned: scrapForRun(world.session.score, wavesCompleted),
+    scrapFromScore: fromScore,
+    scrapFromWaves: fromWaves,
+    wavesCompleted,
   }
 }

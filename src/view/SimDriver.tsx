@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { sampleCommands } from '../input/sample'
 import { FIXED_DT, MAX_SIM_STEPS } from '../sim/constants'
-import { stepWorld } from '../sim/step'
+import { isRunReadyForResults, stepWorld } from '../sim/step'
 import { getWorld } from '../sim/world'
 import { useSessionStore } from '../app/sessionStore'
 
@@ -15,14 +15,22 @@ export function SimDriver() {
     const world = getWorld()
     const commands = sampleCommands()
 
-    if (commands.pause) {
+    if (commands.pause && !world.session.runOver) {
       world.session.paused = !world.session.paused
     }
 
-    if (world.session.paused) return
+    if (world.session.paused && !world.session.runOver) return
 
     if (world.session.runOver) {
-      if (!finished.current) {
+      acc.current += Math.min(delta, 0.1)
+      let steps = 0
+      while (acc.current >= FIXED_DT && steps < MAX_SIM_STEPS) {
+        stepWorld(world, FIXED_DT, commands)
+        acc.current -= FIXED_DT
+        steps++
+      }
+
+      if (isRunReadyForResults(world) && !finished.current) {
         finished.current = true
         finishRunFromWorld()
       }
@@ -40,11 +48,6 @@ export function SimDriver() {
       acc.current -= FIXED_DT
       steps++
       if (world.session.runOver) break
-    }
-
-    if (world.session.runOver && !finished.current) {
-      finished.current = true
-      finishRunFromWorld()
     }
   })
 

@@ -69,6 +69,8 @@ export type Enemy = {
   pathPhase: number
   waveId: number
   shotStyle: 'none' | 'down' | 'spread3'
+  /** Seconds alive; contact damage arms after CONTACT_ARM_TIME. */
+  age: number
 }
 
 export type WavePhase = 'spawning' | 'await_clear' | 'gap'
@@ -93,6 +95,10 @@ export type RunSession = {
   elapsed: number
   paused: boolean
   runOver: boolean
+  /** Seconds remaining after runOver before Results may open. */
+  endHold: number
+  /** Visual death flash timer (seconds remaining). */
+  deathFlash: number
 }
 
 export type World = {

@@ -14,13 +14,14 @@ export function CanvasRoot() {
       className="canvas-layer"
       dpr={quality === 'high' ? 1.5 : quality === 'medium' ? 1 : 0.85}
       camera={{
-        position: [0, 4, 16],
+        position: [0, 5, 17],
         fov: CAMERA_FOV,
         near: 0.1,
         far: 80,
       }}
       onCreated={({ camera }) => {
-        camera.lookAt(0, 4, 0)
+        // Look slightly above band center so spawn approach corridor is readable.
+        camera.lookAt(0, 6.5, 0)
       }}
       gl={{ antialias: quality !== 'low' }}
     >
@@ -33,9 +34,9 @@ export function CanvasRoot() {
       <Playfield />
 
       {bloom && (
-        <EffectComposer>
-          <Bloom luminanceThreshold={0.85} intensity={0.45} mipmapBlur />
-          <Vignette eskil={false} offset={0.2} darkness={0.55} />
+        <EffectComposer multisampling={0}>
+          <Bloom luminanceThreshold={0.55} intensity={0.55} mipmapBlur />
+          <Vignette eskil={false} offset={0.25} darkness={0.45} />
         </EffectComposer>
       )}
     </Canvas>

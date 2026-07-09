@@ -1,11 +1,12 @@
 import type { Commands } from '../input/commands'
 import { circleCircle } from './collision'
 import {
-  BAND,
   BOMB_DAMAGE,
+  CONTACT_ARM_TIME,
   CULL_X_MAX,
   CULL_Y_MIN,
   DART,
+  DEATH_HOLD,
   DRONE,
   ENEMY_BULLET_DAMAGE,
   ENEMY_BULLET_R,
@@ -28,6 +29,7 @@ import {
   enemyHpScale,
   enemyShotSpeedScale,
   eventTimeScale,
+  playerMoveBounds,
   streamSpeedForWave,
   waveClearBonus,
   waveMultiplier,
@@ -106,6 +108,11 @@ function applyPlayerDamage(world: World, amount: number): void {
 
   if (p.lives <= 0) {
     world.session.runOver = true
+    world.session.endHold = DEATH_HOLD
+    world.session.deathFlash = DEATH_HOLD
+    p.vx = 0
+    p.vy = 0
+    p.iFrames = 0
     return
   }
 
@@ -141,6 +148,7 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
   e.path = event.path
   e.pathPhase = 0
   e.waveId = wave
+  e.age = 0
   e.vy = -streamSpeed
 
   if (event.kind === 'drone') {
@@ -241,6 +249,7 @@ function stepWaves(world: World, dt: number): void {
 function stepPlayer(world: World, dt: number, commands: Commands): void {
   const p = world.player
   const maxSpeed = PLAYER_MAX_SPEED
+  const bounds = playerMoveBounds()
 
   let desiredX = commands.moveX * maxSpeed
   let desiredY = commands.moveY * maxSpeed
@@ -266,10 +275,10 @@ function stepPlayer(world: World, dt: number, commands: Commands): void {
   p.x += p.vx * dt
   p.y += p.vy * dt
 
-  p.x = clamp(p.x, BAND.minX, BAND.maxX)
-  p.y = clamp(p.y, BAND.minY, BAND.maxY)
-  if (p.x <= BAND.minX || p.x >= BAND.maxX) p.vx = 0
-  if (p.y <= BAND.minY || p.y >= BAND.maxY) p.vy = 0
+  p.x = clamp(p.x, bounds.minX, bounds.maxX)
+  p.y = clamp(p.y, bounds.minY, bounds.maxY)
+  if (p.x <= bounds.minX || p.x >= bounds.maxX) p.vx = 0
+  if (p.y <= bounds.minY || p.y >= bounds.maxY) p.vy = 0
 
   if (p.iFrames > 0) p.iFrames = Math.max(0, p.iFrames - dt)
   if (p.fireCooldown > 0) p.fireCooldown = Math.max(0, p.fireCooldown - dt)
@@ -399,6 +408,7 @@ function advancePath(e: Enemy, dt: number, streamSpeed: number): void {
 function stepEnemies(world: World, dt: number): void {
   for (const e of world.enemies) {
     if (!e.active) continue
+    e.age += dt
     advancePath(e, dt, world.streamSpeed)
 
     if (e.fireInterval > 0) {
@@ -441,6 +451,7 @@ function stepPlayerHazards(world: World): void {
 
   for (const e of world.enemies) {
     if (!e.active) continue
+    if (e.age < CONTACT_ARM_TIME) continue
     if (!circleCircle({ x: p.x, y: p.y, r: p.hitboxR }, { x: e.x, y: e.y, r: e.r })) continue
     damage = Math.max(damage, e.contactDamage)
   }
@@ -455,8 +466,22 @@ function stepPlayerHazards(world: World): void {
   if (damage > 0) applyPlayerDamage(world, damage)
 }
 
+function stepDeathHold(world: World, dt: number): void {
+  if (world.session.endHold > 0) {
+    world.session.endHold = Math.max(0, world.session.endHold - dt)
+  }
+  if (world.session.deathFlash > 0) {
+    world.session.deathFlash = Math.max(0, world.session.deathFlash - dt)
+  }
+}
+
 export function stepWorld(world: World, dt: number, commands: Commands): void {
-  if (world.session.paused || world.session.runOver) return
+  if (world.session.paused) return
+
+  if (world.session.runOver) {
+    stepDeathHold(world, dt)
+    return
+  }
 
   stepPlayer(world, dt, commands)
   stepBomb(world, commands)
@@ -469,4 +494,9 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   stepPlayerHazards(world)
 
   world.session.elapsed += dt
+}
+
+/** True when the Run is over and the death beat has finished. */
+export function isRunReadyForResults(world: World): boolean {
+  return world.session.runOver && world.session.endHold <= 0
 }

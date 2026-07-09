@@ -1,10 +1,52 @@
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
-import { BoxGeometry, type Group, type InstancedMesh, type Mesh, Object3D } from 'three'
-import { BAND, MAX_ENEMIES, MAX_ENEMY_BULLETS, MAX_PLAYER_BULLETS } from '../sim/constants'
+import { useLayoutEffect, useMemo, useRef } from 'react'
+import {
+  BoxGeometry,
+  type Group,
+  type InstancedMesh,
+  type Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  SphereGeometry,
+} from 'three'
+import {
+  BAND,
+  DEATH_HOLD,
+  MAX_ENEMIES,
+  MAX_ENEMY_BULLETS,
+  MAX_PLAYER_BULLETS,
+  PLAYER_HULL,
+} from '../sim/constants'
+import type { EnemyKind } from '../sim/types'
 import { getWorld } from '../sim/world'
 
 const _proxy = new Object3D()
+
+function hideInstance(inst: InstancedMesh, index: number): void {
+  _proxy.position.set(0, -200, 0)
+  _proxy.scale.setScalar(0)
+  _proxy.rotation.set(0, 0, 0)
+  _proxy.updateMatrix()
+  inst.setMatrixAt(index, _proxy.matrix)
+}
+
+function writeInstance(
+  inst: InstancedMesh,
+  index: number,
+  x: number,
+  y: number,
+  z: number,
+  sx: number,
+  sy: number,
+  sz: number,
+  rotZ = 0,
+): void {
+  _proxy.position.set(x, y, z)
+  _proxy.scale.set(sx, sy, sz)
+  _proxy.rotation.set(0, 0, rotZ)
+  _proxy.updateMatrix()
+  inst.setMatrixAt(index, _proxy.matrix)
+}
 
 export function Playfield() {
   const width = BAND.maxX - BAND.minX
@@ -32,6 +74,7 @@ export function Playfield() {
 
       <StreamMarkers />
       <PlayerMesh />
+      <DeathBurst />
       <PlayerBulletInstances />
       <EnemyBulletInstances />
       <EnemyInstances />
@@ -48,15 +91,15 @@ function StreamMarkers() {
     const speed = getWorld().streamSpeed
     for (const child of g.children) {
       child.position.y -= speed * delta * 0.35
-      if (child.position.y < -2) child.position.y += 18
+      if (child.position.y < -2) child.position.y += 22
     }
   })
 
   const markers = []
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 16; i++) {
     markers.push(
-      <mesh key={i} position={[-5 + (i % 4) * 3.3, 6 + Math.floor(i / 4) * 5, 0]}>
-        <boxGeometry args={[0.15, 0.8, 0.15]} />
+      <mesh key={i} position={[-5 + (i % 4) * 3.3, -1 + Math.floor(i / 4) * 5.5, -0.05]}>
+        <boxGeometry args={[0.12, 0.9, 0.12]} />
         <meshStandardMaterial color="#224466" emissive="#113344" emissiveIntensity={0.4} />
       </mesh>,
     )
@@ -67,32 +110,160 @@ function StreamMarkers() {
 
 function PlayerMesh() {
   const mesh = useRef<Mesh>(null)
+  const wingL = useRef<Mesh>(null)
+  const wingR = useRef<Mesh>(null)
 
   useFrame(() => {
-    const m = mesh.current
-    if (!m) return
-    const p = getWorld().player
-    m.position.set(p.x, p.y, 0.2)
-    const blink = p.iFrames > 0 && Math.floor(p.iFrames * 20) % 2 === 0
-    m.visible = !blink
+    const world = getWorld()
+    const p = world.player
+    const dead = world.session.runOver
+    const blink = !dead && p.iFrames > 0 && Math.floor(p.iFrames * 20) % 2 === 0
+    const visible = !dead && !blink
+    for (const ref of [mesh, wingL, wingR]) {
+      const m = ref.current
+      if (!m) continue
+      m.visible = visible
+      m.position.x = p.x + (ref === wingL ? -0.38 : ref === wingR ? 0.38 : 0)
+      m.position.y = p.y + (ref === mesh ? 0 : -0.1)
+      m.position.z = 0.2
+    }
   })
 
+  const bodyH = PLAYER_HULL.halfH * 1.7
+  const bodyW = PLAYER_HULL.halfW * 1.0
+
   return (
-    <mesh ref={mesh} position={[0, 3.5, 0.2]}>
-      <boxGeometry args={[0.7, 1.0, 0.35]} />
-      <meshStandardMaterial
-        color="#7fd4ff"
-        emissive="#2a88bb"
-        emissiveIntensity={0.6}
-        metalness={0.5}
-        roughness={0.35}
-      />
-    </mesh>
+    <group>
+      <mesh ref={mesh} position={[0, 3.5, 0.2]}>
+        <boxGeometry args={[bodyW, bodyH, 0.32]} />
+        <meshStandardMaterial
+          color="#7fd4ff"
+          emissive="#2a88bb"
+          emissiveIntensity={0.75}
+          metalness={0.45}
+          roughness={0.3}
+        />
+      </mesh>
+      <mesh ref={wingL} position={[-0.38, 3.4, 0.2]}>
+        <boxGeometry args={[0.28, 0.35, 0.12]} />
+        <meshStandardMaterial
+          color="#5eb8e8"
+          emissive="#1a6a99"
+          emissiveIntensity={0.5}
+          metalness={0.4}
+          roughness={0.35}
+        />
+      </mesh>
+      <mesh ref={wingR} position={[0.38, 3.4, 0.2]}>
+        <boxGeometry args={[0.28, 0.35, 0.12]} />
+        <meshStandardMaterial
+          color="#5eb8e8"
+          emissive="#1a6a99"
+          emissiveIntensity={0.5}
+          metalness={0.4}
+          roughness={0.35}
+        />
+      </mesh>
+    </group>
   )
 }
 
-function PlayerBulletInstances() {
+const DEATH_PARTICLES = 14
+
+function DeathBurst() {
+  const group = useRef<Group>(null)
+  const seeded = useRef(false)
+  const origin = useRef({ x: 0, y: 0 })
+  const dirs = useMemo(() => {
+    const list: { x: number; y: number; s: number }[] = []
+    for (let i = 0; i < DEATH_PARTICLES; i++) {
+      const a = (i / DEATH_PARTICLES) * Math.PI * 2
+      const speed = 2.2 + (i % 3) * 0.7
+      list.push({ x: Math.cos(a) * speed, y: Math.sin(a) * speed, s: 0.18 + (i % 4) * 0.05 })
+    }
+    return list
+  }, [])
+
+  useFrame(() => {
+    const g = group.current
+    if (!g) return
+    const world = getWorld()
+    const flash = world.session.deathFlash
+    if (!world.session.runOver || flash <= 0) {
+      g.visible = false
+      seeded.current = false
+      return
+    }
+
+    if (!seeded.current) {
+      origin.current = { x: world.player.x, y: world.player.y }
+      seeded.current = true
+    }
+
+    const t = 1 - flash / DEATH_HOLD
+    const expand = t * 1.15
+    g.visible = true
+    g.position.set(origin.current.x, origin.current.y, 0.35)
+    let i = 0
+    for (const child of g.children) {
+      const d = dirs[i++]
+      if (!d) break
+      child.position.set(d.x * expand, d.y * expand, 0)
+      const scale = d.s * (1.15 - t * 0.85)
+      child.scale.setScalar(Math.max(0.01, scale))
+    }
+  })
+
+  return (
+    <group ref={group} visible={false}>
+      {dirs.map((_, i) => (
+        <mesh key={i}>
+          <boxGeometry args={[1, 1, 0.2]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? '#7fd4ff' : '#ffaa66'}
+            emissive={i % 2 === 0 ? '#44aadd' : '#ff6622'}
+            emissiveIntensity={2}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function useInstancedPool(
+  count: number,
+  geometry: BoxGeometry | SphereGeometry,
+  material: MeshStandardMaterial,
+) {
   const mesh = useRef<InstancedMesh>(null)
+
+  useLayoutEffect(() => {
+    const inst = mesh.current
+    if (!inst) return
+    for (let i = 0; i < count; i++) hideInstance(inst, i)
+    inst.instanceMatrix.needsUpdate = true
+    inst.computeBoundingSphere()
+  }, [count])
+
+  return { mesh, geometry, material }
+}
+
+function PlayerBulletInstances() {
+  const geometry = useMemo(() => new SphereGeometry(0.14, 10, 10), [])
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: '#e8fbff',
+        emissive: '#66d0ff',
+        emissiveIntensity: 1.6,
+        metalness: 0.15,
+        roughness: 0.25,
+        toneMapped: false,
+      }),
+    [],
+  )
+  const { mesh } = useInstancedPool(MAX_PLAYER_BULLETS, geometry, material)
 
   useFrame(() => {
     const inst = mesh.current
@@ -101,37 +272,40 @@ function PlayerBulletInstances() {
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
-      _proxy.position.set(b.x, b.y, 0.25)
-      _proxy.scale.setScalar(1)
-      _proxy.updateMatrix()
-      inst.setMatrixAt(i, _proxy.matrix)
+      writeInstance(inst, i, b.x, b.y, 0.28, 1, 1.4, 1)
       i++
     }
-    for (; i < MAX_PLAYER_BULLETS; i++) {
-      _proxy.position.set(0, -100, 0)
-      _proxy.scale.setScalar(0)
-      _proxy.updateMatrix()
-      inst.setMatrixAt(i, _proxy.matrix)
-    }
+    for (let j = i; j < MAX_PLAYER_BULLETS; j++) hideInstance(inst, j)
+    inst.count = i
     inst.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <instancedMesh ref={mesh} args={[undefined, undefined, MAX_PLAYER_BULLETS]}>
-      <sphereGeometry args={[0.12, 8, 8]} />
-      <meshStandardMaterial
-        color="#dff6ff"
-        emissive="#88ddff"
-        emissiveIntensity={1.2}
-        metalness={0.2}
-        roughness={0.3}
-      />
-    </instancedMesh>
+    <instancedMesh
+      ref={mesh}
+      args={[geometry, material, MAX_PLAYER_BULLETS]}
+      frustumCulled={false}
+      castShadow={false}
+      receiveShadow={false}
+    />
   )
 }
 
 function EnemyBulletInstances() {
-  const mesh = useRef<InstancedMesh>(null)
+  const geometry = useMemo(() => new SphereGeometry(0.16, 10, 10), [])
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: '#ff9977',
+        emissive: '#ff4422',
+        emissiveIntensity: 1.5,
+        metalness: 0.15,
+        roughness: 0.3,
+        toneMapped: false,
+      }),
+    [],
+  )
+  const { mesh } = useInstancedPool(MAX_ENEMY_BULLETS, geometry, material)
 
   useFrame(() => {
     const inst = mesh.current
@@ -140,37 +314,55 @@ function EnemyBulletInstances() {
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
-      _proxy.position.set(b.x, b.y, 0.22)
-      _proxy.scale.setScalar(1)
-      _proxy.updateMatrix()
-      inst.setMatrixAt(i, _proxy.matrix)
+      writeInstance(inst, i, b.x, b.y, 0.26, 1, 1, 1)
       i++
     }
-    for (; i < MAX_ENEMY_BULLETS; i++) {
-      _proxy.position.set(0, -100, 0)
-      _proxy.scale.setScalar(0)
-      _proxy.updateMatrix()
-      inst.setMatrixAt(i, _proxy.matrix)
-    }
+    for (let j = i; j < MAX_ENEMY_BULLETS; j++) hideInstance(inst, j)
+    inst.count = i
     inst.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <instancedMesh ref={mesh} args={[undefined, undefined, MAX_ENEMY_BULLETS]}>
-      <sphereGeometry args={[0.14, 8, 8]} />
-      <meshStandardMaterial
-        color="#ff8866"
-        emissive="#cc3311"
-        emissiveIntensity={1.1}
-        metalness={0.2}
-        roughness={0.35}
-      />
-    </instancedMesh>
+    <instancedMesh
+      ref={mesh}
+      args={[geometry, material, MAX_ENEMY_BULLETS]}
+      frustumCulled={false}
+      castShadow={false}
+      receiveShadow={false}
+    />
   )
 }
 
-function EnemyInstances() {
-  const mesh = useRef<InstancedMesh>(null)
+type KindVisual = {
+  color: string
+  emissive: string
+  sx: number
+  sy: number
+  sz: number
+}
+
+const KIND_VISUAL: Record<EnemyKind, KindVisual> = {
+  drone: { color: '#e87840', emissive: '#a03010', sx: 0.85, sy: 0.7, sz: 0.4 },
+  dart: { color: '#f0c040', emissive: '#a07010', sx: 0.45, sy: 1.05, sz: 0.3 },
+  gunner: { color: '#d04050', emissive: '#801020', sx: 1.15, sy: 0.9, sz: 0.5 },
+}
+
+function EnemyKindInstances({ kind }: { kind: EnemyKind }) {
+  const visual = KIND_VISUAL[kind]
+  const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: visual.color,
+        emissive: visual.emissive,
+        emissiveIntensity: 0.85,
+        metalness: 0.35,
+        roughness: 0.4,
+        toneMapped: false,
+      }),
+    [visual.color, visual.emissive],
+  )
+  const { mesh } = useInstancedPool(MAX_ENEMIES, geometry, material)
 
   useFrame(() => {
     const inst = mesh.current
@@ -178,32 +370,32 @@ function EnemyInstances() {
     const enemies = getWorld().enemies
     let i = 0
     for (const e of enemies) {
-      if (!e.active) continue
-      _proxy.position.set(e.x, e.y, 0.2)
-      _proxy.scale.set(1, 1, 1)
-      _proxy.updateMatrix()
-      inst.setMatrixAt(i, _proxy.matrix)
+      if (!e.active || e.kind !== kind) continue
+      writeInstance(inst, i, e.x, e.y, 0.22, visual.sx, visual.sy, visual.sz)
       i++
     }
-    for (; i < MAX_ENEMIES; i++) {
-      _proxy.position.set(0, -100, 0)
-      _proxy.scale.setScalar(0)
-      _proxy.updateMatrix()
-      inst.setMatrixAt(i, _proxy.matrix)
-    }
+    for (let j = i; j < MAX_ENEMIES; j++) hideInstance(inst, j)
+    inst.count = i
     inst.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <instancedMesh ref={mesh} args={[undefined, undefined, MAX_ENEMIES]}>
-      <boxGeometry args={[0.7, 0.7, 0.35]} />
-      <meshStandardMaterial
-        color="#e07040"
-        emissive="#802010"
-        emissiveIntensity={0.55}
-        metalness={0.4}
-        roughness={0.45}
-      />
-    </instancedMesh>
+    <instancedMesh
+      ref={mesh}
+      args={[geometry, material, MAX_ENEMIES]}
+      frustumCulled={false}
+      castShadow={false}
+      receiveShadow={false}
+    />
+  )
+}
+
+function EnemyInstances() {
+  return (
+    <group>
+      <EnemyKindInstances kind="drone" />
+      <EnemyKindInstances kind="dart" />
+      <EnemyKindInstances kind="gunner" />
+    </group>
   )
 }

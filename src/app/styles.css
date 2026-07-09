@@ -173,6 +173,56 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+.results-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.results-score {
+  font-size: 1.35rem;
+  color: #e8f4ff;
+}
+
+.scrap-panel {
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #2a4a62;
+  border-radius: 4px;
+  background: #0a141e;
+  max-width: 22rem;
+}
+
+.scrap-total {
+  margin: 0;
+  color: #9fe8b0;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.scrap-note {
+  margin: 0.25rem 0 0;
+  line-height: 1.35;
+}
+
+.death-overlay {
+  background: rgba(20, 4, 4, 0.55);
+  animation: death-fade 0.35s ease-out;
+}
+
+.death-panel h2 {
+  color: #ff8866;
+}
+
+@keyframes death-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 table.scores {
   width: 100%;
   border-collapse: collapse;

@@ -12,7 +12,25 @@ export const BAND = {
   maxY: 7,
 } as const
 
+/** Visual hull half-extents used to keep the ship mesh inside the band. */
+export const PLAYER_HULL = {
+  halfW: 0.55,
+  halfH: 0.55,
+} as const
+
+/**
+ * Extra inset from the band's top edge so the player cannot camp the entry line
+ * where streaming threats first become collidable.
+ */
+export const BAND_TOP_SAFE = 0.85
+
 export const RESPAWN = { x: 0, y: 3.5, z: 0 } as const
+
+/** Newly spawned enemies deal no contact damage until this age (seconds). */
+export const CONTACT_ARM_TIME = 0.5
+
+/** Hold the playfield after final death before shell opens Results. */
+export const DEATH_HOLD = 1.75
 
 export const STREAM_BASE_SPEED = 4
 export const STREAM_RAMP = 0.02
@@ -117,6 +135,24 @@ export function waveClearBonus(waveIndex: number): number {
   return Math.floor(250 * (1 + 0.1 * (waveIndex - 1)))
 }
 
+export function scrapFromScore(score: number): number {
+  return Math.floor(score / 100)
+}
+
+export function scrapFromWaves(wavesCompleted: number): number {
+  return Math.floor(wavesCompleted * 5)
+}
+
 export function scrapForRun(score: number, wavesCompleted: number): number {
-  return Math.floor(score / 100) + Math.floor(wavesCompleted * 5)
+  return scrapFromScore(score) + scrapFromWaves(wavesCompleted)
+}
+
+/** Movement clamp so the full player hull stays inside the band, with top safe margin. */
+export function playerMoveBounds() {
+  return {
+    minX: BAND.minX + PLAYER_HULL.halfW,
+    maxX: BAND.maxX - PLAYER_HULL.halfW,
+    minY: BAND.minY + PLAYER_HULL.halfH,
+    maxY: BAND.maxY - PLAYER_HULL.halfH - BAND_TOP_SAFE,
+  }
 }

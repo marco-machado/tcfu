@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { emptyCommands, type Commands } from '../input/commands'
 import {
+  CONTACT_ARM_TIME,
+  DEATH_HOLD,
   FIXED_DT,
   IFRAMES_HIT,
   IFRAMES_RESPAWN,
@@ -10,12 +12,13 @@ import {
   STREAM_BASE_SPEED,
   WAVE_CLEAR_WINDOW,
   WAVE_GAP,
+  playerMoveBounds,
   streamSpeedForWave,
   waveClearBonus,
   waveMultiplier,
 } from './constants'
 import { INTRO_01 } from './patterns'
-import { stepWorld } from './step'
+import { isRunReadyForResults, stepWorld } from './step'
 import { createWorld, getWorld, resetWorld, setWorld } from './world'
 import type { World } from './types'
 
@@ -69,6 +72,7 @@ function placeDrone(world: World, x: number, y: number): World['enemies'][number
   slot.pathPhase = 0
   slot.waveId = world.session.wave
   slot.shotStyle = 'none'
+  slot.age = CONTACT_ARM_TIME
   return slot
 }
 
@@ -265,10 +269,11 @@ describe('sim world step combat defense and terminal', () => {
     world.player.hp = 1
     world.player.lives = 2
     world.player.x = 4
-    world.player.y = 6
-    placeDrone(world, 4, 6)
-    const near = placeEnemyBullet(world, 4.1, 6.1, 1)
-    const far = placeEnemyBullet(world, 4 + MERCY_CLEAR_R + 2, 6, 1)
+    world.player.y = 5
+    placeDrone(world, 4, 5)
+    // Mercy clear is around the respawn point, not the death point.
+    const near = placeEnemyBullet(world, RESPAWN.x + 0.5, RESPAWN.y + 0.5, 1)
+    const far = placeEnemyBullet(world, RESPAWN.x + MERCY_CLEAR_R + 2, RESPAWN.y, 1)
 
     stepWorld(world, FIXED_DT, idle())
     expect(world.player.lives).toBe(1)
@@ -282,7 +287,7 @@ describe('sim world step combat defense and terminal', () => {
     expect(world.session.runOver).toBe(false)
   })
 
-  it('final life loss sets runOver and freezes further sim progress', () => {
+  it('final life loss sets runOver, holds before Results, freezes combat', () => {
     const world = createWorld('vanguard')
     suspendWaves(world)
     world.player.hp = 1
@@ -292,12 +297,46 @@ describe('sim world step combat defense and terminal', () => {
     stepWorld(world, FIXED_DT, idle())
     expect(world.session.runOver).toBe(true)
     expect(world.player.lives).toBe(0)
+    expect(world.session.endHold).toBeCloseTo(DEATH_HOLD, 5)
+    expect(isRunReadyForResults(world)).toBe(false)
 
     const elapsed = world.session.elapsed
     const score = world.session.score
     steps(world, 30, fireOnly())
     expect(world.session.elapsed).toBe(elapsed)
     expect(world.session.score).toBe(score)
+    expect(world.session.endHold).toBeLessThan(DEATH_HOLD)
+    expect(isRunReadyForResults(world)).toBe(false)
+
+    steps(world, Math.ceil(DEATH_HOLD / FIXED_DT) + 2, idle())
+    expect(world.session.endHold).toBe(0)
+    expect(isRunReadyForResults(world)).toBe(true)
+  })
+
+  it('player hull stays inside band with top safe margin', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const bounds = playerMoveBounds()
+    steps(world, 120, { ...emptyCommands(), moveY: 1 })
+    expect(world.player.y).toBeLessThanOrEqual(bounds.maxY + 1e-6)
+    expect(world.player.y).toBeLessThan(7 - 0.5)
+    steps(world, 120, { ...emptyCommands(), moveY: -1 })
+    expect(world.player.y).toBeGreaterThanOrEqual(bounds.minY - 1e-6)
+  })
+
+  it('fresh enemies deal no contact damage until armed', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const foe = placeDrone(world, world.player.x, world.player.y)
+    foe.age = 0
+    const hp0 = world.player.hp
+
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.hp).toBe(hp0)
+
+    foe.age = CONTACT_ARM_TIME
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.hp).toBe(hp0 - 1)
   })
 
   it('bomb spends stock, clears enemy bullets, damages enemies, scores kills', () => {

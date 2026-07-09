@@ -47,7 +47,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   finishRunFromWorld: () => {
     if (get().screen !== 'run') return
     const world = getWorld()
-    if (!world.session.runOver) return
+    if (!world.session.runOver || world.session.endHold > 0) return
 
     const summary = buildRunSummary(world)
     const meta = loadMeta()
