@@ -15,6 +15,9 @@ export const BAND = {
 export const RESPAWN = { x: 0, y: 3.5, z: 0 } as const
 
 export const STREAM_BASE_SPEED = 4
+export const STREAM_RAMP = 0.02
+export const STREAM_CAP = 1.5
+
 export const PLAYER_MAX_SPEED = 8
 export const PLAYER_ACCEL = 40
 export const PLAYER_DECEL = 50
@@ -50,6 +53,15 @@ export const DART = {
   bulletSpeed: 8,
 } as const
 
+export const GUNNER = {
+  hp: 4,
+  points: 300,
+  r: 0.55,
+  contactDamage: 1,
+  fireInterval: 1.4,
+  bulletSpeed: 6,
+} as const
+
 export const ENEMY_BULLET_R = 0.15
 export const ENEMY_BULLET_DAMAGE = 1
 
@@ -63,12 +75,46 @@ export const BOMB_DAMAGE = 5
 export const SPAWN_Y = 18
 export const CULL_Y_MIN = -2
 export const CULL_X_MAX = 10
-export const DRONE_SPAWN_INTERVAL = 1.25
 
-export const SPAWN_LANES = [-4, -2, 0, 2, 4] as const
+export const WAVE_GAP = 0.75
+export const WAVE_CLEAR_WINDOW = 8
+export const HOLD_Y = 12
+
+export const HP_RAMP = 0.04
+export const HP_CAP = 2.5
+export const SHOT_SPEED_RAMP = 0.03
+export const SHOT_SPEED_CAP = 2.0
+export const FIRE_CD_RAMP = 0.025
+export const FIRE_CD_MIN_MULT = 0.5
+export const EVENT_TIME_RAMP = 0.015
+export const EVENT_TIME_MIN = 0.7
 
 export function waveMultiplier(waveIndex: number): number {
   return Math.min(3, 1 + 0.05 * (waveIndex - 1))
+}
+
+export function streamSpeedForWave(waveIndex: number): number {
+  return STREAM_BASE_SPEED * Math.min(STREAM_CAP, 1 + STREAM_RAMP * (waveIndex - 1))
+}
+
+export function enemyHpScale(waveIndex: number): number {
+  return Math.min(HP_CAP, 1 + HP_RAMP * (waveIndex - 1))
+}
+
+export function enemyShotSpeedScale(waveIndex: number): number {
+  return Math.min(SHOT_SPEED_CAP, 1 + SHOT_SPEED_RAMP * (waveIndex - 1))
+}
+
+export function enemyFireCooldownScale(waveIndex: number): number {
+  return Math.max(FIRE_CD_MIN_MULT, 1 / (1 + FIRE_CD_RAMP * (waveIndex - 1)))
+}
+
+export function eventTimeScale(waveIndex: number): number {
+  return Math.max(EVENT_TIME_MIN, 1 / (1 + EVENT_TIME_RAMP * (waveIndex - 1)))
+}
+
+export function waveClearBonus(waveIndex: number): number {
+  return Math.floor(250 * (1 + 0.1 * (waveIndex - 1)))
 }
 
 export function scrapForRun(score: number, wavesCompleted: number): number {

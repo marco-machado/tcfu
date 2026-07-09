@@ -4,7 +4,7 @@ import {
   MAX_PLAYER_BULLETS,
   PLAYER_HITBOX_R,
   RESPAWN,
-  STREAM_BASE_SPEED,
+  streamSpeedForWave,
 } from './constants'
 import type { Enemy, EnemyBullet, PlayerBullet, ShipId, World } from './types'
 
@@ -13,7 +13,7 @@ function emptyPlayerBullet(): PlayerBullet {
 }
 
 function emptyEnemyBullet(): EnemyBullet {
-  return { active: false, x: 0, y: 0, vy: 0, r: 0.15, damage: 1 }
+  return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.15, damage: 1 }
 }
 
 function emptyEnemy(): Enemy {
@@ -30,6 +30,10 @@ function emptyEnemy(): Enemy {
     fireCooldown: 0,
     fireInterval: 0,
     bulletSpeed: 0,
+    path: 'drift_down',
+    pathPhase: 0,
+    waveId: 0,
+    shotStyle: 'none',
   }
 }
 
@@ -64,12 +68,21 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
       paused: false,
       runOver: false,
     },
-    streamSpeed: STREAM_BASE_SPEED,
+    streamSpeed: streamSpeedForWave(1),
     playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyPlayerBullet),
     enemyBullets: Array.from({ length: MAX_ENEMY_BULLETS }, emptyEnemyBullet),
     enemies: Array.from({ length: MAX_ENEMIES }, emptyEnemy),
-    spawnTimer: 0,
-    spawnLane: 0,
+    waves: {
+      suspended: false,
+      phase: 'spawning',
+      patternElapsed: 0,
+      nextEventIndex: 0,
+      clearElapsed: 0,
+      gapElapsed: 0,
+      clearAwarded: false,
+      waveSpawned: 0,
+      waveKilled: 0,
+    },
   }
 }
 

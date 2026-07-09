@@ -1,3 +1,5 @@
+import type { PathId } from './patterns'
+
 export type ShipId = 'vanguard' | 'striker' | 'aegis' | 'phantom'
 
 export type ScreenId =
@@ -10,7 +12,7 @@ export type ScreenId =
 
 export type Vec2 = { x: number; y: number }
 
-export type EnemyKind = 'drone' | 'dart'
+export type EnemyKind = 'drone' | 'dart' | 'gunner'
 
 export type PlayerState = {
   x: number
@@ -44,6 +46,7 @@ export type EnemyBullet = {
   active: boolean
   x: number
   y: number
+  vx: number
   vy: number
   r: number
   damage: number
@@ -62,6 +65,25 @@ export type Enemy = {
   fireCooldown: number
   fireInterval: number
   bulletSpeed: number
+  path: PathId
+  pathPhase: number
+  waveId: number
+  shotStyle: 'none' | 'down' | 'spread3'
+}
+
+export type WavePhase = 'spawning' | 'await_clear' | 'gap'
+
+export type WaveDirector = {
+  /** When true, director does not spawn (for unit tests). */
+  suspended: boolean
+  phase: WavePhase
+  patternElapsed: number
+  nextEventIndex: number
+  clearElapsed: number
+  gapElapsed: number
+  clearAwarded: boolean
+  waveSpawned: number
+  waveKilled: number
 }
 
 export type RunSession = {
@@ -80,6 +102,5 @@ export type World = {
   playerBullets: PlayerBullet[]
   enemyBullets: EnemyBullet[]
   enemies: Enemy[]
-  spawnTimer: number
-  spawnLane: number
+  waves: WaveDirector
 }

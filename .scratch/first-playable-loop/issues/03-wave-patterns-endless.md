@@ -1,6 +1,6 @@
 # Wave patterns and endless escalation
 
-Status: `ready-for-agent`
+Status: `resolved`
 Blocked by: 02
 
 ## Parent
@@ -15,15 +15,19 @@ Combat, death, Results, bomb, and rewards from prior tickets stay in place; this
 
 ## Acceptance criteria
 
-- [ ] Wave director runs fixed intro patterns (intro_01–intro_03 intent from catalog: drones, darts with down fire, denser gunners as needed) using catalog enemy ids and paths.
-- [ ] After a pattern’s spawn window completes, ~0.75 s gap then next wave; world stream never fully stops.
-- [ ] HUD wave index increments 1, 2, 3, … through intro and beyond.
-- [ ] Wave clear bonus when all wave enemies die before 8 s after last spawn; otherwise no clear bonus (timeout).
-- [ ] Kill score uses wave multiplier `1 + 0.05 × (waveIndex - 1)` capped at 3.0; stream and enemy difficulty ramps follow design formulas at least in simplified form.
-- [ ] After intro, endless easy continuation (recycled or pool_easy-style patterns) so the Run never soft-locks waiting for missing content.
-- [ ] Spawn approach ~y = 18; cull y < -2 or |x| > 10; enemies/bullets leave cleanly.
-- [ ] Sim-step tests cover wave advance, gap, clear-bonus window, and post-intro continuation; manual smoke: survive intro, wave counter keeps rising, die later with higher wave on Results.
+- [x] Wave director runs fixed intro patterns (intro_01–intro_03 intent from catalog: drones, darts with down fire, denser gunners as needed) using catalog enemy ids and paths.
+- [x] After a pattern’s spawn window completes, ~0.75 s gap then next wave; world stream never fully stops.
+- [x] HUD wave index increments 1, 2, 3, … through intro and beyond.
+- [x] Wave clear bonus when all wave enemies die before 8 s after last spawn; otherwise no clear bonus (timeout).
+- [x] Kill score uses wave multiplier `1 + 0.05 × (waveIndex - 1)` capped at 3.0; stream and enemy difficulty ramps follow design formulas at least in simplified form.
+- [x] After intro, endless easy continuation (recycled or pool_easy-style patterns) so the Run never soft-locks waiting for missing content.
+- [x] Spawn approach ~y = 18; cull y < -2 or |x| > 10; enemies/bullets leave cleanly.
+- [x] Sim-step tests cover wave advance, gap, clear-bonus window, and post-intro continuation; manual smoke: survive intro, wave counter keeps rising, die later with higher wave on Results.
 
 ## Blocked by
 
 - `02-survive-die-close-run` (Survive, die, and close the Run)
+
+## Answer
+
+Wave director FSM (spawn → await_clear → gap) with intro_01–03 + four easy patterns, clear bonus, stream/HP/shot ramps, gunner + paths. 24 sim tests green.

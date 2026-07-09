@@ -7,7 +7,14 @@ import {
   IFRAMES_SHIELD,
   MERCY_CLEAR_R,
   RESPAWN,
+  STREAM_BASE_SPEED,
+  WAVE_CLEAR_WINDOW,
+  WAVE_GAP,
+  streamSpeedForWave,
+  waveClearBonus,
+  waveMultiplier,
 } from './constants'
+import { INTRO_01 } from './patterns'
 import { stepWorld } from './step'
 import { createWorld, getWorld, resetWorld, setWorld } from './world'
 import type { World } from './types'
@@ -40,6 +47,10 @@ function steps(world: World, n: number, commands: Commands, dt = FIXED_DT): void
   for (let i = 0; i < n; i++) stepWorld(world, dt, commands)
 }
 
+function suspendWaves(world: World): void {
+  world.waves.suspended = true
+}
+
 function placeDrone(world: World, x: number, y: number): World['enemies'][number] {
   const slot = world.enemies.find((e) => !e.active) ?? world.enemies[0]
   slot.active = true
@@ -54,6 +65,10 @@ function placeDrone(world: World, x: number, y: number): World['enemies'][number
   slot.fireCooldown = 0
   slot.fireInterval = 0
   slot.bulletSpeed = 0
+  slot.path = 'drift_down'
+  slot.pathPhase = 0
+  slot.waveId = world.session.wave
+  slot.shotStyle = 'none'
   return slot
 }
 
@@ -62,6 +77,7 @@ function placeEnemyBullet(world: World, x: number, y: number, damage = 1): World
   slot.active = true
   slot.x = x
   slot.y = y
+  slot.vx = 0
   slot.vy = 0
   slot.r = 0.15
   slot.damage = damage
@@ -77,11 +93,14 @@ describe('sim world step combat offense', () => {
     expect(world.session.score).toBe(0)
     expect(world.session.kills).toBe(0)
     expect(world.session.runOver).toBe(false)
+    expect(world.session.wave).toBe(1)
+    expect(world.waves.phase).toBe('spawning')
     expect(world.player.fireCooldown).toBe(0)
   })
 
   it('hold fire spawns a +Y pulse bullet on cooldown 0.18s', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     const y0 = world.player.y
 
     stepWorld(world, FIXED_DT, fireOnly())
@@ -102,6 +121,7 @@ describe('sim world step combat offense', () => {
 
   it('release fire stops new spawns; existing bullets keep moving', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     stepWorld(world, FIXED_DT, fireOnly())
     const yAfterSpawn = activeBullets(world)[0].y
 
@@ -112,29 +132,29 @@ describe('sim world step combat offense', () => {
 
   it('culls player bullets that leave the corridor', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     stepWorld(world, FIXED_DT, fireOnly())
     steps(world, 120, idle())
     expect(activeBullets(world)).toHaveLength(0)
   })
 
-  it('spawns streaming drones that drift with the world stream', () => {
+  it('intro_01 spawns drones that drift with the world stream', () => {
     const world = createWorld('vanguard')
-    steps(world, Math.ceil(1.25 / FIXED_DT), idle())
+    stepWorld(world, FIXED_DT, idle())
     const enemies = activeEnemies(world)
-    expect(enemies.length).toBeGreaterThanOrEqual(1)
-    const drone = enemies[0]
-    expect(drone.kind === 'drone' || drone.kind === 'dart').toBe(true)
-    expect(drone.y).toBeLessThanOrEqual(18)
-    expect(drone.hp).toBe(1)
+    expect(enemies.length).toBe(4)
+    expect(enemies.every((e) => e.kind === 'drone')).toBe(true)
+    expect(enemies[0].y).toBeLessThanOrEqual(18)
 
-    const yBefore = drone.y
+    const yBefore = enemies[0].y
     steps(world, 60, idle())
-    const still = activeEnemies(world).find((e) => e === drone) ?? activeEnemies(world)[0]
+    const still = activeEnemies(world)[0]
     expect(still.y).toBeLessThan(yBefore)
   })
 
   it('player bullet kills a drone and awards 100 score at wave 1', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     const slot = placeDrone(world, world.player.x, world.player.y + 1)
 
     stepWorld(world, FIXED_DT, fireOnly())
@@ -161,10 +181,12 @@ describe('sim world step combat offense', () => {
     expect(fresh.session.score).toBe(0)
     expect(fresh.session.kills).toBe(0)
     expect(fresh.session.runOver).toBe(false)
+    expect(fresh.session.wave).toBe(1)
   })
 
   it('contact with enemy does not destroy the enemy (no ram-kill)', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     const slot = placeDrone(world, world.player.x, world.player.y)
 
     stepWorld(world, FIXED_DT, idle())
@@ -176,7 +198,7 @@ describe('sim world step combat offense', () => {
 describe('sim world step combat defense and terminal', () => {
   it('contact deals 1 HP and grants 1.0s i-frames; player still moves and fires', () => {
     const world = createWorld('vanguard')
-    world.spawnTimer = 99
+    suspendWaves(world)
     placeDrone(world, world.player.x, world.player.y)
     const hp0 = world.player.hp
 
@@ -193,6 +215,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('i-frames block further hazard damage until they expire', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     placeDrone(world, world.player.x, world.player.y)
 
     stepWorld(world, FIXED_DT, idle())
@@ -204,7 +227,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('shield absorbs one hit then grants 0.5s i-frames without HP loss', () => {
     const world = createWorld('vanguard')
-    world.spawnTimer = 99
+    suspendWaves(world)
     world.player.shield = true
     placeDrone(world, world.player.x, world.player.y)
 
@@ -216,6 +239,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('one damage event per step takes the highest amount only', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     placeDrone(world, world.player.x, world.player.y)
     world.enemies[0].contactDamage = 1
     placeEnemyBullet(world, world.player.x, world.player.y, 2)
@@ -227,6 +251,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('enemy bullet damages player and is consumed on hit', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     const bullet = placeEnemyBullet(world, world.player.x, world.player.y, 1)
 
     stepWorld(world, FIXED_DT, idle())
@@ -236,7 +261,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('HP to 0 with lives remaining respawns at band center with mercy clear', () => {
     const world = createWorld('vanguard')
-    world.spawnTimer = 99
+    suspendWaves(world)
     world.player.hp = 1
     world.player.lives = 2
     world.player.x = 4
@@ -259,6 +284,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('final life loss sets runOver and freezes further sim progress', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     world.player.hp = 1
     world.player.lives = 1
     placeDrone(world, world.player.x, world.player.y)
@@ -276,7 +302,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('bomb spends stock, clears enemy bullets, damages enemies, scores kills', () => {
     const world = createWorld('vanguard')
-    world.spawnTimer = 99
+    suspendWaves(world)
     expect(world.player.bombs).toBe(2)
     const foe = placeDrone(world, 0, 8)
     foe.hp = 3
@@ -293,6 +319,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('bomb with empty stock is a no-op', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     world.player.bombs = 0
     const foe = placeDrone(world, 0, 8)
     stepWorld(world, FIXED_DT, bombOnly())
@@ -302,6 +329,7 @@ describe('sim world step combat defense and terminal', () => {
 
   it('pause freezes combat and elapsed time', () => {
     const world = createWorld('vanguard')
+    suspendWaves(world)
     world.session.paused = true
     placeDrone(world, world.player.x, world.player.y)
     const hp = world.player.hp
@@ -311,5 +339,94 @@ describe('sim world step combat defense and terminal', () => {
     expect(world.player.hp).toBe(hp)
     expect(world.session.elapsed).toBe(elapsed)
     expect(activeBullets(world)).toHaveLength(0)
+  })
+})
+
+describe('sim world step wave director', () => {
+  it('fires intro_01 first line immediately then second line at 2.5s', () => {
+    const world = createWorld('vanguard')
+    stepWorld(world, FIXED_DT, idle())
+    expect(activeEnemies(world)).toHaveLength(4)
+
+    steps(world, Math.floor(2.4 / FIXED_DT), idle())
+    expect(activeEnemies(world).length).toBeLessThanOrEqual(8)
+
+    steps(world, Math.ceil(0.2 / FIXED_DT), idle())
+    expect(world.waves.waveSpawned).toBe(INTRO_01.events.length)
+  })
+
+  it('enters await_clear after spawn window then gap after clear window timeout', () => {
+    const world = createWorld('vanguard')
+    steps(world, Math.ceil(3 / FIXED_DT), idle())
+    expect(world.waves.phase).toBe('await_clear')
+    expect(world.session.wave).toBe(1)
+
+    const scoreAtClearWindow = world.session.score
+    steps(world, Math.ceil(WAVE_CLEAR_WINDOW / FIXED_DT) + 2, idle())
+    expect(world.waves.phase).toBe('gap')
+    expect(world.waves.clearAwarded).toBe(false)
+    expect(world.session.score).toBe(scoreAtClearWindow)
+
+    steps(world, Math.ceil(WAVE_GAP / FIXED_DT) + 2, idle())
+    expect(world.session.wave).toBe(2)
+    expect(world.waves.phase).toBe('spawning')
+  })
+
+  it('awards wave clear bonus when all wave enemies are killed before timeout', () => {
+    const world = createWorld('vanguard')
+    const scoreBefore = world.session.score
+
+    const maxSteps = Math.ceil(6 / FIXED_DT)
+    for (let i = 0; i < maxSteps; i++) {
+      for (const e of world.enemies) {
+        if (e.active && e.waveId === world.session.wave) {
+          e.active = false
+          world.waves.waveKilled += 1
+        }
+      }
+      stepWorld(world, FIXED_DT, idle())
+      if (world.waves.clearAwarded) break
+    }
+
+    expect(world.waves.clearAwarded).toBe(true)
+    expect(world.session.score).toBe(scoreBefore + waveClearBonus(1))
+    expect(world.waves.phase).toBe('gap')
+  })
+
+  it('kill score uses wave multiplier at higher waves', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.session.wave = 5
+    const slot = placeDrone(world, world.player.x, world.player.y + 1)
+    slot.points = 100
+
+    stepWorld(world, FIXED_DT, fireOnly())
+    steps(world, 10, idle())
+
+    expect(world.session.score).toBe(Math.floor(100 * waveMultiplier(5)))
+  })
+
+  it('stream speed ramps with wave index and never stops', () => {
+    expect(streamSpeedForWave(1)).toBe(STREAM_BASE_SPEED)
+    expect(streamSpeedForWave(10)).toBeGreaterThan(STREAM_BASE_SPEED)
+    expect(streamSpeedForWave(100)).toBe(STREAM_BASE_SPEED * 1.5)
+
+    const world = createWorld('vanguard')
+    // Advance past wave 1 spawn + clear timeout + gap
+    steps(world, Math.ceil((3 + WAVE_CLEAR_WINDOW + WAVE_GAP + 0.1) / FIXED_DT), idle())
+    expect(world.session.wave).toBeGreaterThanOrEqual(2)
+    expect(world.streamSpeed).toBe(streamSpeedForWave(world.session.wave))
+    expect(world.streamSpeed).toBeGreaterThan(0)
+  })
+
+  it('continues past intro into easy waves without soft-lock', () => {
+    const world = createWorld('vanguard')
+    // Roughly enough time for waves 1-3 timeouts + gaps + start of wave 4
+    const perWave = 3 + WAVE_CLEAR_WINDOW + WAVE_GAP
+    steps(world, Math.ceil((perWave * 3 + 1) / FIXED_DT), idle())
+    expect(world.session.wave).toBeGreaterThanOrEqual(4)
+    expect(world.waves.phase === 'spawning' || world.waves.phase === 'await_clear' || world.waves.phase === 'gap').toBe(
+      true,
+    )
   })
 })

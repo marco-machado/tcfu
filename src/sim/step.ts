@@ -7,9 +7,10 @@ import {
   CULL_Y_MIN,
   DART,
   DRONE,
-  DRONE_SPAWN_INTERVAL,
   ENEMY_BULLET_DAMAGE,
   ENEMY_BULLET_R,
+  GUNNER,
+  HOLD_Y,
   IFRAMES_BOMB,
   IFRAMES_HIT,
   IFRAMES_RESPAWN,
@@ -20,11 +21,19 @@ import {
   PLAYER_MAX_SPEED,
   PULSE_T0,
   RESPAWN,
-  SPAWN_LANES,
   SPAWN_Y,
+  WAVE_CLEAR_WINDOW,
+  WAVE_GAP,
+  enemyFireCooldownScale,
+  enemyHpScale,
+  enemyShotSpeedScale,
+  eventTimeScale,
+  streamSpeedForWave,
+  waveClearBonus,
   waveMultiplier,
 } from './constants'
-import type { Enemy, EnemyBullet, PlayerBullet, World } from './types'
+import { patternForWave, type PathId, type SpawnEvent } from './patterns'
+import type { Enemy, EnemyBullet, EnemyKind, PlayerBullet, World } from './types'
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v))
@@ -55,10 +64,13 @@ function onPlayfield(x: number, y: number): boolean {
   return y >= CULL_Y_MIN && y <= SPAWN_Y && Math.abs(x) <= CULL_X_MAX
 }
 
-function awardKill(world: World, points: number): void {
+function awardKill(world: World, points: number, waveId: number): void {
   world.session.kills += 1
-  const mult = waveMultiplier(world.session.wave)
+  const mult = waveMultiplier(waveId > 0 ? waveId : world.session.wave)
   world.session.score += Math.floor(points * mult)
+  if (waveId === world.session.wave) {
+    world.waves.waveKilled += 1
+  }
 }
 
 function mercyClearEnemyBullets(world: World): void {
@@ -104,6 +116,126 @@ function applyPlayerDamage(world: World, amount: number): void {
   p.vy = 0
   p.iFrames = IFRAMES_RESPAWN
   mercyClearEnemyBullets(world)
+}
+
+function kindStats(kind: EnemyKind) {
+  if (kind === 'gunner') return GUNNER
+  if (kind === 'dart') return DART
+  return DRONE
+}
+
+function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: number): void {
+  const stats = kindStats(event.kind)
+  const hpScale = enemyHpScale(wave)
+  const shotScale = enemyShotSpeedScale(wave)
+  const cdScale = enemyFireCooldownScale(wave)
+
+  e.active = true
+  e.kind = event.kind
+  e.x = event.x
+  e.y = event.y
+  e.r = stats.r
+  e.hp = Math.max(1, Math.round(stats.hp * hpScale))
+  e.points = stats.points
+  e.contactDamage = stats.contactDamage
+  e.path = event.path
+  e.pathPhase = 0
+  e.waveId = wave
+  e.vy = -streamSpeed
+
+  if (event.kind === 'drone') {
+    e.fireInterval = 0
+    e.fireCooldown = 0
+    e.bulletSpeed = 0
+    e.shotStyle = 'none'
+  } else if (event.kind === 'dart') {
+    e.fireInterval = DART.fireInterval * cdScale
+    e.fireCooldown = e.fireInterval * 0.4
+    e.bulletSpeed = DART.bulletSpeed * shotScale
+    e.shotStyle = 'down'
+  } else {
+    e.fireInterval = GUNNER.fireInterval * cdScale
+    e.fireCooldown = e.fireInterval * 0.5
+    e.bulletSpeed = GUNNER.bulletSpeed * shotScale
+    e.shotStyle = 'spread3'
+  }
+
+  if (event.path === 'dive') {
+    e.vy = -streamSpeed * 1.6
+  } else if (event.path === 'hold_and_shot') {
+    e.vy = -streamSpeed * 0.85
+  }
+}
+
+function beginWave(world: World, waveIndex: number): void {
+  world.session.wave = waveIndex
+  world.streamSpeed = streamSpeedForWave(waveIndex)
+  world.waves.phase = 'spawning'
+  world.waves.patternElapsed = 0
+  world.waves.nextEventIndex = 0
+  world.waves.clearElapsed = 0
+  world.waves.gapElapsed = 0
+  world.waves.clearAwarded = false
+  world.waves.waveSpawned = 0
+  world.waves.waveKilled = 0
+}
+
+function enterGap(world: World): void {
+  world.waves.phase = 'gap'
+  world.waves.gapElapsed = 0
+}
+
+function tryAwardClear(world: World): void {
+  const w = world.waves
+  if (w.clearAwarded) return
+  if (w.waveSpawned <= 0) return
+  if (w.waveKilled < w.waveSpawned) return
+  if (w.clearElapsed > WAVE_CLEAR_WINDOW) return
+  w.clearAwarded = true
+  world.session.score += waveClearBonus(world.session.wave)
+}
+
+function stepWaves(world: World, dt: number): void {
+  if (world.waves.suspended) return
+  const w = world.waves
+
+  if (w.phase === 'gap') {
+    w.gapElapsed += dt
+    if (w.gapElapsed >= WAVE_GAP) {
+      beginWave(world, world.session.wave + 1)
+    }
+    return
+  }
+
+  if (w.phase === 'spawning') {
+    const pattern = patternForWave(world.session.wave)
+    const scale = eventTimeScale(world.session.wave)
+    w.patternElapsed += dt / scale
+
+    while (w.nextEventIndex < pattern.events.length) {
+      const event = pattern.events[w.nextEventIndex]!
+      if (w.patternElapsed < event.t) break
+      const slot = acquireEnemy(world)
+      if (!slot) break
+      configureEnemy(slot, event, world.session.wave, world.streamSpeed)
+      w.waveSpawned += 1
+      w.nextEventIndex += 1
+    }
+
+    if (w.nextEventIndex >= pattern.events.length) {
+      w.phase = 'await_clear'
+      w.clearElapsed = 0
+      tryAwardClear(world)
+      if (w.clearAwarded) enterGap(world)
+    }
+    return
+  }
+
+  w.clearElapsed += dt
+  tryAwardClear(world)
+  if (w.clearAwarded || w.clearElapsed >= WAVE_CLEAR_WINDOW) {
+    enterGap(world)
+  }
 }
 
 function stepPlayer(world: World, dt: number, commands: Commands): void {
@@ -176,7 +308,7 @@ function stepBomb(world: World, commands: Commands): void {
     e.hp -= BOMB_DAMAGE
     if (e.hp <= 0) {
       e.active = false
-      awardKill(world, e.points)
+      awardKill(world, e.points, e.waveId)
     }
   }
 }
@@ -194,6 +326,7 @@ function stepPlayerBullets(world: World, dt: number): void {
 function stepEnemyBullets(world: World, dt: number): void {
   for (const b of world.enemyBullets) {
     if (!b.active) continue
+    b.x += b.vx * dt
     b.y += b.vy * dt
     if (b.y < CULL_Y_MIN || b.y > SPAWN_Y + 2 || Math.abs(b.x) > CULL_X_MAX) {
       b.active = false
@@ -201,65 +334,77 @@ function stepEnemyBullets(world: World, dt: number): void {
   }
 }
 
-function stepSpawn(world: World, dt: number): void {
-  world.spawnTimer -= dt
-  if (world.spawnTimer > 0) return
+function fireEnemyShot(world: World, e: Enemy): void {
+  if (e.shotStyle === 'none') return
 
-  const slot = acquireEnemy(world)
-  if (!slot) {
-    world.spawnTimer = DRONE_SPAWN_INTERVAL
+  if (e.shotStyle === 'down') {
+    const bullet = acquireEnemyBullet(world)
+    if (!bullet) return
+    bullet.active = true
+    bullet.x = e.x
+    bullet.y = e.y
+    bullet.vx = 0
+    bullet.vy = -e.bulletSpeed
+    bullet.r = ENEMY_BULLET_R
+    bullet.damage = ENEMY_BULLET_DAMAGE
     return
   }
 
-  const x = SPAWN_LANES[world.spawnLane % SPAWN_LANES.length]!
-  const asDart = world.spawnLane % 2 === 1
-  world.spawnLane += 1
+  const angles = [-0.35, 0, 0.35]
+  for (const a of angles) {
+    const bullet = acquireEnemyBullet(world)
+    if (!bullet) break
+    bullet.active = true
+    bullet.x = e.x
+    bullet.y = e.y
+    bullet.vx = Math.sin(a) * e.bulletSpeed
+    bullet.vy = -Math.cos(a) * e.bulletSpeed
+    bullet.r = ENEMY_BULLET_R
+    bullet.damage = ENEMY_BULLET_DAMAGE
+  }
+}
 
-  slot.active = true
-  slot.x = x
-  slot.y = SPAWN_Y
-  slot.vy = -world.streamSpeed
+function advancePath(e: Enemy, dt: number, streamSpeed: number): void {
+  const path: PathId = e.path
+  e.pathPhase += dt
 
-  if (asDart) {
-    slot.kind = 'dart'
-    slot.r = DART.r
-    slot.hp = DART.hp
-    slot.points = DART.points
-    slot.contactDamage = DART.contactDamage
-    slot.fireInterval = DART.fireInterval
-    slot.fireCooldown = DART.fireInterval * 0.5
-    slot.bulletSpeed = DART.bulletSpeed
-  } else {
-    slot.kind = 'drone'
-    slot.r = DRONE.r
-    slot.hp = DRONE.hp
-    slot.points = DRONE.points
-    slot.contactDamage = DRONE.contactDamage
-    slot.fireInterval = 0
-    slot.fireCooldown = 0
-    slot.bulletSpeed = 0
+  if (path === 'drift_down') {
+    e.vy = -streamSpeed
+    e.y += e.vy * dt
+    return
   }
 
-  world.spawnTimer = DRONE_SPAWN_INTERVAL
+  if (path === 'dive') {
+    e.vy = -streamSpeed * 1.6
+    e.y += e.vy * dt
+    return
+  }
+
+  if (path === 'sine_x') {
+    e.vy = -streamSpeed
+    e.y += e.vy * dt
+    e.x += Math.sin(e.pathPhase * 3) * 2.2 * dt
+    return
+  }
+
+  if (e.y > HOLD_Y) {
+    e.vy = -streamSpeed * 0.85
+    e.y += e.vy * dt
+  } else {
+    e.vy = 0
+    e.y = HOLD_Y
+  }
 }
 
 function stepEnemies(world: World, dt: number): void {
   for (const e of world.enemies) {
     if (!e.active) continue
-    e.y += e.vy * dt
+    advancePath(e, dt, world.streamSpeed)
 
     if (e.fireInterval > 0) {
       e.fireCooldown -= dt
       if (e.fireCooldown <= 0) {
-        const bullet = acquireEnemyBullet(world)
-        if (bullet) {
-          bullet.active = true
-          bullet.x = e.x
-          bullet.y = e.y
-          bullet.vy = -e.bulletSpeed
-          bullet.r = ENEMY_BULLET_R
-          bullet.damage = ENEMY_BULLET_DAMAGE
-        }
+        fireEnemyShot(world, e)
         e.fireCooldown = e.fireInterval
       }
     }
@@ -281,7 +426,7 @@ function stepPlayerBulletHits(world: World): void {
       b.active = false
       if (e.hp <= 0) {
         e.active = false
-        awardKill(world, e.points)
+        awardKill(world, e.points, e.waveId)
       }
       break
     }
@@ -318,7 +463,7 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   stepPlayerBullets(world, dt)
   stepEnemyBullets(world, dt)
   stepFire(world, commands)
-  stepSpawn(world, dt)
+  stepWaves(world, dt)
   stepEnemies(world, dt)
   stepPlayerBulletHits(world)
   stepPlayerHazards(world)
