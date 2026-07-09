@@ -45,6 +45,10 @@ export const CAMERA_FOV = 40
 export const MAX_PLAYER_BULLETS = 64
 export const MAX_ENEMY_BULLETS = 96
 export const MAX_ENEMIES = 48
+export const MAX_POWERUPS = 3
+export const POWERUP_R = 0.35
+/** Flat score awarded for collecting a powerup; gameplay effect remains primary. */
+export const POWERUP_SCORE = 50
 
 export const PULSE_T0 = {
   cooldown: 0.18,

@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   BoxGeometry,
+  Color,
   type Group,
   type InstancedMesh,
   type Mesh,
@@ -15,9 +16,10 @@ import {
   MAX_ENEMIES,
   MAX_ENEMY_BULLETS,
   MAX_PLAYER_BULLETS,
+  MAX_POWERUPS,
   PLAYER_HULL,
 } from '../sim/constants'
-import type { EnemyKind } from '../sim/types'
+import type { EnemyKind, PowerupType } from '../sim/types'
 import { getWorld } from '../sim/world'
 
 const _proxy = new Object3D()
@@ -78,6 +80,7 @@ export function Playfield() {
       <PlayerBulletInstances />
       <EnemyBulletInstances />
       <EnemyInstances />
+      <PowerupInstances />
     </group>
   )
 }
@@ -398,4 +401,53 @@ function EnemyInstances() {
       <EnemyKindInstances kind="gunner" />
     </group>
   )
+}
+
+function PowerupInstances() {
+  const geometry = useMemo(() => new SphereGeometry(0.32, 12, 12), [])
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: '#ffdc62',
+        emissive: '#dca318',
+        emissiveIntensity: 1.5,
+        metalness: 0.3,
+        roughness: 0.25,
+        toneMapped: false,
+        vertexColors: true,
+      }),
+    [],
+  )
+  const { mesh } = useInstancedPool(MAX_POWERUPS, geometry, material)
+
+  const color = useMemo(() => new Color(), [])
+
+  useFrame((state) => {
+    const inst = mesh.current
+    if (!inst) return
+    const powerups = getWorld().powerups
+    let i = 0
+    for (const powerup of powerups) {
+      if (!powerup.active) continue
+      writeInstance(inst, i, powerup.x, powerup.y, 0.32, 1, 1, 1, state.clock.elapsedTime * 1.8)
+      color.set(POWERUP_COLORS[powerup.type])
+      inst.setColorAt(i, color)
+      i++
+    }
+    for (let j = i; j < MAX_POWERUPS; j++) hideInstance(inst, j)
+    inst.count = i
+    inst.instanceMatrix.needsUpdate = true
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true
+  })
+
+  return <instancedMesh ref={mesh} args={[geometry, material, MAX_POWERUPS]} frustumCulled={false} />
+}
+
+const POWERUP_COLORS: Record<PowerupType, string> = {
+  shield: '#78e8ff',
+  bomb_stock: '#ffca50',
+  repair: '#88ff92',
+  rate_up: '#ffe66b',
+  spread_up: '#e18cff',
+  score_mult: '#ffd85c',
 }

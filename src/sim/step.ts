@@ -20,6 +20,7 @@ import {
   PLAYER_ACCEL,
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
+  POWERUP_SCORE,
   RESPAWN,
   SPAWN_Y,
   WAVE_CLEAR_WINDOW,
@@ -34,7 +35,7 @@ import {
   waveMultiplier,
 } from './constants'
 import { patternForWave, type PathId, type SpawnEvent } from './patterns'
-import type { Enemy, EnemyBullet, EnemyClass, EnemyKind, PlayerBullet, World } from './types'
+import type { Enemy, EnemyBullet, EnemyClass, EnemyKind, PlayerBullet, Powerup, World } from './types'
 import { weaponFor, weaponTierForWCells } from './weapons'
 
 function clamp(v: number, min: number, max: number): number {
@@ -60,6 +61,29 @@ function acquireEnemy(world: World): Enemy | null {
     if (!e.active) return e
   }
   return null
+}
+
+function applyPowerup(world: World, powerup: Powerup): void {
+  const player = world.player
+  if (powerup.type === 'shield') player.shield = true
+  if (powerup.type === 'bomb_stock') player.bombs = Math.min(player.maxBombs, player.bombs + 1)
+  if (powerup.type === 'repair') player.hp = Math.min(player.maxHp, player.hp + 1)
+  world.session.score += POWERUP_SCORE
+}
+
+function stepPowerups(world: World, dt: number): void {
+  const player = world.player
+  for (const powerup of world.powerups) {
+    if (!powerup.active) continue
+    powerup.y -= world.streamSpeed * dt
+    if (!onPlayfield(powerup.x, powerup.y)) {
+      powerup.active = false
+      continue
+    }
+    if (!circleCircle({ x: player.x, y: player.y, r: player.hitboxR }, powerup)) continue
+    applyPowerup(world, powerup)
+    powerup.active = false
+  }
 }
 
 function onPlayfield(x: number, y: number): boolean {
@@ -515,6 +539,7 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   stepWaves(world, dt)
   stepEnemies(world, dt)
   stepPlayerBulletHits(world)
+  stepPowerups(world, dt)
   stepPlayerHazards(world)
 
   world.session.elapsed += dt

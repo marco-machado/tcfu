@@ -20,11 +20,11 @@ Tracer-bullet implementation tickets for [the powerups and W-cells specification
 
 **Blocked by:** None — can start immediately.
 
-- [ ] Active pickups stream through and cull from the playfield, and no more than three may be active at once.
-- [ ] Ship-versus-pickup collision collects the item and awards one named, positive, fixed pickup-score value; the implementer selects and documents that currently unspecified value.
-- [ ] Shield refreshes the shield buffer; Bomb adds one stock without exceeding maximum; Repair restores one HP without exceeding maximum HP.
-- [ ] Pickup presentation is visible and readable in the Run without making the view authoritative for pickup state.
-- [ ] Simulation tests cover spawn/setup, movement/culling, collection, score, cap, and all three clamped effects.
+- [x] Active pickups stream through and cull from the playfield, and no more than three may be active at once.
+- [x] Ship-versus-pickup collision collects the item and awards one named, positive, fixed pickup-score value; the implementer selects and documents that currently unspecified value.
+- [x] Shield refreshes the shield buffer; Bomb adds one stock without exceeding maximum; Repair restores one HP without exceeding maximum HP.
+- [x] Pickup presentation is visible and readable in the Run without making the view authoritative for pickup state.
+- [x] Simulation tests cover spawn/setup, movement/culling, collection, score, cap, and all three clamped effects.
 
 ## Timed powerup combat effects
 

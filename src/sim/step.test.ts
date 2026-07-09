@@ -91,6 +91,15 @@ function placeEnemyBullet(world: World, x: number, y: number, damage = 1): World
   return slot
 }
 
+function placePowerup(world: World, type: World['powerups'][number]['type'], x: number, y: number) {
+  const slot = world.powerups.find((powerup) => !powerup.active) ?? world.powerups[0]
+  slot.active = true
+  slot.type = type
+  slot.x = x
+  slot.y = y
+  return slot
+}
+
 describe('sim world step combat offense', () => {
   it('starts a Run with empty combat pools and zero score', () => {
     const world = createWorld('vanguard')
@@ -381,6 +390,63 @@ describe('sim world step combat offense', () => {
 })
 
 describe('sim world step combat defense and terminal', () => {
+  it('collects a Shield powerup for its next-hit buffer and pickup score', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const pickup = placePowerup(world, 'shield', world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(pickup.active).toBe(false)
+    expect(world.player.shield).toBe(true)
+    expect(world.session.score).toBe(50)
+  })
+
+  it.each([
+    ['bomb_stock', 'bombs', 5],
+    ['repair', 'hp', 3],
+  ] as const)('collects %s without exceeding its player maximum', (type, field, expected) => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.bombs = 4
+    world.player.hp = 2
+    placePowerup(world, type, world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.player[field]).toBe(expected)
+    expect(world.session.score).toBe(50)
+  })
+
+  it.each([
+    ['shield', 'shield', true],
+    ['bomb_stock', 'bombs', 5],
+    ['repair', 'hp', 3],
+  ] as const)('refreshes or clamps %s when the player is already at its maximum', (type, field, expected) => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.shield = true
+    world.player.bombs = world.player.maxBombs
+    world.player.hp = world.player.maxHp
+    placePowerup(world, type, world.player.x, world.player.y)
+
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.player[field]).toBe(expected)
+    expect(world.session.score).toBe(50)
+  })
+
+  it('bounds the pickup pool at three and culls a pickup that leaves the playfield', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    expect(world.powerups).toHaveLength(3)
+    const pickup = placePowerup(world, 'shield', 0, -1.99)
+
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(pickup.active).toBe(false)
+  })
+
   it('contact deals 1 HP and grants 1.0s i-frames; player still moves and fires', () => {
     const world = createWorld('vanguard')
     suspendWaves(world)

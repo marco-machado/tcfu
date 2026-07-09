@@ -2,11 +2,13 @@ import {
   MAX_ENEMIES,
   MAX_ENEMY_BULLETS,
   MAX_PLAYER_BULLETS,
+  MAX_POWERUPS,
   PLAYER_HITBOX_R,
+  POWERUP_R,
   RESPAWN,
   streamSpeedForWave,
 } from './constants'
-import type { Enemy, EnemyBullet, PlayerBullet, ShipId, World } from './types'
+import type { Enemy, EnemyBullet, PlayerBullet, Powerup, ShipId, World } from './types'
 
 function emptyPlayerBullet(): PlayerBullet {
   return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.12, damage: 1, pierce: 0, hitEnemyIds: [] }
@@ -14,6 +16,10 @@ function emptyPlayerBullet(): PlayerBullet {
 
 function emptyEnemyBullet(): EnemyBullet {
   return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.15, damage: 1 }
+}
+
+function emptyPowerup(_: unknown, id: number): Powerup {
+  return { id, active: false, type: 'shield', x: 0, y: 0, r: POWERUP_R }
 }
 
 function emptyEnemy(_: unknown, id: number): Enemy {
@@ -76,6 +82,7 @@ export function createWorld(shipId: ShipId = 'vanguard'): World {
     playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyPlayerBullet),
     enemyBullets: Array.from({ length: MAX_ENEMY_BULLETS }, emptyEnemyBullet),
     enemies: Array.from({ length: MAX_ENEMIES }, emptyEnemy),
+    powerups: Array.from({ length: MAX_POWERUPS }, emptyPowerup),
     waves: {
       suspended: false,
       phase: 'spawning',

@@ -14,6 +14,7 @@ export type Vec2 = { x: number; y: number }
 
 export type EnemyKind = 'drone' | 'dart' | 'gunner'
 export type EnemyClass = 'fodder' | 'grunt' | 'elite' | 'set_piece'
+export type PowerupType = 'shield' | 'bomb_stock' | 'repair' | 'rate_up' | 'spread_up' | 'score_mult'
 
 export type PlayerState = {
   x: number
@@ -78,6 +79,15 @@ export type Enemy = {
   age: number
 }
 
+export type Powerup = {
+  id: number
+  active: boolean
+  type: PowerupType
+  x: number
+  y: number
+  r: number
+}
+
 export type WavePhase = 'spawning' | 'await_clear' | 'gap'
 
 export type WaveDirector = {
@@ -113,5 +123,6 @@ export type World = {
   playerBullets: PlayerBullet[]
   enemyBullets: EnemyBullet[]
   enemies: Enemy[]
+  powerups: Powerup[]
   waves: WaveDirector
 }
