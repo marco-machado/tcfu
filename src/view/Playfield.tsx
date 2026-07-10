@@ -253,7 +253,7 @@ function EnemyBulletInstances() {
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
-      const rotZ = Math.atan2(b.vx, b.vy)
+      const rotZ = Math.atan2(-b.vx, b.vy)
       writeInstance(inst, i, b.x, b.y, 0.26, 1, 1, 1, rotZ)
       i++
     }
