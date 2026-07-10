@@ -1,12 +1,5 @@
 import { useSessionStore } from '../../app/sessionStore'
-import type { ShipId } from '../../sim/types'
-
-const SHIPS: { id: ShipId; name: string; unlock: number; blurb: string }[] = [
-  { id: 'vanguard', name: 'Vanguard', unlock: 0, blurb: 'Balanced starter' },
-  { id: 'striker', name: 'Striker', unlock: 25000, blurb: 'Glass offense' },
-  { id: 'aegis', name: 'Aegis', unlock: 75000, blurb: 'Armored wing' },
-  { id: 'phantom', name: 'Phantom', unlock: 150000, blurb: 'Mobility dart' },
-]
+import { isShipUnlocked, SHIP_KIT_IDS, shipKit } from '../../sim/shipKits'
 
 export function HangarScreen() {
   const selectedShip = useSessionStore((s) => s.selectedShip)
@@ -14,31 +7,39 @@ export function HangarScreen() {
   const startRun = useSessionStore((s) => s.startRun)
   const setScreen = useSessionStore((s) => s.setScreen)
   const meta = useSessionStore((s) => s.meta)
-  const best = useSessionStore((s) =>
-    s.highScores.reduce((m, row) => Math.max(m, row.score), 0),
-  )
+  const careerBest = useSessionStore((s) => s.careerBest)
 
   return (
     <div className="screen">
       <h2>Hangar</h2>
       <p className="muted">
-        Best {best} · Scrap {meta.scrap}
+        Career best {careerBest.toLocaleString()} · Scrap {meta.scrap}
       </p>
       <div className="ship-grid">
-        {SHIPS.map((ship) => {
-          const open = ship.id === 'vanguard' || best >= ship.unlock
+        {SHIP_KIT_IDS.map((id) => {
+          const kit = shipKit(id)
+          const open = isShipUnlocked(id, careerBest)
+          const selected = selectedShip === id
           return (
             <button
-              key={ship.id}
+              key={id}
               type="button"
-              className={`ship-card${selectedShip === ship.id ? ' selected' : ''}${open ? '' : ' locked'}`}
+              className={`ship-card${selected ? ' selected' : ''}${open ? '' : ' locked'}`}
               disabled={!open}
-              onClick={() => open && selectShip(ship.id)}
+              onClick={() => open && selectShip(id)}
             >
-              <strong>{ship.name}</strong>
-              <div className="muted">
-                {open ? ship.blurb : `Unlock @ ${ship.unlock.toLocaleString()}`}
-              </div>
+              <strong>{kit.name}</strong>
+              <div className="muted">{kit.blurb}</div>
+              {open ? (
+                <div className="muted ship-stats">
+                  HP {kit.maxHp} · Hitbox {kit.hitboxR} · Move ×{kit.moveMult} · Bombs{' '}
+                  {kit.startBombs}
+                  <br />
+                  {kit.weaponName} · {kit.passiveLine}
+                </div>
+              ) : (
+                <div className="muted">Unlock @ {kit.unlockScore.toLocaleString()}</div>
+              )}
             </button>
           )
         })}

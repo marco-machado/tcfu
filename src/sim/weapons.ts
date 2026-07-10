@@ -1,3 +1,4 @@
+import { shipKit } from './shipKits'
 import type { ShipId } from './types'
 
 export type WeaponShot = {
@@ -80,9 +81,10 @@ export function nextWeaponTierThreshold(wCells: number): number | null {
 
 export function weaponFor(shipId: ShipId, tier: WeaponTier): WeaponStats {
   const base = weaponTiers[shipId][tier]!
-  if (shipId !== 'striker') return base
+  const damageMult = shipKit(shipId).damageMult
+  if (damageMult === 1) return base
   return {
     ...base,
-    shots: base.shots.map((shot) => ({ ...shot, damage: shot.damage * 1.1 })),
+    shots: base.shots.map((shot) => ({ ...shot, damage: shot.damage * damageMult })),
   }
 }

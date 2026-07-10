@@ -111,10 +111,57 @@ function StreamMarkers() {
   return <group ref={group}>{markers}</group>
 }
 
+type KitVisual = {
+  color: string
+  emissive: string
+  bodyScaleX: number
+  bodyScaleY: number
+  wingSpread: number
+  wingScale: number
+}
+
+const KIT_VISUAL: Record<string, KitVisual> = {
+  vanguard: {
+    color: '#7fd4ff',
+    emissive: '#2a88bb',
+    bodyScaleX: 1,
+    bodyScaleY: 1,
+    wingSpread: 0.38,
+    wingScale: 1,
+  },
+  striker: {
+    color: '#ffb070',
+    emissive: '#c05020',
+    bodyScaleX: 0.85,
+    bodyScaleY: 1.25,
+    wingSpread: 0.32,
+    wingScale: 0.85,
+  },
+  aegis: {
+    color: '#90b8e0',
+    emissive: '#3060a0',
+    bodyScaleX: 1.25,
+    bodyScaleY: 0.95,
+    wingSpread: 0.48,
+    wingScale: 1.2,
+  },
+  phantom: {
+    color: '#6a7a98',
+    emissive: '#304060',
+    bodyScaleX: 0.7,
+    bodyScaleY: 1.15,
+    wingSpread: 0.28,
+    wingScale: 0.7,
+  },
+}
+
 function PlayerMesh() {
   const mesh = useRef<Mesh>(null)
   const wingL = useRef<Mesh>(null)
   const wingR = useRef<Mesh>(null)
+  const bodyMat = useRef<MeshStandardMaterial>(null)
+  const wingLMat = useRef<MeshStandardMaterial>(null)
+  const wingRMat = useRef<MeshStandardMaterial>(null)
 
   useFrame(() => {
     const world = getWorld()
@@ -122,24 +169,35 @@ function PlayerMesh() {
     const dead = world.session.runOver
     const blink = !dead && p.iFrames > 0 && Math.floor(p.iFrames * 20) % 2 === 0
     const visible = !dead && !blink
+    const visual = KIT_VISUAL[p.shipId] ?? KIT_VISUAL.vanguard
+    const bodyH = PLAYER_HULL.halfH * 1.7 * visual.bodyScaleY
+    const bodyW = PLAYER_HULL.halfW * 1.0 * visual.bodyScaleX
+
     for (const ref of [mesh, wingL, wingR]) {
       const m = ref.current
       if (!m) continue
       m.visible = visible
-      m.position.x = p.x + (ref === wingL ? -0.38 : ref === wingR ? 0.38 : 0)
+      m.position.x =
+        p.x + (ref === wingL ? -visual.wingSpread : ref === wingR ? visual.wingSpread : 0)
       m.position.y = p.y + (ref === mesh ? 0 : -0.1)
       m.position.z = 0.2
     }
+    if (mesh.current) mesh.current.scale.set(bodyW, bodyH, 0.32)
+    if (wingL.current) wingL.current.scale.set(0.28 * visual.wingScale, 0.35 * visual.wingScale, 0.12)
+    if (wingR.current) wingR.current.scale.set(0.28 * visual.wingScale, 0.35 * visual.wingScale, 0.12)
+    for (const mat of [bodyMat.current, wingLMat.current, wingRMat.current]) {
+      if (!mat) continue
+      mat.color.set(visual.color)
+      mat.emissive.set(visual.emissive)
+    }
   })
-
-  const bodyH = PLAYER_HULL.halfH * 1.7
-  const bodyW = PLAYER_HULL.halfW * 1.0
 
   return (
     <group>
-      <mesh ref={mesh} position={[0, 3.5, 0.2]}>
-        <boxGeometry args={[bodyW, bodyH, 0.32]} />
+      <mesh ref={mesh} position={[0, 3.5, 0.2]} scale={[1, 1, 0.32]}>
+        <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
+          ref={bodyMat}
           color="#7fd4ff"
           emissive="#2a88bb"
           emissiveIntensity={0.75}
@@ -147,9 +205,10 @@ function PlayerMesh() {
           roughness={0.3}
         />
       </mesh>
-      <mesh ref={wingL} position={[-0.38, 3.4, 0.2]}>
-        <boxGeometry args={[0.28, 0.35, 0.12]} />
+      <mesh ref={wingL} position={[-0.38, 3.4, 0.2]} scale={[0.28, 0.35, 0.12]}>
+        <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
+          ref={wingLMat}
           color="#5eb8e8"
           emissive="#1a6a99"
           emissiveIntensity={0.5}
@@ -157,9 +216,10 @@ function PlayerMesh() {
           roughness={0.35}
         />
       </mesh>
-      <mesh ref={wingR} position={[0.38, 3.4, 0.2]}>
-        <boxGeometry args={[0.28, 0.35, 0.12]} />
+      <mesh ref={wingR} position={[0.38, 3.4, 0.2]} scale={[0.28, 0.35, 0.12]}>
+        <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
+          ref={wingRMat}
           color="#5eb8e8"
           emissive="#1a6a99"
           emissiveIntensity={0.5}

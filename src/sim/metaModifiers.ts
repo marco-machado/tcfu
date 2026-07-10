@@ -1,3 +1,6 @@
+import { shipKit } from './shipKits'
+import type { ShipId } from './types'
+
 export type MetaBranch = 'arsenal' | 'hull' | 'salvage' | 'thrust'
 
 export type MetaRanks = {
@@ -135,13 +138,10 @@ export const META_RANK_EFFECTS: Record<MetaBranch, [string, string, string]> = {
   ],
 }
 
-export function shipMoveMult(shipId: 'vanguard' | 'striker' | 'aegis' | 'phantom'): number {
-  if (shipId === 'striker') return 1.15
-  if (shipId === 'aegis') return 0.9
-  if (shipId === 'phantom') return 1.25
-  return 1
+export function shipMoveMult(shipId: ShipId): number {
+  return shipKit(shipId).moveMult
 }
 
-export function baseHitIFrames(shipId: 'vanguard' | 'striker' | 'aegis' | 'phantom'): number {
-  return shipId === 'phantom' ? 1.25 : 1
+export function baseHitIFrames(shipId: ShipId): number {
+  return shipKit(shipId).hitIFrames
 }

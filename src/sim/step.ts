@@ -59,6 +59,7 @@ import type {
   World,
 } from './types'
 import { baseHitIFrames, shipMoveMult } from './metaModifiers'
+import { shipKit } from './shipKits'
 import { weaponFor, weaponTierForWCells } from './weapons'
 
 function clamp(v: number, min: number, max: number): number {
@@ -241,6 +242,7 @@ function applyPlayerDamage(world: World, amount: number): void {
   p.vx = 0
   p.vy = 0
   p.iFrames = IFRAMES_RESPAWN
+  p.shield = shipKit(p.shipId).startShieldEachLife
   mercyClearEnemyBullets(world)
 }
 

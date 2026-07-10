@@ -18,7 +18,15 @@ _Avoid_: Scroll speed controlled by the player, level conveyor (unclear)
 
 **Ship kit**:
 A selectable ship identity between runs: base stats plus starting weapon identity.
-_Avoid_: Loadout (implies free mix-and-match), class ( overloaded)
+_Avoid_: Loadout (implies free mix-and-match), class (overloaded), skin (cosmetic-only)
+
+**Ship passive**:
+A fixed ship-kit trait applied for the whole Run, or per life when the catalog says so. Distinct from meta upgrades and powerups.
+_Avoid_: Ability, perk, powerup, meta upgrade
+
+**Career best**:
+Highest single-Run score ever recorded locally. Used for ship-kit unlock evaluation.
+_Avoid_: High score (the top-10 list is separate), average score
 
 **Powerup**:
 A mid-run pickup that grants a temporary or run-scoped effect.

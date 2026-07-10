@@ -3,12 +3,12 @@ import {
   MAX_ENEMY_BULLETS,
   MAX_PLAYER_BULLETS,
   MAX_POWERUPS,
-  PLAYER_HITBOX_R,
   POWERUP_R,
   RESPAWN,
   streamSpeedForWave,
 } from './constants'
 import { DEFAULT_META_MODIFIERS, type MetaModifiers } from './metaModifiers'
+import { shipKit } from './shipKits'
 import type { Enemy, EnemyBullet, PlayerBullet, Powerup, ShipId, World } from './types'
 
 function emptyPlayerBullet(): PlayerBullet {
@@ -57,12 +57,10 @@ export function createWorld(
   shipId: ShipId = 'vanguard',
   meta: MetaModifiers = DEFAULT_META_MODIFIERS,
 ): World {
-  const maxHp = shipId === 'striker' ? 2 : 3
-  const kitStartBombs = shipId === 'aegis' ? 3 : 2
-  const kitMaxBombs = 5
-  const maxBombs = kitMaxBombs + meta.bombMaxBonus
-  const startBombs = Math.min(kitStartBombs + meta.bombStartBonus, maxBombs)
-  const kitStartShield = shipId === 'aegis'
+  const kit = shipKit(shipId)
+  const maxBombs = kit.maxBombs + meta.bombMaxBonus
+  const startBombs = Math.min(kit.startBombs + meta.bombStartBonus, maxBombs)
+  const startShield = kit.startShieldEachLife || meta.startRunShield
 
   return {
     player: {
@@ -70,17 +68,17 @@ export function createWorld(
       y: RESPAWN.y,
       vx: 0,
       vy: 0,
-      hp: maxHp,
-      maxHp,
+      hp: kit.maxHp,
+      maxHp: kit.maxHp,
       lives: 3,
       bombs: startBombs,
       maxBombs,
       wCells: 0,
-      shield: kitStartShield || meta.startRunShield,
+      shield: startShield,
       iFrames: 0,
-      shipId,
+      shipId: kit.id,
       fireCooldown: 0,
-      hitboxR: PLAYER_HITBOX_R,
+      hitboxR: kit.hitboxR,
       rateUp: 0,
       spreadUp: 0,
       scoreMult: 0,

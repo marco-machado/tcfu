@@ -1499,3 +1499,46 @@ describe('content depth combat', () => {
     expect(e.x).toBeCloseTo(-3, 1)
   })
 })
+
+describe('ship kit identity', () => {
+  it('applies catalog hitbox HP bombs and shield at create for each kit', () => {
+    const vanguard = createWorld('vanguard')
+    expect(vanguard.player).toMatchObject({ hitboxR: 0.35, maxHp: 3, bombs: 2, shield: false })
+
+    const striker = createWorld('striker')
+    expect(striker.player).toMatchObject({ hitboxR: 0.32, maxHp: 2, hp: 2, bombs: 2 })
+
+    const aegis = createWorld('aegis')
+    expect(aegis.player).toMatchObject({ hitboxR: 0.38, maxHp: 3, bombs: 3, shield: true })
+
+    const phantom = createWorld('phantom')
+    expect(phantom.player).toMatchObject({ hitboxR: 0.28, maxHp: 3, bombs: 2 })
+  })
+
+  it('Aegis regains shield on respawn', () => {
+    const world = createWorld('aegis')
+    suspendWaves(world)
+    world.player.shield = false
+    world.player.hp = 1
+    world.player.lives = 2
+    placeEnemyBullet(world, world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.lives).toBe(1)
+    expect(world.player.shield).toBe(true)
+    expect(world.player.hp).toBe(world.player.maxHp)
+  })
+
+  it('non-Aegis with Hull r2 does not re-grant shield on respawn', () => {
+    const meta = metaModifiersFromRanks({ arsenal: 0, hull: 2, salvage: 0, thrust: 0 })
+    const world = createWorld('vanguard', meta)
+    expect(world.player.shield).toBe(true)
+    suspendWaves(world)
+    world.player.shield = false
+    world.player.hp = 1
+    world.player.lives = 2
+    placeEnemyBullet(world, world.player.x, world.player.y)
+    stepWorld(world, FIXED_DT, idle())
+    expect(world.player.lives).toBe(1)
+    expect(world.player.shield).toBe(false)
+  })
+})

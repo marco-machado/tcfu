@@ -12,9 +12,15 @@ export function ResultsScreen() {
         <div className="results-body">
           <p className="results-score">Score {lastRun.score}</p>
           <p className="muted">
-            {lastRun.shipId} · Wave {lastRun.wave} · Kills {lastRun.kills} · Time{' '}
+            {lastRun.shipName} · Wave {lastRun.wave} · Kills {lastRun.kills} · Time{' '}
             {Math.floor(lastRun.timeSec)}s
           </p>
+          <p className="muted">Career best {lastRun.careerBest.toLocaleString()}</p>
+          {lastRun.unlockedKitNames.length > 0 ? (
+            <p className="unlock-note">
+              Unlocked {lastRun.unlockedKitNames.join(', ')}
+            </p>
+          ) : null}
           <div className="scrap-panel">
             <p className="scrap-total">Scrap +{lastRun.scrapEarned}</p>
             <p className="muted scrap-note">

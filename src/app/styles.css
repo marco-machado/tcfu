@@ -233,6 +233,17 @@ button:disabled {
   opacity: 0.5;
 }
 
+.ship-stats {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.unlock-note {
+  color: #9ee0ff;
+  font-weight: 600;
+}
+
 .muted {
   color: #7a90a3;
   font-size: 0.85rem;
