@@ -1,5 +1,6 @@
 import { useSessionStore } from '../../app/sessionStore'
 import { unlockAudio, playSfx } from '../../audio/bus'
+import { BrandMark } from '../brand/BrandMark'
 
 export function TitleScreen() {
   const setScreen = useSessionStore((s) => s.setScreen)
@@ -13,9 +14,18 @@ export function TitleScreen() {
 
   return (
     <div className="screen title-screen">
-      <p className="title-kicker muted">Endless survival · desktop 4:3</p>
-      <h1 className="title-mark">TCFU</h1>
-      <p className="title-tagline">Hold the band. Ride the stream. Die with a high score.</p>
+      <div className="title-lockup">
+        <BrandMark className="title-insignia" decorative />
+        <div className="title-wordmark" aria-label="TCFU">
+          <span>TC</span>
+          <i aria-hidden="true" />
+          <span>FU</span>
+        </div>
+        <p className="title-kicker">Endless corridor survival</p>
+      </div>
+      <p className="title-tagline">
+        <span>Hold the band.</span> Ride the stream. Die with a high score.
+      </p>
       <div className="menu title-menu">
         <button type="button" className="primary-action" onClick={goHangar}>
           Play
