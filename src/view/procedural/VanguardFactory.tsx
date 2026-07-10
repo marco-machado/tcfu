@@ -8,7 +8,7 @@ import {
   Vector2,
 } from 'three'
 import type { DetailLevel } from './registry'
-import { hasKitPart } from './registry'
+import { hasKitPart, kitRecipe } from './registry'
 import { cloneRoleMaterial, getRoleMaterial } from './MaterialLibrary'
 import { collectModelDiagnostics } from './ModelDiagnostics'
 import { materialToken } from './materialTokens'
@@ -120,7 +120,7 @@ export function VanguardFactory({
     [mutableMaterials],
   )
   const plumeMat = useMemo(() => {
-    const t = materialToken('thrusterPlayer')
+    const t = materialToken(kitRecipe('vanguard').thrusterToken)
     return {
       color: t.color,
       emissive: t.emissive,

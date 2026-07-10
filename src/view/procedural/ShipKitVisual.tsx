@@ -68,6 +68,7 @@ function useFlashDriver(liveFlash: boolean, flash: number, captureKey: string) {
   const group = useRef<Group>(null)
   const base = useRef(new Map<MeshStandardMaterial, MatProps>())
   const capturedKey = useRef('')
+  const wasFlashing = useRef(false)
 
   useFrame(() => {
     const g = group.current
@@ -91,7 +92,11 @@ function useFlashDriver(liveFlash: boolean, flash: number, captureKey: string) {
       capturedKey.current = captureKey
     }
     const f = liveFlash ? presentationFxState.playerFlash : flash
-    applyFlashToGroup(g, f, base.current)
+    const flashing = f > 0
+    // Restore only on the flash-off transition so per-frame drivers
+    // (thruster plume intensity) keep authority between flashes.
+    if (flashing || wasFlashing.current) applyFlashToGroup(g, f, base.current)
+    wasFlashing.current = flashing
   })
 
   return group
