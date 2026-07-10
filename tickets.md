@@ -4,7 +4,7 @@ Implementation and design work is tracked under [`.scratch/`](.scratch/). This f
 
 ## Frontier
 
-No open implementation PRDs. All feature packages under `.scratch/` are `resolved`.
+No ticketed work is currently ready.
 
 Optional product directions (not ticketed yet):
 
@@ -29,6 +29,7 @@ When starting one of these, add `.scratch/<feature>/PRD.md` (and issues) and lis
 | Content depth | [`.scratch/content-depth/PRD.md`](.scratch/content-depth/PRD.md) | 24 patterns, elites, set-pieces, boss bar |
 | Presentation v1 | [`.scratch/presentation/PRD.md`](.scratch/presentation/PRD.md) | Events, juice stubs, rumble, sway |
 | Procedural premium interim | [`.scratch/procedural-premium-interim/PRD.md`](.scratch/procedural-premium-interim/PRD.md) | ADR 0005 interim art |
+| Gameplay HUD readability | [`.scratch/gameplay-hud/PRD.md`](.scratch/gameplay-hud/PRD.md) | Survival-first HUD tracer bullet |
 
 ### Post-package sim work (no dedicated PRD)
 

@@ -5,6 +5,7 @@ import { scrapEarnMultFromRanks } from '../../sim/metaModifiers'
 import { bossBarFromWorld } from '../../sim/step'
 import { getWorld } from '../../sim/world'
 import { nextWeaponTierThreshold, weaponTierForWCells, WEAPON_TIER_MAX } from '../../sim/weapons'
+import { presentationFxState } from '../../presentation/fxState'
 
 export function RunHud() {
   const [, tick] = useState(0)
@@ -35,14 +36,23 @@ export function RunHud() {
   if (p.scoreMult > 0) timed.push(`BTY ${p.scoreMult.toFixed(1)}s`)
   const boss = bossBarFromWorld(w)
   const bossPct = boss && boss.maxHp > 0 ? Math.max(0, Math.min(1, boss.hp / boss.maxHp)) : 0
+  const hpPct = p.maxHp > 0 ? Math.max(0, Math.min(1, p.hp / p.maxHp)) : 0
+  const damageCue = presentationFxState.hudDamage > 0
+  const shieldBreakCue = presentationFxState.hudShieldBreak > 0
+  const lifeLossCue = presentationFxState.hudLifeLoss > 0
 
   return (
     <div className="hud">
-      <div className="hud-top">
-        <span>SCORE {Math.floor(s.score)}</span>
-        <span>KILLS {s.kills}</span>
-        <span>WAVE {s.wave}</span>
-        <span>BOMBS {p.bombs}</span>
+      <div className="hud-top" aria-label="Run progress">
+        <div className="hud-score hud-module">
+          <span className="hud-label">Score</span>
+          <strong className="hud-number hud-score-value">{Math.floor(s.score)}</strong>
+          <span className="hud-secondary">Kills <b className="hud-number">{s.kills}</b></span>
+        </div>
+        <div className="hud-wave hud-module">
+          <span className="hud-label">Wave</span>
+          <strong className="hud-number hud-wave-value">{s.wave}</strong>
+        </div>
       </div>
       <div className="hud-mid">
         {boss ? (
@@ -58,15 +68,36 @@ export function RunHud() {
         {timed.length > 0 ? <span className="hud-timed">{timed.join(' · ')}</span> : null}
       </div>
       <div className="hud-bottom">
-        <span>
-          HP {'●'.repeat(Math.max(0, p.hp))}
-          {'○'.repeat(Math.max(0, p.maxHp - p.hp))} · LIVES {p.lives}
-          {p.shield ? ' · SHIELD' : ''}
-        </span>
-        <span>
+        <section
+          className={`survival-cluster hud-module${damageCue ? ' is-damaged' : ''}${shieldBreakCue ? ' is-shield-hit' : ''}${lifeLossCue ? ' is-life-lost' : ''}`}
+          aria-label="Survival status"
+        >
+          <div className="hp-heading">
+            <span className="hud-label">Hull</span>
+            <strong className="hp-value"><span className="hud-number">{Math.max(0, p.hp)}</span><small>/{p.maxHp}</small></strong>
+          </div>
+          <div className="hp-track" role="meter" aria-label="Hull integrity" aria-valuemin={0} aria-valuemax={p.maxHp} aria-valuenow={Math.max(0, p.hp)}>
+            <span className="hp-fill" style={{ width: `${hpPct * 100}%` }} />
+          </div>
+          <div className="survival-details">
+            <span className="lives-status"><span aria-hidden="true">◆</span> Lives <b className="hud-number">{p.lives}</b></span>
+            <span className={`shield-status${p.shield ? ' is-active' : ' is-offline'}`}>
+              <span className="shield-icon" aria-hidden="true" />
+              {shieldBreakCue ? 'Shield absorbed hit' : p.shield ? 'Shield ready' : 'Shield offline'}
+            </span>
+          </div>
+        </section>
+        <div className="hud-resources">
+          <div className={`bomb-status hud-module${p.bombs === 0 ? ' is-empty' : ''}`} aria-label={`${p.bombs} bombs available`}>
+            <span className="bomb-icon" aria-hidden="true">✦</span>
+            <span><span className="hud-label">Bombs</span><strong className="hud-number">{p.bombs}</strong></span>
+            {p.bombs === 0 ? <em>Empty</em> : <kbd>Shift</kbd>}
+          </div>
+          <span className="hud-economy hud-module">
           SCRAP ~{scrapEst} · TIER {tierPips} · W-CELLS {p.wCells}
           {nextTier === null ? ' · MAX' : ` / ${nextTier}`}
-        </span>
+          </span>
+        </div>
       </div>
       {s.paused && !dying && (
         <div className="overlay">

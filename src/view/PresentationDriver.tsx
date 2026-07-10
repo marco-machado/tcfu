@@ -12,7 +12,7 @@ import { playSfx } from '../audio/bus'
 import { rumbleForEvent } from '../input/rumble'
 import { drainPresentation, type PresentationEvent } from '../sim/presentation'
 import { getWorld } from '../sim/world'
-import { presentationFxState } from './presentationFxState'
+import { presentationFxState } from '../presentation/fxState'
 
 const MAX_FX = 96
 const _proxy = new Object3D()
@@ -80,14 +80,17 @@ function handleEvent(
       break
     case 'player_hit':
       playerFlash.current = 0.18
+      presentationFxState.hudDamage = 0.45
       spawnBurst(pool, event.x, event.y, n(4), '#e8fbff', 2.5, 0.2, 0.14)
       break
     case 'shield_break':
       playerFlash.current = 0.22
+      presentationFxState.hudShieldBreak = 0.55
       spawnBurst(pool, event.x, event.y, n(6), '#78e8ff', 3, 0.25, 0.16)
       break
     case 'life_loss':
       playerFlash.current = 0.25
+      presentationFxState.hudLifeLoss = 0.7
       spawnBurst(pool, event.x, event.y, n(8), '#ffccaa', 3.5, 0.3, 0.18)
       break
     case 'death':
@@ -149,6 +152,9 @@ export function PresentationDriver() {
 
     if (playerFlash.current > 0) playerFlash.current = Math.max(0, playerFlash.current - delta)
     if (bombPulse.current > 0) bombPulse.current = Math.max(0, bombPulse.current - delta)
+    presentationFxState.hudDamage = Math.max(0, presentationFxState.hudDamage - delta)
+    presentationFxState.hudShieldBreak = Math.max(0, presentationFxState.hudShieldBreak - delta)
+    presentationFxState.hudLifeLoss = Math.max(0, presentationFxState.hudLifeLoss - delta)
 
     // Expose flashes on world session via module-level side channel for PlayerMesh
     presentationFxState.playerFlash = playerFlash.current
