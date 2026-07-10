@@ -1,6 +1,6 @@
 # Harden compact layout and Run-state transitions
 
-Status: `ready-for-agent`
+Status: `resolved`
 
 Blocked by: 02, 03
 
@@ -16,19 +16,19 @@ This final slice makes the full feature shippable: survival, progression, poweru
 
 ## Acceptance criteria
 
-- [ ] The complete HUD fits the desktop 4:3 product viewport without clipping, overlap, or interference with the movement band.
-- [ ] A narrower desktop or laptop viewport uses an intentional compact composition rather than arbitrary flex wrapping.
-- [ ] Related labels and values remain atomic and visually associated at every tested viewport.
-- [ ] Secondary information compresses or moves before survival status and Run progress lose readability.
-- [ ] A phone-sized viewport has no clipped content, overlap, or ambiguous value wrapping, without claiming touch gameplay support.
-- [ ] Persistent HUD content, boss bar, pause modal, Destroyed state, player focal area, and likely threat lanes do not overlap at tested viewports.
-- [ ] High score, high wave, large Scrap, maximum W-cell values, shield state, multiple timed powerups, and long set-piece values remain stable.
-- [ ] Starting or restarting a Run clears pause, Destroyed, boss, timed-powerup, and stale counter presentation immediately.
-- [ ] Canvas resize and HUD placement remain synchronized across all tested viewports.
-- [ ] Existing desktop keyboard and gamepad controls remain functional; no touch controls are introduced.
-- [ ] Browser-level acceptance runs through baseline gameplay, high-value gameplay, set-piece, pause, Destroyed, restart, and new-Run states.
-- [ ] Desktop, compact, set-piece, pause, and Destroyed screenshots are captured as evidence.
-- [ ] Launch, resize, pause/resume, restart, and new-Run flows introduce no browser errors or HUD-related warnings.
+- [x] The complete HUD fits the desktop 4:3 product viewport without clipping, overlap, or interference with the movement band.
+- [x] A narrower desktop or laptop viewport uses an intentional compact composition rather than arbitrary flex wrapping.
+- [x] Related labels and values remain atomic and visually associated at every tested viewport.
+- [x] Secondary information compresses or moves before survival status and Run progress lose readability.
+- [x] A phone-sized viewport has no clipped content, overlap, or ambiguous value wrapping, without claiming touch gameplay support.
+- [x] Persistent HUD content, boss bar, pause modal, Destroyed state, player focal area, and likely threat lanes do not overlap at tested viewports.
+- [x] High score, high wave, large Scrap, maximum W-cell values, shield state, multiple timed powerups, and long set-piece values remain stable.
+- [x] Starting or restarting a Run clears pause, Destroyed, boss, timed-powerup, and stale counter presentation immediately.
+- [x] Canvas resize and HUD placement remain synchronized across all tested viewports.
+- [x] Existing desktop keyboard and gamepad controls remain functional; no touch controls are introduced.
+- [x] Browser-level acceptance runs through baseline gameplay, high-value gameplay, set-piece, pause, Destroyed, restart, and new-Run states.
+- [x] Desktop, compact, set-piece, pause, and Destroyed screenshots are captured as evidence.
+- [x] Launch, resize, pause/resume, restart, and new-Run flows introduce no browser errors or HUD-related warnings.
 
 ## Blocked by
 
@@ -37,3 +37,4 @@ This final slice makes the full feature shippable: survival, progression, poweru
 
 ## Comments
 
+Resolved. Implementation restructures `src/shell/hud/RunHud.tsx` (powerup badges, W-cell meter, tier pips, boss bar head), adds `src/shell/hud/PauseModal.tsx`, container-query compact layouts in `src/app/styles.css`, a settings return path in the session store, presentation-cue reset on Run start, and a dev-only browser acceptance seam. Browser-level evidence in `../evidence/acceptance-02-04.md`.

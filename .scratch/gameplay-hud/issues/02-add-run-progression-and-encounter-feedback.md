@@ -1,6 +1,6 @@
 # Add Run progression and encounter feedback
 
-Status: `ready-for-agent`
+Status: `resolved`
 
 Blocked by: 01
 
@@ -16,19 +16,19 @@ A completed slice is demoable in a Run with multiple active powerups and a set-p
 
 ## Acceptance criteria
 
-- [ ] W-cell progress toward the next run upgrade is shown as a stable progress treatment rather than embedded prose.
-- [ ] Current weapon tier and maximum-tier state remain visually stable as progression changes.
-- [ ] Reaching a new weapon tier produces a brief restrained reward response without obscuring play.
-- [ ] Estimated Scrap remains readable but is visually subordinate to survival and Run progress.
-- [ ] Each active timed powerup has an individually recognizable label or icon and remaining duration.
-- [ ] Multiple timed powerups remain individually scannable and do not collapse into a joined sentence.
-- [ ] Powerups approaching expiration use a restrained warning state with meaning beyond color alone.
-- [ ] The boss bar uses a stable label and track while set-piece HP changes.
-- [ ] The boss bar does not obscure threats or stack with another large banner over the play path.
-- [ ] Large Scrap, W-cell, tier, timer, set-piece HP, score, and wave values do not shift critical HUD clusters.
-- [ ] Progression and encounter UI reads existing authoritative Run state and existing presentation signals without duplicating progression or combat rules.
-- [ ] Browser-level checks cover multiple powerups, expiration, large values, tier advancement, maximum tier, and a live set-piece state.
-- [ ] Gameplay and set-piece screenshots plus a clean browser-console check are captured as acceptance evidence.
+- [x] W-cell progress toward the next run upgrade is shown as a stable progress treatment rather than embedded prose.
+- [x] Current weapon tier and maximum-tier state remain visually stable as progression changes.
+- [x] Reaching a new weapon tier produces a brief restrained reward response without obscuring play.
+- [x] Estimated Scrap remains readable but is visually subordinate to survival and Run progress.
+- [x] Each active timed powerup has an individually recognizable label or icon and remaining duration.
+- [x] Multiple timed powerups remain individually scannable and do not collapse into a joined sentence.
+- [x] Powerups approaching expiration use a restrained warning state with meaning beyond color alone.
+- [x] The boss bar uses a stable label and track while set-piece HP changes.
+- [x] The boss bar does not obscure threats or stack with another large banner over the play path.
+- [x] Large Scrap, W-cell, tier, timer, set-piece HP, score, and wave values do not shift critical HUD clusters.
+- [x] Progression and encounter UI reads existing authoritative Run state and existing presentation signals without duplicating progression or combat rules.
+- [x] Browser-level checks cover multiple powerups, expiration, large values, tier advancement, maximum tier, and a live set-piece state.
+- [x] Gameplay and set-piece screenshots plus a clean browser-console check are captured as acceptance evidence.
 
 ## Blocked by
 
@@ -36,3 +36,4 @@ A completed slice is demoable in a Run with multiple active powerups and a set-p
 
 ## Comments
 
+Resolved. Implementation restructures `src/shell/hud/RunHud.tsx` (powerup badges, W-cell meter, tier pips, boss bar head), adds `src/shell/hud/PauseModal.tsx`, container-query compact layouts in `src/app/styles.css`, a settings return path in the session store, presentation-cue reset on Run start, and a dev-only browser acceptance seam. Browser-level evidence in `../evidence/acceptance-02-04.md`.

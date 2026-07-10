@@ -1,6 +1,6 @@
 # Gameplay HUD readability pass
 
-Status: `ready-for-agent`
+Status: `resolved`
 
 ## Problem Statement
 
