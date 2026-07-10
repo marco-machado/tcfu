@@ -208,6 +208,11 @@ export function waveClearBonus(waveIndex: number): number {
   return Math.floor(250 * (1 + 0.1 * (waveIndex - 1)))
 }
 
+/** Score when the player loses no HP during a wave (shield absorb still qualifies). */
+export function noDamageWaveBonus(waveIndex: number): number {
+  return Math.floor(150 * (1 + 0.1 * (waveIndex - 1)))
+}
+
 export function scrapFromScore(score: number): number {
   return Math.floor(score / 100)
 }

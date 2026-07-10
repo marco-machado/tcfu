@@ -19,6 +19,7 @@ import {
   playerMoveBounds,
   scrapForRun,
   streamSpeedForWave,
+  noDamageWaveBonus,
   waveClearBonus,
   waveMultiplier,
 } from './constants'
@@ -756,11 +757,15 @@ describe('sim world step wave director', () => {
     steps(world, Math.ceil(WAVE_CLEAR_WINDOW / FIXED_DT) + 2, idle())
     expect(world.waves.phase).toBe('gap')
     expect(world.waves.clearAwarded).toBe(false)
-    expect(world.session.score).toBe(scoreAtClearWindow)
+    // Timeout with no HP lost still awards the no-damage wave bonus.
+    expect(world.session.score).toBe(scoreAtClearWindow + noDamageWaveBonus(1))
+    expect(world.waves.noDamageAwarded).toBe(true)
 
     steps(world, Math.ceil(WAVE_GAP / FIXED_DT) + 2, idle())
     expect(world.session.wave).toBe(2)
     expect(world.waves.phase).toBe('spawning')
+    expect(world.waves.hpLostThisWave).toBe(false)
+    expect(world.waves.noDamageAwarded).toBe(false)
   })
 
   it('awards wave clear bonus when all wave enemies are killed before timeout', () => {
@@ -780,8 +785,111 @@ describe('sim world step wave director', () => {
     }
 
     expect(world.waves.clearAwarded).toBe(true)
-    expect(world.session.score).toBe(scoreBefore + waveClearBonus(1))
+    expect(world.session.score).toBe(scoreBefore + waveClearBonus(1) + noDamageWaveBonus(1))
     expect(world.waves.phase).toBe('gap')
+  })
+
+  it('awards no-damage wave bonus when HP is never lost that wave', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.session.wave = 3
+    world.waves.waveSpawned = 1
+    world.waves.waveKilled = 1
+    world.waves.phase = 'await_clear'
+    world.waves.clearElapsed = 0
+    world.waves.clearAwarded = false
+    world.waves.hpLostThisWave = false
+    world.waves.noDamageAwarded = false
+
+    const scoreBefore = world.session.score
+    world.waves.suspended = false
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.waves.phase).toBe('gap')
+    expect(world.waves.noDamageAwarded).toBe(true)
+    expect(world.session.score).toBe(
+      scoreBefore + waveClearBonus(3) + noDamageWaveBonus(3),
+    )
+  })
+
+  it('skips no-damage wave bonus after HP loss even if the wave is cleared', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.session.wave = 2
+    world.waves.waveSpawned = 1
+    world.waves.waveKilled = 1
+    world.waves.phase = 'await_clear'
+    world.waves.clearElapsed = 0
+    world.waves.clearAwarded = false
+    world.waves.hpLostThisWave = false
+    world.waves.noDamageAwarded = false
+
+    // Contact damage while waves stay suspended for the hit, then finish clear.
+    placeDrone(world, world.player.x, world.player.y)
+    steps(world, Math.ceil(CONTACT_ARM_TIME / FIXED_DT) + 2, idle())
+    expect(world.player.hp).toBeLessThan(world.player.maxHp)
+    expect(world.waves.hpLostThisWave).toBe(true)
+
+    for (const e of world.enemies) e.active = false
+    world.waves.waveKilled = 1
+    world.waves.suspended = false
+    const scoreBefore = world.session.score
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.waves.clearAwarded).toBe(true)
+    expect(world.waves.noDamageAwarded).toBe(false)
+    expect(world.session.score).toBe(scoreBefore + waveClearBonus(2))
+  })
+
+  it('shield absorb does not disqualify the no-damage wave bonus', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.player.shield = true
+    world.session.wave = 1
+    world.waves.waveSpawned = 1
+    world.waves.waveKilled = 1
+    world.waves.phase = 'await_clear'
+    world.waves.clearElapsed = 0
+    world.waves.clearAwarded = false
+    world.waves.hpLostThisWave = false
+    world.waves.noDamageAwarded = false
+
+    placeDrone(world, world.player.x, world.player.y)
+    steps(world, Math.ceil(CONTACT_ARM_TIME / FIXED_DT) + 2, idle())
+    expect(world.player.shield).toBe(false)
+    expect(world.player.hp).toBe(world.player.maxHp)
+    expect(world.waves.hpLostThisWave).toBe(false)
+
+    for (const e of world.enemies) e.active = false
+    world.waves.waveKilled = 1
+    world.waves.suspended = false
+    const scoreBefore = world.session.score
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.session.score).toBe(scoreBefore + waveClearBonus(1) + noDamageWaveBonus(1))
+    expect(world.waves.noDamageAwarded).toBe(true)
+  })
+
+  it('Bounty does not double the no-damage wave bonus', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    world.session.wave = 1
+    world.player.scoreMult = 10
+    world.waves.waveSpawned = 1
+    world.waves.waveKilled = 1
+    world.waves.phase = 'await_clear'
+    world.waves.clearElapsed = 0
+    world.waves.clearAwarded = false
+    world.waves.hpLostThisWave = false
+    world.waves.noDamageAwarded = false
+
+    const scoreBefore = world.session.score
+    world.waves.suspended = false
+    stepWorld(world, FIXED_DT, idle())
+
+    expect(world.session.score).toBe(
+      scoreBefore + waveClearBonus(1) + noDamageWaveBonus(1),
+    )
   })
 
   it('kill score uses wave multiplier at higher waves', () => {
@@ -982,8 +1090,12 @@ describe('sim world step timed powerups', () => {
     world.waves.suspended = false
     world.waves.phase = 'await_clear'
     world.waves.clearElapsed = 0
+    world.waves.hpLostThisWave = false
+    world.waves.noDamageAwarded = false
     stepWorld(world, FIXED_DT, idle())
-    expect(world.session.score).toBe(50 + 200 + waveClearBonus(1))
+    expect(world.session.score).toBe(
+      50 + 200 + waveClearBonus(1) + noDamageWaveBonus(1),
+    )
   })
 
   it('Bounty expires and kill score returns to the wave multiplier only', () => {

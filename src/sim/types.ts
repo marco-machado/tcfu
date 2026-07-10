@@ -123,6 +123,10 @@ export type WaveDirector = {
   clearElapsed: number
   gapElapsed: number
   clearAwarded: boolean
+  /** True if player HP decreased during the current wave (shield absorb does not set this). */
+  hpLostThisWave: boolean
+  /** True after no-damage wave bonus was applied for the current wave. */
+  noDamageAwarded: boolean
   waveSpawned: number
   waveKilled: number
   nextPowerupEventIndex: number

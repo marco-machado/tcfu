@@ -44,6 +44,7 @@ import {
   eventTimeScale,
   playerMoveBounds,
   streamSpeedForWave,
+  noDamageWaveBonus,
   waveClearBonus,
   waveMultiplier,
 } from './constants'
@@ -221,6 +222,7 @@ function applyPlayerDamage(world: World, amount: number): void {
   }
 
   p.hp -= amount
+  world.waves.hpLostThisWave = true
   if (p.hp > 0) {
     p.iFrames = baseHitIFrames(p.shipId) + world.meta.hitIFramesBonus
     pushPresentation(world.presentation, { type: 'player_hit', x: p.x, y: p.y })
@@ -385,12 +387,23 @@ function beginWave(world: World, waveIndex: number): void {
   world.waves.clearElapsed = 0
   world.waves.gapElapsed = 0
   world.waves.clearAwarded = false
+  world.waves.hpLostThisWave = false
+  world.waves.noDamageAwarded = false
   world.waves.waveSpawned = 0
   world.waves.waveKilled = 0
   world.waves.nextPowerupEventIndex = 0
 }
 
+function tryAwardNoDamage(world: World): void {
+  const w = world.waves
+  if (w.noDamageAwarded) return
+  if (w.hpLostThisWave) return
+  w.noDamageAwarded = true
+  world.session.score += noDamageWaveBonus(world.session.wave)
+}
+
 function enterGap(world: World): void {
+  tryAwardNoDamage(world)
   world.waves.phase = 'gap'
   world.waves.gapElapsed = 0
 }

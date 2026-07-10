@@ -3,13 +3,14 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   BoxGeometry,
   Color,
+  type BufferGeometry,
   type Group,
   type InstancedMesh,
-  type Mesh,
-  MeshStandardMaterial,
   Object3D,
+  OctahedronGeometry,
   SphereGeometry,
 } from 'three'
+import { useSessionStore } from '../app/sessionStore'
 import {
   BAND,
   DEATH_HOLD,
@@ -17,11 +18,20 @@ import {
   MAX_ENEMY_BULLETS,
   MAX_PLAYER_BULLETS,
   MAX_POWERUPS,
-  PLAYER_HULL,
 } from '../sim/constants'
 import type { EnemyKind, PowerupType } from '../sim/types'
 import { getWorld } from '../sim/world'
-import { presentationFxState } from './presentationFxState'
+import { createTokenMaterial } from './procedural/createMaterial'
+import { bakeEnemyGeometry, createEnemyMaterial } from './procedural/enemyGeometry'
+import { materialToken } from './procedural/materialTokens'
+import { ParallaxCorridor } from './procedural/ParallaxCorridor'
+import {
+  detailFromQuality,
+  type DetailLevel,
+  ENEMY_KIND_VISUAL_IDS,
+  POWERUP_TOKENS,
+} from './procedural/registry'
+import { ShipKitVisual } from './procedural/ShipKitVisual'
 
 const _proxy = new Object3D()
 
@@ -52,6 +62,8 @@ function writeInstance(
 }
 
 export function Playfield() {
+  const quality = useSessionStore((s) => s.settings.quality)
+  const detail = detailFromQuality(quality)
   const width = BAND.maxX - BAND.minX
   const height = BAND.maxY - BAND.minY
   const cx = (BAND.minX + BAND.maxX) / 2
@@ -60,14 +72,11 @@ export function Playfield() {
 
   return (
     <group>
-      <mesh position={[0, 8, -0.08]}>
-        <planeGeometry args={[28, 48]} />
-        <meshStandardMaterial color="#0a1220" metalness={0.2} roughness={0.9} />
-      </mesh>
+      <ParallaxCorridor detail={detail} />
 
       <mesh position={[cx, cy, -0.02]}>
         <planeGeometry args={[width, height]} />
-        <meshBasicMaterial color="#123048" transparent opacity={0.35} />
+        <meshBasicMaterial color="#123048" transparent opacity={0.28} />
       </mesh>
 
       <lineSegments position={[cx, cy, 0.02]}>
@@ -75,94 +84,20 @@ export function Playfield() {
         <lineBasicMaterial color="#3d8ec4" />
       </lineSegments>
 
-      <StreamMarkers />
-      <PlayerMesh />
+      <PlayerMesh detail={detail} />
       <DeathBurst />
       <PlayerBulletInstances />
       <EnemyBulletInstances />
-      <EnemyInstances />
+      <EnemyInstances detail={detail} />
       <PowerupInstances />
     </group>
   )
 }
 
-function StreamMarkers() {
+function PlayerMesh({ detail }: { detail: DetailLevel }) {
   const group = useRef<Group>(null)
-
-  useFrame((_, delta) => {
-    const g = group.current
-    if (!g) return
-    const speed = getWorld().streamSpeed
-    for (const child of g.children) {
-      child.position.y -= speed * delta * 0.35
-      if (child.position.y < -2) child.position.y += 22
-    }
-  })
-
-  const markers = []
-  for (let i = 0; i < 16; i++) {
-    markers.push(
-      <mesh key={i} position={[-5 + (i % 4) * 3.3, -1 + Math.floor(i / 4) * 5.5, -0.05]}>
-        <boxGeometry args={[0.12, 0.9, 0.12]} />
-        <meshStandardMaterial color="#224466" emissive="#113344" emissiveIntensity={0.4} />
-      </mesh>,
-    )
-  }
-
-  return <group ref={group}>{markers}</group>
-}
-
-type KitVisual = {
-  color: string
-  emissive: string
-  bodyScaleX: number
-  bodyScaleY: number
-  wingSpread: number
-  wingScale: number
-}
-
-const KIT_VISUAL: Record<string, KitVisual> = {
-  vanguard: {
-    color: '#7fd4ff',
-    emissive: '#2a88bb',
-    bodyScaleX: 1,
-    bodyScaleY: 1,
-    wingSpread: 0.38,
-    wingScale: 1,
-  },
-  striker: {
-    color: '#ffb070',
-    emissive: '#c05020',
-    bodyScaleX: 0.85,
-    bodyScaleY: 1.25,
-    wingSpread: 0.32,
-    wingScale: 0.85,
-  },
-  aegis: {
-    color: '#90b8e0',
-    emissive: '#3060a0',
-    bodyScaleX: 1.25,
-    bodyScaleY: 0.95,
-    wingSpread: 0.48,
-    wingScale: 1.2,
-  },
-  phantom: {
-    color: '#6a7a98',
-    emissive: '#304060',
-    bodyScaleX: 0.7,
-    bodyScaleY: 1.15,
-    wingSpread: 0.28,
-    wingScale: 0.7,
-  },
-}
-
-function PlayerMesh() {
-  const mesh = useRef<Mesh>(null)
-  const wingL = useRef<Mesh>(null)
-  const wingR = useRef<Mesh>(null)
-  const bodyMat = useRef<MeshStandardMaterial>(null)
-  const wingLMat = useRef<MeshStandardMaterial>(null)
-  const wingRMat = useRef<MeshStandardMaterial>(null)
+  // Ship is fixed for the Run; session selection matches world.player.shipId at launch.
+  const shipId = useSessionStore((s) => s.selectedShip)
 
   useFrame(() => {
     const world = getWorld()
@@ -170,77 +105,15 @@ function PlayerMesh() {
     const dead = world.session.runOver
     const blink = !dead && p.iFrames > 0 && Math.floor(p.iFrames * 20) % 2 === 0
     const visible = !dead && !blink
-    const visual = KIT_VISUAL[p.shipId] ?? KIT_VISUAL.vanguard
-    const bodyH = PLAYER_HULL.halfH * 1.7 * visual.bodyScaleY
-    const bodyW = PLAYER_HULL.halfW * 1.0 * visual.bodyScaleX
-
-    for (const ref of [mesh, wingL, wingR]) {
-      const m = ref.current
-      if (!m) continue
-      m.visible = visible
-      m.position.x =
-        p.x + (ref === wingL ? -visual.wingSpread : ref === wingR ? visual.wingSpread : 0)
-      m.position.y = p.y + (ref === mesh ? 0 : -0.1)
-      m.position.z = 0.2
-    }
-    if (mesh.current) mesh.current.scale.set(bodyW, bodyH, 0.32)
-    if (wingL.current) wingL.current.scale.set(0.28 * visual.wingScale, 0.35 * visual.wingScale, 0.12)
-    if (wingR.current) wingR.current.scale.set(0.28 * visual.wingScale, 0.35 * visual.wingScale, 0.12)
-    const flash = presentationFxState.playerFlash
-    const mats: { mat: MeshStandardMaterial | null; body: boolean }[] = [
-      { mat: bodyMat.current, body: true },
-      { mat: wingLMat.current, body: false },
-      { mat: wingRMat.current, body: false },
-    ]
-    for (const { mat, body } of mats) {
-      if (!mat) continue
-      if (flash > 0) {
-        mat.color.set('#ffffff')
-        mat.emissive.set('#c8f0ff')
-        mat.emissiveIntensity = 1.4
-      } else {
-        mat.color.set(visual.color)
-        mat.emissive.set(visual.emissive)
-        mat.emissiveIntensity = body ? 0.75 : 0.5
-      }
-    }
+    const g = group.current
+    if (!g) return
+    g.visible = visible
+    g.position.set(p.x, p.y, 0.2)
   })
 
   return (
-    <group>
-      <mesh ref={mesh} position={[0, 3.5, 0.2]} scale={[1, 1, 0.32]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          ref={bodyMat}
-          color="#7fd4ff"
-          emissive="#2a88bb"
-          emissiveIntensity={0.75}
-          metalness={0.45}
-          roughness={0.3}
-        />
-      </mesh>
-      <mesh ref={wingL} position={[-0.38, 3.4, 0.2]} scale={[0.28, 0.35, 0.12]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          ref={wingLMat}
-          color="#5eb8e8"
-          emissive="#1a6a99"
-          emissiveIntensity={0.5}
-          metalness={0.4}
-          roughness={0.35}
-        />
-      </mesh>
-      <mesh ref={wingR} position={[0.38, 3.4, 0.2]} scale={[0.28, 0.35, 0.12]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          ref={wingRMat}
-          color="#5eb8e8"
-          emissive="#1a6a99"
-          emissiveIntensity={0.5}
-          metalness={0.4}
-          roughness={0.35}
-        />
-      </mesh>
+    <group ref={group} position={[0, 3.5, 0.2]}>
+      <ShipKitVisual key={`${shipId}-${detail}`} shipId={shipId} detail={detail} liveFlash />
     </group>
   )
 }
@@ -308,11 +181,7 @@ function DeathBurst() {
   )
 }
 
-function useInstancedPool(
-  count: number,
-  geometry: BoxGeometry | SphereGeometry,
-  material: MeshStandardMaterial,
-) {
+function useInstancedPool(count: number) {
   const mesh = useRef<InstancedMesh>(null)
 
   useLayoutEffect(() => {
@@ -323,24 +192,17 @@ function useInstancedPool(
     inst.computeBoundingSphere()
   }, [count])
 
-  return { mesh, geometry, material }
+  return mesh
 }
 
 function PlayerBulletInstances() {
-  const geometry = useMemo(() => new SphereGeometry(0.14, 10, 10), [])
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: '#e8fbff',
-        emissive: '#66d0ff',
-        emissiveIntensity: 1.6,
-        metalness: 0.15,
-        roughness: 0.25,
-        toneMapped: false,
-      }),
-    [],
-  )
-  const { mesh } = useInstancedPool(MAX_PLAYER_BULLETS, geometry, material)
+  const geometry = useMemo(() => {
+    // Elongated bolt: capsule-like via stretched sphere-ish cylinder baked as box diamond
+    const g = new BoxGeometry(0.12, 0.42, 0.12)
+    return g
+  }, [])
+  const material = useMemo(() => createTokenMaterial('projectilePlayer'), [])
+  const mesh = useInstancedPool(MAX_PLAYER_BULLETS)
 
   useFrame(() => {
     const inst = mesh.current
@@ -349,7 +211,7 @@ function PlayerBulletInstances() {
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
-      writeInstance(inst, i, b.x, b.y, 0.28, 1, 1.4, 1)
+      writeInstance(inst, i, b.x, b.y, 0.28, 1, 1, 1)
       i++
     }
     for (let j = i; j < MAX_PLAYER_BULLETS; j++) hideInstance(inst, j)
@@ -369,20 +231,9 @@ function PlayerBulletInstances() {
 }
 
 function EnemyBulletInstances() {
-  const geometry = useMemo(() => new SphereGeometry(0.16, 10, 10), [])
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: '#ff9977',
-        emissive: '#ff4422',
-        emissiveIntensity: 1.5,
-        metalness: 0.15,
-        roughness: 0.3,
-        toneMapped: false,
-      }),
-    [],
-  )
-  const { mesh } = useInstancedPool(MAX_ENEMY_BULLETS, geometry, material)
+  const geometry = useMemo(() => new SphereGeometry(0.14, 8, 8), [])
+  const material = useMemo(() => createTokenMaterial('projectileEnemy'), [])
+  const mesh = useInstancedPool(MAX_ENEMY_BULLETS)
 
   useFrame(() => {
     const inst = mesh.current
@@ -410,40 +261,17 @@ function EnemyBulletInstances() {
   )
 }
 
-type KindVisual = {
-  color: string
-  emissive: string
-  sx: number
-  sy: number
-  sz: number
-}
+function EnemyKindInstances({ kind, detail }: { kind: EnemyKind; detail: DetailLevel }) {
+  const geometry = useMemo(() => bakeEnemyGeometry(kind, detail), [kind, detail])
+  const material = useMemo(() => createEnemyMaterial(kind), [kind])
+  const mesh = useInstancedPool(MAX_ENEMIES)
 
-const KIND_VISUAL: Record<EnemyKind, KindVisual> = {
-  drone: { color: '#e87840', emissive: '#a03010', sx: 0.85, sy: 0.7, sz: 0.4 },
-  dart: { color: '#f0c040', emissive: '#a07010', sx: 0.45, sy: 1.05, sz: 0.3 },
-  gunner: { color: '#d04050', emissive: '#801020', sx: 1.15, sy: 0.9, sz: 0.5 },
-  sidecar: { color: '#e06090', emissive: '#901040', sx: 1.2, sy: 0.75, sz: 0.45 },
-  razor: { color: '#c050ff', emissive: '#7010b0', sx: 1.35, sy: 1.1, sz: 0.55 },
-  prism: { color: '#50e0d0', emissive: '#108070', sx: 1.3, sy: 1.3, sz: 0.55 },
-  colossus: { color: '#ff6060', emissive: '#a01010', sx: 2.0, sy: 1.2, sz: 0.7 },
-}
-
-function EnemyKindInstances({ kind }: { kind: EnemyKind }) {
-  const visual = KIND_VISUAL[kind]
-  const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: visual.color,
-        emissive: visual.emissive,
-        emissiveIntensity: 0.85,
-        metalness: 0.35,
-        roughness: 0.4,
-        toneMapped: false,
-      }),
-    [visual.color, visual.emissive],
-  )
-  const { mesh } = useInstancedPool(MAX_ENEMIES, geometry, material)
+  useLayoutEffect(() => {
+    return () => {
+      geometry.dispose()
+      material.dispose()
+    }
+  }, [geometry, material])
 
   useFrame(() => {
     const inst = mesh.current
@@ -452,7 +280,7 @@ function EnemyKindInstances({ kind }: { kind: EnemyKind }) {
     let i = 0
     for (const e of enemies) {
       if (!e.active || e.kind !== kind) continue
-      writeInstance(inst, i, e.x, e.y, 0.22, visual.sx, visual.sy, visual.sz)
+      writeInstance(inst, i, e.x, e.y, 0.22, 1, 1, 1)
       i++
     }
     for (let j = i; j < MAX_ENEMIES; j++) hideInstance(inst, j)
@@ -471,38 +299,48 @@ function EnemyKindInstances({ kind }: { kind: EnemyKind }) {
   )
 }
 
-function EnemyInstances() {
+function EnemyInstances({ detail }: { detail: DetailLevel }) {
   return (
     <group>
-      <EnemyKindInstances kind="drone" />
-      <EnemyKindInstances kind="dart" />
-      <EnemyKindInstances kind="gunner" />
-      <EnemyKindInstances kind="sidecar" />
-      <EnemyKindInstances kind="razor" />
-      <EnemyKindInstances kind="prism" />
-      <EnemyKindInstances kind="colossus" />
+      {ENEMY_KIND_VISUAL_IDS.map((kind) => (
+        <EnemyKindInstances key={`${kind}-${detail}`} kind={kind} detail={detail} />
+      ))}
     </group>
   )
 }
 
-function PowerupInstances() {
-  const geometry = useMemo(() => new SphereGeometry(0.32, 12, 12), [])
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: '#ffdc62',
-        emissive: '#dca318',
-        emissiveIntensity: 1.5,
-        metalness: 0.3,
-        roughness: 0.25,
-        toneMapped: false,
-        vertexColors: true,
-      }),
-    [],
-  )
-  const { mesh } = useInstancedPool(MAX_POWERUPS, geometry, material)
+/** Shape families: sphere, octahedron diamond, box wedge. */
+type PowerupShape = 'orb' | 'diamond' | 'wedge'
 
+function PowerupShapePool({
+  shape,
+  types,
+}: {
+  shape: PowerupShape
+  types: PowerupType[]
+}) {
+  const geometry = useMemo((): BufferGeometry => {
+    if (shape === 'orb') return new SphereGeometry(0.32, 12, 12)
+    if (shape === 'diamond') return new OctahedronGeometry(0.34, 0)
+    return new BoxGeometry(0.38, 0.28, 0.28)
+  }, [shape])
+
+  const material = useMemo(() => {
+    const mat = createTokenMaterial('pickupGold')
+    mat.vertexColors = true
+    return mat
+  }, [])
+
+  const mesh = useInstancedPool(MAX_POWERUPS)
   const color = useMemo(() => new Color(), [])
+  const typeSet = useMemo(() => new Set(types), [types])
+
+  useLayoutEffect(() => {
+    return () => {
+      geometry.dispose()
+      material.dispose()
+    }
+  }, [geometry, material])
 
   useFrame((state) => {
     const inst = mesh.current
@@ -510,9 +348,10 @@ function PowerupInstances() {
     const powerups = getWorld().powerups
     let i = 0
     for (const powerup of powerups) {
-      if (!powerup.active) continue
-      writeInstance(inst, i, powerup.x, powerup.y, 0.32, 1, 1, 1, state.clock.elapsedTime * 1.8)
-      color.set(POWERUP_COLORS[powerup.type])
+      if (!powerup.active || !typeSet.has(powerup.type)) continue
+      const spin = state.clock.elapsedTime * 1.8
+      writeInstance(inst, i, powerup.x, powerup.y, 0.32, 1, 1, 1, spin)
+      color.set(materialToken(POWERUP_TOKENS[powerup.type]).color)
       inst.setColorAt(i, color)
       i++
     }
@@ -525,11 +364,12 @@ function PowerupInstances() {
   return <instancedMesh ref={mesh} args={[geometry, material, MAX_POWERUPS]} frustumCulled={false} />
 }
 
-const POWERUP_COLORS: Record<PowerupType, string> = {
-  shield: '#78e8ff',
-  bomb_stock: '#ffca50',
-  repair: '#88ff92',
-  rate_up: '#ffe66b',
-  spread_up: '#e18cff',
-  score_mult: '#ffd85c',
+function PowerupInstances() {
+  return (
+    <group>
+      <PowerupShapePool shape="orb" types={['shield', 'repair']} />
+      <PowerupShapePool shape="diamond" types={['bomb_stock', 'rate_up', 'score_mult']} />
+      <PowerupShapePool shape="wedge" types={['spread_up']} />
+    </group>
+  )
 }

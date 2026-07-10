@@ -1,17 +1,9 @@
 import { useSessionStore } from '../../app/sessionStore'
 import { unlockAudio, playSfx } from '../../audio/bus'
 import { isShipUnlocked, SHIP_KIT_IDS, shipKit } from '../../sim/shipKits'
-import type { ShipId } from '../../sim/types'
-
-const PREVIEW: Record<
-  ShipId,
-  { body: string; accent: string; width: string; height: string }
-> = {
-  vanguard: { body: '#7fd4ff', accent: '#2a88bb', width: '42%', height: '58%' },
-  striker: { body: '#ffb070', accent: '#c05020', width: '34%', height: '70%' },
-  aegis: { body: '#90b8e0', accent: '#3060a0', width: '56%', height: '52%' },
-  phantom: { body: '#6a7a98', accent: '#304060', width: '28%', height: '64%' },
-}
+import { kitRecipe } from '../../view/procedural/registry'
+import { materialToken } from '../../view/procedural/materialTokens'
+import { ShipKitPreview } from '../../view/procedural/ShipKitPreview'
 
 export function HangarScreen() {
   const selectedShip = useSessionStore((s) => s.selectedShip)
@@ -23,7 +15,7 @@ export function HangarScreen() {
   const settings = useSessionStore((s) => s.settings)
 
   const kit = shipKit(selectedShip)
-  const preview = PREVIEW[selectedShip]
+  const accent = materialToken(kitRecipe(selectedShip).thrusterToken).emissive
 
   const launch = () => {
     unlockAudio()
@@ -67,16 +59,8 @@ export function HangarScreen() {
             )
           })}
         </div>
-        <div className="kit-preview" style={{ borderColor: preview.accent }}>
-          <div
-            className="kit-silhouette"
-            style={{
-              background: preview.body,
-              boxShadow: `0 0 24px ${preview.accent}`,
-              width: preview.width,
-              height: preview.height,
-            }}
-          />
+        <div className="kit-preview" style={{ borderColor: accent }}>
+          <ShipKitPreview shipId={selectedShip} />
           <strong>{kit.name}</strong>
           <p className="muted kit-preview-blurb">{kit.blurb}</p>
           <p className="muted ship-stats">

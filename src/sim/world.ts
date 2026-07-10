@@ -107,6 +107,8 @@ export function createWorld(
       clearElapsed: 0,
       gapElapsed: 0,
       clearAwarded: false,
+      hpLostThisWave: false,
+      noDamageAwarded: false,
       waveSpawned: 0,
       waveKilled: 0,
       nextPowerupEventIndex: 0,
