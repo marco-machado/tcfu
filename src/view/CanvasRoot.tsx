@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
-import { CAMERA_FOV } from '../sim/constants'
+import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
 import { useSessionStore } from '../app/sessionStore'
 import { Playfield } from './Playfield'
 import { PresentationDriver } from './PresentationDriver'
@@ -18,13 +18,13 @@ export function CanvasRoot() {
       className="canvas-layer"
       dpr={quality === 'high' ? 1.5 : quality === 'medium' ? 1 : 0.85}
       camera={{
-        position: [0, 5, 17],
+        position: [CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z],
         fov: CAMERA_FOV,
         near: 0.1,
         far: 80,
       }}
       onCreated={({ camera, gl, scene }) => {
-        camera.lookAt(0, 6.5, 0)
+        camera.lookAt(CAMERA_LOOK_AT.x, CAMERA_LOOK_AT.y, CAMERA_LOOK_AT.z)
         applyStudioEnvironment(gl, scene)
       }}
       gl={{

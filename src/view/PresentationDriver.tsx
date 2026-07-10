@@ -10,6 +10,7 @@ import {
 import { useSessionStore } from '../app/sessionStore'
 import { playSfx } from '../audio/bus'
 import { rumbleForEvent } from '../input/rumble'
+import { CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
 import { drainPresentation, type PresentationEvent } from '../sim/presentation'
 import { getWorld } from '../sim/world'
 import { presentationFxState } from '../presentation/fxState'
@@ -133,7 +134,8 @@ export function PresentationDriver() {
   const playerFlash = useRef(0)
   const bombPulse = useRef(0)
   const { camera } = useThree()
-  const basePos = useRef({ x: 0, y: 5, z: 17 })
+  const basePos = useRef({ x: CAMERA_POS.x, y: CAMERA_POS.y, z: CAMERA_POS.z })
+  const lookAt = useRef({ x: CAMERA_LOOK_AT.x, y: CAMERA_LOOK_AT.y, z: CAMERA_LOOK_AT.z })
   const swayT = useRef(0)
 
   useFrame((_, delta) => {
@@ -202,16 +204,17 @@ export function PresentationDriver() {
     }
 
     swayT.current += dt
+    const la = lookAt.current
     if (swayOn && !world.session.paused) {
-      const a = 0.045
+      const a = 0.06
       const t = swayT.current
       camera.position.x = basePos.current.x + Math.sin(t * 0.7) * a
-      camera.position.y = basePos.current.y + Math.cos(t * 0.55) * a * 0.6
-      camera.position.z = basePos.current.z
-      camera.lookAt(Math.sin(t * 0.5) * a * 0.4, 6.5, 0)
+      camera.position.y = basePos.current.y + Math.cos(t * 0.55) * a * 0.55
+      camera.position.z = basePos.current.z + Math.sin(t * 0.35) * a * 0.35
+      camera.lookAt(la.x + Math.sin(t * 0.5) * a * 0.35, la.y, la.z)
     } else {
       camera.position.set(basePos.current.x, basePos.current.y, basePos.current.z)
-      camera.lookAt(0, 6.5, 0)
+      camera.lookAt(la.x, la.y, la.z)
     }
   })
 
