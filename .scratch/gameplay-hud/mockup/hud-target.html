@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TCFU HUD target mockup — Corridor Signal</title>
+  <style>
+    :root {
+      --void-950: #03070B;
+      --void-900: #071019;
+      --hull-700: #162D3A;
+      --signal-cyan: #5EE7FF;
+      --signal-blue: #2A8CFF;
+      --threat-amber: #FF9B42;
+      --threat-magenta: #FF4F87;
+      --salvage-gold: #F6CA62;
+      --repair-lime: #8DF0A2;
+      --ice-white: #EAF8FF;
+      --muted-steel: #819AAA;
+
+      --panel: linear-gradient(145deg, rgba(7, 16, 25, 0.94), rgba(8, 22, 34, 0.78));
+      --panel-edge: rgba(94, 231, 255, 0.28);
+      --panel-edge-strong: rgba(94, 231, 255, 0.55);
+      --panel-edge-gold: rgba(246, 202, 98, 0.5);
+      --panel-edge-threat: rgba(255, 79, 135, 0.45);
+      --shadow-panel: inset 0 0 20px rgba(94, 231, 255, 0.05), 0 2px 12px rgba(0, 0, 0, 0.4);
+      --clip-module: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      --display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+      --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #010305;
+      color: var(--ice-white);
+      font-family: var(--ui);
+    }
+
+    body {
+      padding: 1.25rem 1.5rem 2rem;
+    }
+
+    .page-head {
+      max-width: 68rem;
+      margin: 0 auto 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      align-items: end;
+      justify-content: space-between;
+    }
+
+    .page-head h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 1.35rem;
+      letter-spacing: 0.08em;
+      font-weight: 400;
+      color: var(--signal-cyan);
+      text-transform: uppercase;
+    }
+
+    .page-head p {
+      margin: 0.2rem 0 0;
+      color: var(--muted-steel);
+      font-size: 0.78rem;
+      max-width: 36rem;
+      line-height: 1.4;
+    }
+
+    .state-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .state-tabs button {
+      appearance: none;
+      border: 1px solid var(--hull-700);
+      background: var(--void-900);
+      color: var(--muted-steel);
+      font: 700 0.65rem/1 var(--ui);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.55rem 0.7rem;
+      cursor: pointer;
+      clip-path: var(--clip-module);
+    }
+
+    .state-tabs button[aria-pressed="true"] {
+      border-color: var(--panel-edge-strong);
+      color: var(--ice-white);
+      box-shadow: 0 0 0 1px rgba(94, 231, 255, 0.15), inset 0 0 12px rgba(94, 231, 255, 0.08);
+    }
+
+    .state-tabs button:focus-visible {
+      outline: 2px solid var(--signal-cyan);
+      outline-offset: 2px;
+    }
+
+    .stage-wrap {
+      max-width: 68rem;
+      margin: 0 auto;
+    }
+
+    .stage {
+      --stage-w: 1024px;
+      --stage-h: 768px;
+      width: min(100%, var(--stage-w));
+      aspect-ratio: 4 / 3;
+      margin: 0 auto;
+      position: relative;
+      background:
+        radial-gradient(ellipse 55% 70% at 50% 42%, rgba(22, 45, 58, 0.35), transparent 70%),
+        linear-gradient(180deg, #040a10 0%, var(--void-950) 40%, #02060a 100%);
+      border: 1px solid #0e1c28;
+      box-shadow: 0 0 0 1px #050b11, 0 24px 60px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stage.is-compact {
+      --stage-w: 720px;
+      --stage-h: 540px;
+    }
+
+    /* Fake world: corridor brackets + ship silhouette (not interactive) */
+    .world {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .ship {
+      position: absolute;
+      left: 50%;
+      top: 58%;
+      width: 42px;
+      height: 48px;
+      transform: translate(-50%, -50%);
+    }
+
+    .ship-body {
+      position: absolute;
+      inset: 8px 10px 4px;
+      background: linear-gradient(180deg, #2a4558, #0d1a24);
+      clip-path: polygon(50% 0, 88% 38%, 100% 100%, 50% 78%, 0 100%, 12% 38%);
+      border: 1px solid rgba(94, 231, 255, 0.35);
+    }
+
+    .ship-thrust {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 10px;
+      height: 14px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, var(--signal-cyan), transparent);
+      filter: blur(1px);
+      opacity: 0.85;
+    }
+
+    .stream-tick {
+      position: absolute;
+      width: 2px;
+      height: 18px;
+      background: rgba(255, 155, 66, 0.35);
+      animation: stream 2.4s linear infinite;
+    }
+
+    @keyframes stream {
+      from { transform: translateY(-40px); opacity: 0; }
+      15% { opacity: 0.7; }
+      to { transform: translateY(720px); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stream-tick { animation: none; opacity: 0.35; }
+    }
+
+    /* HUD shell */
+    .hud {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      padding: 0.85rem 1rem 0.55rem;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      pointer-events: none;
+      text-shadow: 0 1px 2px #000;
+      font-size: 0.82rem;
+    }
+
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .hud-mid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.55rem;
+      padding-top: 0.45rem;
+      min-height: 0;
+    }
+
+    .hud-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .module {
+      background: var(--panel);
+      border: 1px solid var(--panel-edge);
+      box-shadow: var(--shadow-panel);
+      clip-path: var(--clip-module);
+    }
+
+    .label {
+      display: block;
+      color: var(--muted-steel);
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    /* Score + wave (Run progress) */
+    .score {
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: end;
+      width: 11.5rem;
+      padding: 0.48rem 0.65rem;
+      gap: 0.15rem 0.65rem;
+    }
+
+    .score .value {
+      grid-column: 1;
+      min-width: 8ch;
+      color: var(--ice-white);
+      font-size: 1.22rem;
+      letter-spacing: 0.06em;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .score .kills {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+      color: var(--muted-steel);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .score .kills b {
+      display: block;
+      min-width: 3ch;
+      margin-top: 0.2rem;
+      color: #abc5d3;
+      font-size: 0.85rem;
+      text-align: right;
+    }
+
+    .wave {
+      min-width: 5.4rem;
+      padding: 0.48rem 0.65rem;
+      text-align: right;
+      border-color: rgba(94, 231, 255, 0.4);
+    }
+
+    .wave .value {
+      min-width: 3ch;
+      color: var(--signal-cyan);
+      font-size: 1.22rem;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    /* Boss bar */
+    .boss {
+      width: min(17.5rem, 46%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+      align-items: stretch;
+    }
+
+    .boss-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding: 0 0.1rem;
+    }
+
+    .boss-name {
+      font-family: var(--display);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      color: var(--threat-magenta);
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .boss-hp {
+      min-width: 6ch;
+      color: #ffb0a8;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .boss-track {
+      height: 0.52rem;
+      background: #12080c;
+      border: 1px solid #6a2038;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .boss-track::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent calc(10% - 1px),
+        rgba(255, 255, 255, 0.04) calc(10% - 1px),
+        rgba(255, 255, 255, 0.04) 10%
+      );
+      pointer-events: none;
+    }
+
+    .boss-fill {
+      height: 100%;
+      width: 62%;
+      background: linear-gradient(90deg, #8a1838, var(--threat-magenta) 70%, #ff8aa8);
+      box-shadow: 0 0 10px rgba(255, 79, 135, 0.35);
+    }
+
+    /* Timed powerups */
+    .powerups {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.35rem;
+      max-width: 22rem;
+    }
+
+    .powerup {
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-rows: auto auto;
+      column-gap: 0.4rem;
+      align-items: center;
+      min-width: 5.6rem;
+      padding: 0.32rem 0.48rem;
+      border: 1px solid rgba(246, 202, 98, 0.4);
+      background: rgba(7, 16, 25, 0.88);
+      clip-path: var(--clip-module);
+    }
+
+    .powerup .glyph {
+      grid-row: 1 / span 2;
+      width: 0.9rem;
+      height: 0.9rem;
+      border: 1px solid currentColor;
+      color: var(--salvage-gold);
+      display: grid;
+      place-items: center;
+      font-size: 0.55rem;
+      font-weight: 800;
+    }
+
+    .powerup .name {
+      color: var(--ice-white);
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .powerup .timer {
+      min-width: 3.2ch;
+      color: var(--salvage-gold);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .powerup.is-expiring {
+      border-style: dashed;
+      border-color: var(--threat-amber);
+      box-shadow: 0 0 0 1px rgba(255, 155, 66, 0.12);
+    }
+
+    .powerup.is-expiring .glyph,
+    .powerup.is-expiring .timer {
+      color: var(--threat-amber);
+    }
+
+    .powerup.is-expiring .name {
+      color: #ffd2a8;
+    }
+
+    /* Survival cluster */
+    .survival {
+      width: 17.8rem;
+      min-height: 3.7rem;
+      padding: 0.34rem 0.72rem 0.38rem;
+      display: grid;
+      grid-template-columns: 7.4rem 1fr;
+      grid-template-rows: auto auto;
+      column-gap: 0.55rem;
+      row-gap: 0.28rem;
+      border-color: var(--panel-edge-strong);
+    }
+
+    .survival.is-damaged {
+      border-color: var(--threat-magenta);
+      filter: brightness(1.2);
+    }
+
+    .hp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+    }
+
+    .hp-value {
+      display: flex;
+      align-items: baseline;
+      color: var(--ice-white);
+      font-size: 1.28rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .hp-value .num { min-width: 2ch; }
+    .hp-value small {
+      color: var(--muted-steel);
+      font-size: 0.68rem;
+      font-weight: 600;
+      margin-left: 0.05rem;
+    }
+
+    .hp-track {
+      align-self: center;
+      height: 0.52rem;
+      border: 1px solid #31566a;
+      background: #0a0e12;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hp-fill {
+      display: block;
+      height: 100%;
+      width: 33%;
+      background: linear-gradient(90deg, #c94a55, var(--signal-cyan));
+      box-shadow: 0 0 8px rgba(94, 231, 255, 0.25);
+    }
+
+    .survival.is-damaged .hp-fill {
+      background: linear-gradient(90deg, #9a2030, var(--threat-magenta));
+    }
+
+    .survival-meta {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .lives {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--muted-steel);
+      white-space: nowrap;
+    }
+
+    .lives .pip {
+      width: 0.55rem;
+      height: 0.55rem;
+      background: var(--salvage-gold);
+      clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+      box-shadow: 0 0 6px rgba(246, 202, 98, 0.35);
+    }
+
+    .lives b {
+      min-width: 2ch;
+      color: var(--ice-white);
+      font-size: 0.78rem;
+    }
+
+    .shield {
+      display: flex;
+      align-items: center;
+      gap: 0.32rem;
+      white-space: nowrap;
+    }
+
+    .shield-icon {
+      width: 0.68rem;
+      height: 0.78rem;
+      border: 1px solid currentColor;
+      clip-path: polygon(50% 0, 100% 18%, 88% 72%, 50% 100%, 12% 72%, 0 18%);
+      background: currentColor;
+    }
+
+    .shield.is-active { color: var(--signal-cyan); }
+    .shield.is-offline {
+      color: #647681;
+    }
+    .shield.is-offline .shield-icon {
+      background: transparent;
+      opacity: 0.7;
+    }
+
+    /* Resources column */
+    .resources {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+    }
+
+    .bomb {
+      display: flex;
+      align-items: center;
+      gap: 0.48rem;
+      min-width: 9.6rem;
+      padding: 0.4rem 0.55rem;
+      border-color: var(--panel-edge-gold);
+    }
+
+    .bomb-icon {
+      width: 1.05rem;
+      height: 1.05rem;
+      display: grid;
+      place-items: center;
+      color: var(--salvage-gold);
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+
+    .bomb .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+    }
+
+    .bomb .count {
+      min-width: 2ch;
+      color: #fff0b3;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .bomb .hint {
+      margin-left: auto;
+      color: #9caab0;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid #3a4a54;
+      padding: 0.12rem 0.28rem;
+    }
+
+    .bomb.is-empty {
+      border-style: dashed;
+      border-color: #56616a;
+      filter: saturate(0.25);
+    }
+
+    .bomb.is-empty .bomb-icon { color: #6e7880; }
+    .bomb.is-empty .count { color: #8a949c; }
+    .bomb.is-empty .hint {
+      border-color: transparent;
+      color: #82909a;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      padding: 0;
+    }
+
+    .economy {
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+      min-width: 11.2rem;
+      padding: 0.38rem 0.5rem;
+      border-color: rgba(129, 154, 170, 0.28);
+    }
+
+    .economy-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .scrap {
+      color: var(--muted-steel);
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .scrap b {
+      color: #c9b078;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 5ch;
+      text-align: right;
+    }
+
+    .tier {
+      display: flex;
+      align-items: center;
+      gap: 0.28rem;
+      color: var(--muted-steel);
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .tier-pips {
+      display: flex;
+      gap: 0.18rem;
+    }
+
+    .tier-pips span {
+      width: 0.42rem;
+      height: 0.42rem;
+      border: 1px solid var(--signal-blue);
+      background: transparent;
+      transform: rotate(45deg);
+    }
+
+    .tier-pips span.on {
+      background: var(--signal-cyan);
+      border-color: var(--signal-cyan);
+      box-shadow: 0 0 6px rgba(94, 231, 255, 0.45);
+    }
+
+    .wcell {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .wcell .label { grid-column: 1; }
+    .wcell-track {
+      height: 0.38rem;
+      border: 1px solid #2a4454;
+      background: #0a1016;
+      overflow: hidden;
+    }
+
+    .wcell-fill {
+      height: 100%;
+      width: 45%;
+      background: linear-gradient(90deg, var(--signal-blue), var(--signal-cyan));
+    }
+
+    .wcell .frac {
+      min-width: 5ch;
+      color: #9bb8c8;
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .economy.is-max .wcell-fill {
+      width: 100%;
+      background: linear-gradient(90deg, #2a6a7a, var(--repair-lime));
+    }
+
+    .economy.is-max .frac {
+      color: var(--repair-lime);
+      letter-spacing: 0.12em;
+    }
+
+    /* Overlays */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: none;
+      place-items: center;
+      background: rgba(3, 7, 11, 0.62);
+      pointer-events: auto;
+      backdrop-filter: blur(1px);
+    }
+
+    .stage[data-state="pause"] .overlay.pause,
+    .stage[data-state="destroyed"] .overlay.destroyed {
+      display: grid;
+    }
+
+    .stage[data-state="pause"] .world,
+    .stage[data-state="pause"] .hud {
+      filter: brightness(0.55) saturate(0.85);
+    }
+
+    .modal {
+      width: min(18.5rem, 86%);
+      padding: 1.15rem 1.2rem 1.05rem;
+      background: linear-gradient(160deg, rgba(7, 16, 25, 0.98), rgba(10, 20, 30, 0.96));
+      border: 1px solid rgba(94, 231, 255, 0.35);
+      box-shadow:
+        0 0 0 1px rgba(3, 7, 11, 0.8),
+        0 18px 40px rgba(0, 0, 0, 0.55),
+        inset 0 0 28px rgba(94, 231, 255, 0.05);
+      clip-path: var(--clip-module);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      text-shadow: none;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 1.45rem;
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      text-align: center;
+      color: var(--signal-cyan);
+      text-transform: uppercase;
+    }
+
+    .modal .sub {
+      margin: -0.35rem 0 0;
+      text-align: center;
+      color: var(--muted-steel);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--hull-700);
+      background: rgba(22, 45, 58, 0.55);
+      color: var(--ice-white);
+      font: 700 0.72rem/1 var(--ui);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.72rem 0.85rem;
+      cursor: pointer;
+      clip-path: var(--clip-module);
+      text-align: center;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--signal-cyan);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      border-color: rgba(94, 231, 255, 0.65);
+      background: linear-gradient(180deg, rgba(42, 140, 255, 0.35), rgba(22, 45, 58, 0.85));
+      color: var(--ice-white);
+      box-shadow: inset 0 0 16px rgba(94, 231, 255, 0.12), 0 0 12px rgba(94, 231, 255, 0.12);
+      font-size: 0.8rem;
+      padding: 0.85rem;
+    }
+
+    .btn-primary.is-focus {
+      outline: 2px solid var(--signal-cyan);
+      outline-offset: 2px;
+      box-shadow: inset 0 0 18px rgba(94, 231, 255, 0.2), 0 0 0 1px rgba(94, 231, 255, 0.25);
+    }
+
+    .btn-secondary {
+      color: #c5d7e2;
+    }
+
+    .btn-danger {
+      border-color: rgba(255, 79, 135, 0.35);
+      color: #d8a0b0;
+      margin-top: 0.15rem;
+    }
+
+    .btn-danger-ghost {
+      border-color: transparent;
+      background: transparent;
+      color: #6f828f;
+      font-size: 0.62rem;
+      padding: 0.45rem;
+    }
+
+    .confirm-hint {
+      margin: 0;
+      text-align: center;
+      color: #6f828f;
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .modal.death {
+      border-color: rgba(255, 79, 135, 0.45);
+      box-shadow:
+        0 0 0 1px rgba(3, 7, 11, 0.8),
+        0 18px 40px rgba(0, 0, 0, 0.55),
+        inset 0 0 28px rgba(255, 79, 135, 0.06);
+    }
+
+    .modal.death h2 {
+      color: var(--threat-magenta);
+    }
+
+    .modal.death .sub {
+      color: #a88894;
+    }
+
+    /* Compact layout rules */
+    .stage.is-compact .hud {
+      padding: 0.55rem 0.6rem 0.4rem;
+      font-size: 0.75rem;
+    }
+
+    .stage.is-compact .score {
+      width: 9.4rem;
+      padding: 0.38rem 0.5rem;
+    }
+
+    .stage.is-compact .score .value { font-size: 1.02rem; min-width: 7ch; }
+    .stage.is-compact .score .kills { font-size: 0.52rem; }
+    .stage.is-compact .score .kills b { font-size: 0.72rem; }
+    .stage.is-compact .wave { min-width: 4.4rem; padding: 0.38rem 0.5rem; }
+    .stage.is-compact .wave .value { font-size: 1.02rem; }
+    .stage.is-compact .survival {
+      width: 14.2rem;
+      min-height: 3.25rem;
+      padding: 0.28rem 0.5rem;
+      grid-template-columns: 6rem 1fr;
+    }
+    .stage.is-compact .hp-value { font-size: 1.05rem; }
+    .stage.is-compact .bomb { min-width: 7.8rem; padding: 0.32rem 0.42rem; }
+    .stage.is-compact .economy { min-width: 9.4rem; }
+    .stage.is-compact .boss { width: min(14rem, 55%); }
+    .stage.is-compact .powerups { max-width: 16rem; gap: 0.28rem; }
+    .stage.is-compact .powerup { min-width: 5rem; padding: 0.26rem 0.38rem; }
+
+    .legend {
+      max-width: 68rem;
+      margin: 1.1rem auto 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 0.55rem;
+      color: var(--muted-steel);
+      font-size: 0.72rem;
+      line-height: 1.35;
+    }
+
+    .legend div {
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #13202b;
+      background: rgba(7, 16, 25, 0.65);
+      clip-path: var(--clip-module);
+    }
+
+    .legend strong {
+      display: block;
+      color: var(--ice-white);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .swatch {
+      display: inline-block;
+      width: 0.55rem;
+      height: 0.55rem;
+      margin-right: 0.25rem;
+      vertical-align: -0.05rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <header class="page-head">
+    <div>
+      <h1>Gameplay HUD target</h1>
+      <p>
+        Corridor Signal mockup for the gameplay HUD readability pass.
+        Desktop 4:3 product frame, authored clusters, semantic palette, open movement band.
+      </p>
+    </div>
+    <div class="state-tabs" role="group" aria-label="Mockup states">
+      <button type="button" data-state="run" aria-pressed="true">Run</button>
+      <button type="button" data-state="pause" aria-pressed="false">Pause</button>
+      <button type="button" data-state="destroyed" aria-pressed="false">Destroyed</button>
+      <button type="button" data-state="compact" aria-pressed="false">Compact</button>
+    </div>
+  </header>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage" data-state="run" aria-label="Desktop 4:3 Run frame mockup">
+      <div class="world" aria-hidden="true">
+        <div class="ship"><div class="ship-body"></div><div class="ship-thrust"></div></div>
+        <span class="stream-tick" style="left:42%;top:0;animation-delay:0s"></span>
+        <span class="stream-tick" style="left:51%;top:0;animation-delay:0.7s;background:rgba(255,79,135,0.3)"></span>
+        <span class="stream-tick" style="left:58%;top:0;animation-delay:1.3s"></span>
+      </div>
+
+      <div class="hud">
+        <div class="hud-top" aria-label="Run progress">
+          <div class="module score">
+            <span class="label">Score</span>
+            <strong class="value num">9876543</strong>
+            <span class="kills">Kills <b class="num">888</b></span>
+          </div>
+          <div class="module wave">
+            <span class="label">Wave</span>
+            <strong class="value num">99</strong>
+          </div>
+        </div>
+
+        <div class="hud-mid">
+          <div class="boss" aria-label="Set-piece health">
+            <div class="boss-head">
+              <span class="boss-name">Colossus</span>
+              <span class="boss-hp num">1860/3000</span>
+            </div>
+            <div class="boss-track" role="meter" aria-label="Colossus hull integrity" aria-valuemin="0" aria-valuemax="3000" aria-valuenow="1860" aria-valuetext="1860 of 3000">
+              <div class="boss-fill"></div>
+            </div>
+          </div>
+
+          <div class="powerups" aria-label="Timed powerups">
+            <div class="powerup" title="Overclock">
+              <span class="glyph" aria-hidden="true">O</span>
+              <span class="name">Overclock</span>
+              <span class="timer num">6.2s</span>
+            </div>
+            <div class="powerup" title="Options">
+              <span class="glyph" aria-hidden="true">+</span>
+              <span class="name">Options</span>
+              <span class="timer num">4.8s</span>
+            </div>
+            <div class="powerup is-expiring" title="Bounty expiring">
+              <span class="glyph" aria-hidden="true">×</span>
+              <span class="name">Bounty</span>
+              <span class="timer num">1.1s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-bottom">
+          <section class="module survival is-damaged" aria-label="Survival status">
+            <div class="hp-head">
+              <span class="label">Hull</span>
+              <strong class="hp-value"><span class="num">1</span><small>/3</small></strong>
+            </div>
+            <div class="hp-track" role="meter" aria-label="Hull integrity" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1">
+              <span class="hp-fill"></span>
+            </div>
+            <div class="survival-meta">
+              <span class="lives"><span class="pip" aria-hidden="true"></span> Lives <b class="num">2</b></span>
+              <span class="shield is-active"><span class="shield-icon" aria-hidden="true"></span> Shield ready</span>
+            </div>
+          </section>
+
+          <div class="resources">
+            <div class="module bomb is-empty" aria-label="0 bombs available">
+              <span class="bomb-icon" aria-hidden="true">✦</span>
+              <span class="stack">
+                <span class="label">Bombs</span>
+                <strong class="count num">0</strong>
+              </span>
+              <span class="hint">Empty</span>
+            </div>
+            <div class="module economy" aria-label="Run economy">
+              <div class="economy-row">
+                <span class="scrap">Scrap <b class="num">~99255</b></span>
+                <span class="tier" aria-label="Weapon tier 2 of 3">
+                  Tier
+                  <span class="tier-pips" aria-hidden="true">
+                    <span class="on"></span><span class="on"></span><span></span>
+                  </span>
+                </span>
+              </div>
+              <div class="wcell">
+                <span class="label">W-cells</span>
+                <div class="wcell-track"><div class="wcell-fill"></div></div>
+                <span class="frac num">9/20</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay pause" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+          <h2 id="pause-title">Paused</h2>
+          <div class="actions">
+            <button type="button" class="btn btn-primary is-focus" data-action="resume">Resume</button>
+            <button type="button" class="btn btn-secondary">Settings</button>
+            <button type="button" class="btn btn-danger">Restart run</button>
+            <button type="button" class="btn btn-danger-ghost">Exit to hangar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay destroyed" aria-hidden="true">
+        <div class="modal death" role="dialog" aria-modal="true" aria-labelledby="destroyed-title" tabindex="-1">
+          <h2 id="destroyed-title">Destroyed</h2>
+          <p class="sub">Salvaging wreckage</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="legend" aria-label="Design notes">
+    <div>
+      <strong>Hierarchy</strong>
+      Survival first (hull meter, lives, shield). Score and wave second. Powerups, bombs, boss third. Scrap and W-cells fourth.
+    </div>
+    <div>
+      <strong>Palette</strong>
+      <span class="swatch" style="background:#5EE7FF"></span>player/focus
+      <span class="swatch" style="background:#FF4F87"></span>critical
+      <span class="swatch" style="background:#FF9B42"></span>caution
+      <span class="swatch" style="background:#F6CA62"></span>reward
+      <span class="swatch" style="background:#819AAA"></span>secondary
+    </div>
+    <div>
+      <strong>Shape</strong>
+      Clipped 8px modules, open movement band, stable numeric slots, no nested chrome over the play path.
+    </div>
+    <div>
+      <strong>Voice</strong>
+      Short command fragments: PAUSED, RESUME, DESTROYED, WAVE, HULL. No SaaS verbs.
+    </div>
+  </section>
+
+  <script>
+    const stage = document.getElementById("stage");
+    const buttons = document.querySelectorAll(".state-tabs button");
+    const hud = stage.querySelector(".hud");
+    const pauseDialog = stage.querySelector(".overlay.pause .modal");
+    const destroyedDialog = stage.querySelector(".overlay.destroyed .modal");
+    const resumeButton = pauseDialog.querySelector('[data-action="resume"]');
+    let lastFocusedElement = null;
+
+    function applyState(state) {
+      const compact = state === "compact";
+      const view = compact ? "run" : state;
+      const overlayActive = view === "pause" || view === "destroyed";
+
+      if (overlayActive && !stage.matches('[data-state="pause"], [data-state="destroyed"]')) {
+        lastFocusedElement = document.activeElement;
+      }
+
+      stage.dataset.state = view;
+      stage.classList.toggle("is-compact", compact);
+      stage.setAttribute(
+        "aria-label",
+        compact ? "Compact 4:3 Run frame mockup" : `Desktop 4:3 ${view[0].toUpperCase()}${view.slice(1)} frame mockup`
+      );
+      hud.toggleAttribute("inert", overlayActive);
+      buttons.forEach((btn) => {
+        btn.setAttribute("aria-pressed", String(btn.dataset.state === state));
+      });
+      stage.querySelector(".overlay.pause")?.setAttribute("aria-hidden", String(view !== "pause"));
+      stage.querySelector(".overlay.destroyed")?.setAttribute("aria-hidden", String(view !== "destroyed"));
+
+      if (view === "pause") {
+        resumeButton.focus();
+      } else if (view === "destroyed") {
+        destroyedDialog.focus();
+      } else if (lastFocusedElement instanceof HTMLElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+      }
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => applyState(btn.dataset.state));
+    });
+
+    resumeButton.addEventListener("click", () => applyState("run"));
+
+    document.addEventListener("keydown", (event) => {
+      if (stage.dataset.state !== "pause") return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        applyState("run");
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = [...pauseDialog.querySelectorAll("button:not([disabled])")];
+      const currentIndex = focusable.indexOf(document.activeElement);
+      const nextIndex = event.shiftKey
+        ? (currentIndex - 1 + focusable.length) % focusable.length
+        : (currentIndex + 1) % focusable.length;
+
+      event.preventDefault();
+      focusable[nextIndex].focus();
+    });
+  </script>
+</body>
+</html>
