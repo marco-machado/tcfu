@@ -59,6 +59,7 @@ import type {
   World,
 } from './types'
 import { baseHitIFrames, shipMoveMult } from './metaModifiers'
+import { pushPresentation } from './presentation'
 import { shipKit } from './shipKits'
 import { weaponFor, weaponTierForWCells } from './weapons'
 
@@ -154,6 +155,7 @@ function applyPowerup(world: World, powerup: Powerup): void {
   if (powerup.type === 'score_mult') player.scoreMult = SCORE_MULT_DURATION
   world.session.score += POWERUP_SCORE
   world.powerupDryElapsed = 0
+  pushPresentation(world.presentation, { type: 'pickup', x: powerup.x, y: powerup.y })
 }
 
 function stepPowerups(world: World, dt: number): void {
@@ -192,6 +194,7 @@ function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId
   if (enemy.waveId === world.session.wave) {
     world.waves.waveKilled += 1
   }
+  pushPresentation(world.presentation, { type: 'kill', x: enemy.x, y: enemy.y })
   tryDropOnKill(world, enemy)
 }
 
@@ -213,18 +216,22 @@ function applyPlayerDamage(world: World, amount: number): void {
   if (p.shield) {
     p.shield = false
     p.iFrames = IFRAMES_SHIELD
+    pushPresentation(world.presentation, { type: 'shield_break', x: p.x, y: p.y })
     return
   }
 
   p.hp -= amount
   if (p.hp > 0) {
     p.iFrames = baseHitIFrames(p.shipId) + world.meta.hitIFramesBonus
+    pushPresentation(world.presentation, { type: 'player_hit', x: p.x, y: p.y })
     return
   }
 
   p.hp = 0
   p.lives -= 1
   p.shield = false
+  pushPresentation(world.presentation, { type: 'player_hit', x: p.x, y: p.y })
+  pushPresentation(world.presentation, { type: 'life_loss', x: p.x, y: p.y })
 
   if (p.lives <= 0) {
     world.session.runOver = true
@@ -233,6 +240,7 @@ function applyPlayerDamage(world: World, amount: number): void {
     p.vx = 0
     p.vy = 0
     p.iFrames = 0
+    pushPresentation(world.presentation, { type: 'death', x: p.x, y: p.y })
     return
   }
 
@@ -546,6 +554,7 @@ function stepBomb(world: World, commands: Commands): void {
 
   p.bombs -= 1
   p.iFrames = Math.max(p.iFrames, IFRAMES_BOMB)
+  pushPresentation(world.presentation, { type: 'bomb', x: p.x, y: p.y })
 
   for (const b of world.enemyBullets) {
     if (b.active && onPlayfield(b.x, b.y)) b.active = false

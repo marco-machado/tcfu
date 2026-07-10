@@ -8,6 +8,7 @@ import {
   streamSpeedForWave,
 } from './constants'
 import { DEFAULT_META_MODIFIERS, type MetaModifiers } from './metaModifiers'
+import { createPresentationBuffer } from './presentation'
 import { shipKit } from './shipKits'
 import type { Enemy, EnemyBullet, PlayerBullet, Powerup, ShipId, World } from './types'
 
@@ -113,6 +114,7 @@ export function createWorld(
     powerupDryElapsed: 0,
     rng: Math.random,
     meta: { ...meta },
+    presentation: createPresentationBuffer(),
   }
 }
 

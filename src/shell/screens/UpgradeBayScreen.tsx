@@ -1,4 +1,5 @@
 import { useSessionStore } from '../../app/sessionStore'
+import { playSfx, unlockAudio } from '../../audio/bus'
 import {
   META_BRANCHES,
   META_BRANCH_LABELS,
@@ -15,9 +16,11 @@ export function UpgradeBayScreen() {
   const meta = useSessionStore((s) => s.meta)
   const purchaseMetaRank = useSessionStore((s) => s.purchaseMetaRank)
   const setScreen = useSessionStore((s) => s.setScreen)
+  const settings = useSessionStore((s) => s.settings)
 
   const buy = (branch: MetaBranch) => {
-    purchaseMetaRank(branch)
+    unlockAudio()
+    if (purchaseMetaRank(branch)) playSfx('ui_confirm', settings)
   }
 
   return (

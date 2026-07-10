@@ -75,3 +75,7 @@ _Avoid_: Boss stage UI, mission objective bar
 **Endless survival**:
 The sole mode: continuous escalating threat until death; no campaign stages as the primary structure.
 _Avoid_: Story mode, mission select
+
+**Presentation event**:
+A discrete combat signal (hit, kill, bomb, pickup, shield break, death) emitted for view, audio, and rumble consumers. Not a sim entity and not combat authority.
+_Avoid_: VFX state as gameplay truth, particle as entity

@@ -1,12 +1,17 @@
-# Tickets: Presentation v1
+# Make combat and shell feel arcade: juice, audio stubs, rumble, sway
 
-Tracer-bullet implementation ticket for [the presentation specification](.scratch/presentation/PRD.md). Work the frontier: any ticket whose blockers are complete.
+Status: `resolved`
+Blocked by: none
 
-## Make combat and shell feel arcade: juice, audio stubs, rumble, sway
+## Parent
 
-**What to build:** A Run and menus deliver arcade feedback — combat presentation events drive hit/kill/bomb/pickup/death VFX, SFX stubs and gamepad rumble respect volume settings, camera gets tiny sway with quality gates, and Title/Hangar get light product polish — without production GLBs or full music.
+`.scratch/presentation/PRD.md`
 
-**Blocked by:** None — can start immediately.
+## What to build
+
+A Run and menus deliver arcade feedback — combat presentation events drive hit/kill/bomb/pickup/death VFX, SFX stubs and gamepad rumble respect volume settings, camera gets tiny sway with quality gates, and Title/Hangar get light product polish — without production GLBs or full music.
+
+## Acceptance criteria
 
 - [x] Sim emits bounded presentation events at authoritative combat sites (HP hit, shield absorb, kill, bomb, pickup, death); view drains them each frame for lightweight particles/flashes; mesh is never combat authority.
 - [x] Quality Low/Medium/High gates bloom/DPR/particle density/sway as specified; tiny cosmetic camera sway only (no hit kick or player-lag follow).
@@ -14,3 +19,11 @@ Tracer-bullet implementation ticket for [the presentation specification](.scratc
 - [x] Gamepad rumble on damage (~100 ms), life loss (~200 ms), bomb (~150 ms) when hardware exists; no-op otherwise.
 - [x] Title hierarchy + Hangar selected-kit preview (silhouette/colors); HUD stays uncluttered.
 - [x] Pure tests cover event buffer and gain mapping; visual/audio/rumble/shell are manual smoke.
+
+## Blocked by
+
+None — can start immediately.
+
+## Answer
+
+Presentation events from sim; VFX + sway + quality gates; audio stubs + rumble; Title/Hangar polish; pure buffer/gain tests green.

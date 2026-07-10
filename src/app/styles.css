@@ -76,6 +76,82 @@ button:disabled {
   pointer-events: auto;
 }
 
+.title-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.title-mark {
+  font-size: 3.2rem;
+  letter-spacing: 0.18em;
+  margin: 0.2rem 0;
+  text-shadow: 0 0 24px #2a88bb;
+}
+
+.title-kicker {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.title-tagline {
+  max-width: 22rem;
+  margin: 0.25rem 0 1.25rem;
+  color: #b8d0e4;
+}
+
+.title-menu {
+  align-items: stretch;
+  width: min(16rem, 100%);
+}
+
+.title-controls {
+  margin-top: 1.25rem;
+}
+
+.primary-action {
+  border-color: #5ec8ff;
+  background: #123248;
+  box-shadow: 0 0 0 1px #5ec8ff inset;
+}
+
+.primary-action:hover {
+  background: #18405c;
+}
+
+.hangar-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.kit-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.85rem;
+  border: 1px solid #2a4a62;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0a1420 0%, #070c14 100%);
+  text-align: center;
+}
+
+.kit-silhouette {
+  border-radius: 6px 6px 40% 40%;
+  margin-bottom: 0.35rem;
+}
+
+.kit-preview-blurb {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
 .screen h1,
 .screen h2 {
   margin: 0;

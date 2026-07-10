@@ -1,5 +1,6 @@
 import type { PathId } from './patterns'
 import type { MetaModifiers } from './metaModifiers'
+import type { PresentationBuffer } from './presentation'
 
 export type ShipId = 'vanguard' | 'striker' | 'aegis' | 'phantom'
 
@@ -157,4 +158,6 @@ export type World = {
   rng: Rng
   /** Meta combat/payout snapshot frozen at Run start. */
   meta: MetaModifiers
+  /** Bounded combat presentation events for view/audio/rumble. */
+  presentation: PresentationBuffer
 }

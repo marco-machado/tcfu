@@ -21,6 +21,7 @@ import {
 } from '../sim/constants'
 import type { EnemyKind, PowerupType } from '../sim/types'
 import { getWorld } from '../sim/world'
+import { presentationFxState } from './presentationFxState'
 
 const _proxy = new Object3D()
 
@@ -185,10 +186,23 @@ function PlayerMesh() {
     if (mesh.current) mesh.current.scale.set(bodyW, bodyH, 0.32)
     if (wingL.current) wingL.current.scale.set(0.28 * visual.wingScale, 0.35 * visual.wingScale, 0.12)
     if (wingR.current) wingR.current.scale.set(0.28 * visual.wingScale, 0.35 * visual.wingScale, 0.12)
-    for (const mat of [bodyMat.current, wingLMat.current, wingRMat.current]) {
+    const flash = presentationFxState.playerFlash
+    const mats: { mat: MeshStandardMaterial | null; body: boolean }[] = [
+      { mat: bodyMat.current, body: true },
+      { mat: wingLMat.current, body: false },
+      { mat: wingRMat.current, body: false },
+    ]
+    for (const { mat, body } of mats) {
       if (!mat) continue
-      mat.color.set(visual.color)
-      mat.emissive.set(visual.emissive)
+      if (flash > 0) {
+        mat.color.set('#ffffff')
+        mat.emissive.set('#c8f0ff')
+        mat.emissiveIntensity = 1.4
+      } else {
+        mat.color.set(visual.color)
+        mat.emissive.set(visual.emissive)
+        mat.emissiveIntensity = body ? 0.75 : 0.5
+      }
     }
   })
 
