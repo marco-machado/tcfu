@@ -12,11 +12,18 @@ export type KitPartId =
   | 'hull'
   | 'wings'
   | 'thruster'
+  | 'thrusterPlume'
   | 'canopy'
   | 'finDetail'
   | 'shieldRing'
   | 'gunPods'
   | 'edgeGlow'
+
+export type SceneryExtras = {
+  starCount: number
+  streakCount: number
+  distantSilhouettes: boolean
+}
 
 export type EnemyPartId = 'body' | 'accent' | 'optionalDetail'
 
@@ -77,16 +84,16 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
     baseParts: ['hull', 'wings', 'thruster'],
-    optionalParts: ['canopy', 'finDetail'],
+    optionalParts: ['canopy', 'finDetail', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
   striker: {
     id: 'striker',
     hullToken: 'hullCold',
-    thrusterToken: 'thrusterHot',
-    accentToken: 'thrusterHot',
+    thrusterToken: 'thrusterPlayer',
+    accentToken: 'accentPlayer',
     baseParts: ['hull', 'wings', 'thruster', 'gunPods'],
-    optionalParts: ['canopy', 'finDetail'],
+    optionalParts: ['canopy', 'finDetail', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
   aegis: {
@@ -95,7 +102,7 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
     baseParts: ['hull', 'wings', 'thruster', 'shieldRing'],
-    optionalParts: ['canopy', 'finDetail'],
+    optionalParts: ['canopy', 'finDetail', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
   phantom: {
@@ -104,7 +111,7 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
     baseParts: ['hull', 'wings', 'thruster'],
-    optionalParts: ['canopy'],
+    optionalParts: ['canopy', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
 }
@@ -213,6 +220,17 @@ export function partsForEnemy(kind: EnemyKind, detail: DetailLevel): EnemyPartId
 export function sceneryLayers(detail: DetailLevel): SceneryLayerId[] {
   if (detail === 'low') return ['far', 'near']
   return ['far', 'mid', 'near']
+}
+
+/** Deep-space density knobs; mid layer is distant silhouettes, not trench walls. */
+export function sceneryExtras(detail: DetailLevel): SceneryExtras {
+  if (detail === 'low') {
+    return { starCount: 48, streakCount: 10, distantSilhouettes: false }
+  }
+  if (detail === 'medium') {
+    return { starCount: 72, streakCount: 18, distantSilhouettes: true }
+  }
+  return { starCount: 96, streakCount: 26, distantSilhouettes: true }
 }
 
 export function hasKitPart(id: ShipId, detail: DetailLevel, part: KitPartId): boolean {

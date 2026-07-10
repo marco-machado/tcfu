@@ -33,13 +33,13 @@ export function CanvasRoot() {
         outputColorSpace: SRGBColorSpace,
       }}
     >
-      <color attach="background" args={['#050a12']} />
-      {fogOn ? <fog attach="fog" args={['#050a12', 22, 55]} /> : null}
-      <ambientLight intensity={0.22} />
-      <hemisphereLight args={['#7aa8c8', '#0a1018', 0.38]} />
-      <directionalLight position={[4, 8, 10]} intensity={1.15} color="#e0f0ff" />
-      <directionalLight position={[-6, 2, 4]} intensity={0.4} color="#3a6088" />
-      <directionalLight position={[0, -2, 8]} intensity={0.3} color="#50b0e0" />
+      <color attach="background" args={['#03070B']} />
+      {fogOn ? <fog attach="fog" args={['#03070B', 18, 48]} /> : null}
+      <ambientLight intensity={0.12} />
+      <hemisphereLight args={['#4a6a80', '#050810', 0.28]} />
+      <directionalLight position={[4, 8, 10]} intensity={0.95} color="#d0e8ff" />
+      <directionalLight position={[-6, 2, 4]} intensity={0.28} color="#2a4060" />
+      <directionalLight position={[0, -2, 8]} intensity={0.22} color="#3a90b8" />
 
       <SimDriver />
       <Playfield />
@@ -47,8 +47,8 @@ export function CanvasRoot() {
 
       {bloom && (
         <EffectComposer multisampling={0}>
-          <Bloom luminanceThreshold={0.68} intensity={0.5} mipmapBlur luminanceSmoothing={0.2} />
-          <Vignette eskil={false} offset={0.25} darkness={0.45} />
+          <Bloom luminanceThreshold={0.62} intensity={0.55} mipmapBlur luminanceSmoothing={0.18} />
+          <Vignette eskil={false} offset={0.22} darkness={0.55} />
         </EffectComposer>
       )}
     </Canvas>

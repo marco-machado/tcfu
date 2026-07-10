@@ -13,7 +13,8 @@ let baked: ReturnType<PMREMGenerator['fromScene']>['texture'] | null = null
 export function applyStudioEnvironment(renderer: WebGLRenderer, scene: Scene): void {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.05
+  // Slightly under-exposed so void stays deep and emissives carry the signal
+  renderer.toneMappingExposure = 0.92
 
   if (!baked) {
     const pmrem = new PMREMGenerator(renderer)
@@ -21,5 +22,5 @@ export function applyStudioEnvironment(renderer: WebGLRenderer, scene: Scene): v
     pmrem.dispose()
   }
   scene.environment = baked
-  scene.environmentIntensity = 0.95
+  scene.environmentIntensity = 0.55
 }

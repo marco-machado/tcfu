@@ -4,6 +4,8 @@
 
 **Corridor Signal** turns the game’s defining action into its identity: hold a narrow movement band while hostile space streams toward you. The system should feel like disciplined flight telemetry under increasing signal corruption—not generic neon sci-fi.
 
+**Corridor** is brand language for the movement band and world stream fantasy. It is **not** a requirement for colossal trench walls or shaft architecture on the playfield. In-world presentation is **deep space**: void field, stars, sparse distant silhouettes, stream-synced parallax—not industrial corridor cages.
+
 The name remains **TCFU**. Do not invent or publish an expansion until the game has a narrative reason for one.
 
 ### Player promise
@@ -36,8 +38,8 @@ Use the full lockup on title, store art, and major results moments. Use the insi
 | Hull steel | `--hull-700` | `#162D3A` | Frames, inactive rails, disabled UI |
 | Player signal | `--signal-cyan` | `#5EE7FF` | Player, focus, primary action, safe telemetry |
 | Vector blue | `--signal-blue` | `#2A8CFF` | Depth, secondary player energy |
-| Threat amber | `--threat-amber` | `#FF9B42` | Incoming pressure, caution, enemy energy |
-| Threat magenta | `--threat-magenta` | `#FF4F87` | Critical enemy fire and life-threatening alerts |
+| Threat amber | `--threat-amber` | `#FF9B42` | Incoming pressure, caution, enemy energy; primary in-world threat fire and hostile hull accents stay warm amber/orange/red |
+| Threat magenta | `--threat-magenta` | `#FF4F87` | Critical HUD alerts and life-threatening UI only—not a mandate to retune in-world enemy fire to magenta |
 | Salvage gold | `--salvage-gold` | `#F6CA62` | Scrap, rewards, bombs |
 | Repair lime | `--repair-lime` | `#8DF0A2` | Repair and successful recovery only |
 | Ice white | `--ice-white` | `#EAF8FF` | Primary text and hot cores |
@@ -73,13 +75,20 @@ Before checking for provider credentials, inspect the image-generation tools and
 
 Use this art brief for title-screen key art:
 
-> TCFU title-screen key art for a high-fidelity vertical arcade space shooter. A lone angular interceptor seen from elevated rear three-quarter view holds the center of a narrow colossal space corridor. Cold cyan engine signal and precision lane brackets face a distant wall of warm amber-magenta hostile craft and weapons fire. Dark brushed-metal structures, deep black void, restrained emissive bloom, strong readable silhouettes, disciplined asymmetrical composition, generous negative space for a compact logo, cinematic PBR, no text, no watermark, no purple cyberpunk city, no retro pixels.
+> TCFU title-screen key art for a high-fidelity vertical arcade space shooter. A lone angular interceptor seen from elevated rear three-quarter view holds the center of deep hostile space. Cold cyan thruster plumes and precision lane-bracket telemetry face warm amber-orange hostile craft and weapons fire. Deep black void, sparse distant silhouettes, restrained emissive bloom, strong readable silhouettes, disciplined asymmetrical composition, generous negative space for a compact logo, cinematic PBR, no text, no watermark, no purple cyberpunk city, no retro pixels, no colossal trench walls as world identity.
 
 ### Key-art reference
 
 ![Generated Corridor Signal key-art reference](assets/corridor-signal-key-art-reference.png)
 
-Use this generated concept as a directional reference for the rear three-quarter interceptor silhouette, open vertical combat lane, cold player-versus-warm-threat color split, bracket telemetry, dark hard-surface corridor, and restrained emissive treatment. It is not a final layout master: future title and store compositions should introduce the brief’s disciplined asymmetry and protect a clearer negative-space field for the lockup.
+Use this generated concept as a **partial** directional reference for:
+
+- rear three-quarter interceptor silhouette and thruster energy
+- deep void contrast and open vertical combat lane
+- cold player cyan versus warm threat (amber/orange/red in-world)
+- restrained emissive treatment and hard-surface craft
+
+It is **not** a mandate to rebuild colossal corridor walls, floor shafts, or magenta fire lanes in the Run. The movement band is gameplay chrome only. Future title and store compositions should introduce the brief’s disciplined asymmetry and protect a clearer negative-space field for the lockup.
 
 ## Applications and next assets
 
@@ -89,4 +98,15 @@ Use this generated concept as a directional reference for the rear three-quarter
 4. Ship-kit submarks — one silhouette-led mark per Vanguard, Striker, Aegis, Phantom.
 5. Key art and store capsule — generate from the image brief with the best available image-generation capability; provider credentials are a workflow-specific fallback, not a prerequisite.
 
-Every new asset should pass three checks: recognizable in silhouette, assigned a semantic color role, and visibly related to either the corridor brackets or forward vector.
+Every new asset should pass three checks: recognizable in silhouette, assigned a semantic color role, and visibly related to either the corridor brackets (band/frame motif) or forward vector.
+
+### In-game look checklist (deep-space target)
+
+1. Run reads as deep space, not a trench corridor or desk grid.
+2. No colossal wall shaft architecture as world identity.
+3. Threat fire and hostile accents stay warm (amber/orange/red runtime tokens).
+4. Player thrusters and shots read cyan/cool with visible plume energy on Medium+ (all kits).
+5. Scenery stays subordinate to combat silhouettes; band chrome is not physical walls.
+6. Low quality reduces density (stars, streaks, plumes) without flipping team colors.
+7. Hangar kit preview matches Run thruster language.
+8. Presentation juice (hit/kill/bomb/pickup/death) still fires.

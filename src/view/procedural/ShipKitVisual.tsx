@@ -113,7 +113,7 @@ function Box({
   )
 }
 
-/** Engine: outer ring, tapered bell, dark throat, hot core. */
+/** Engine: outer ring, tapered bell, dark throat, hot core, optional plume. */
 function EngineNozzle({
   x,
   y,
@@ -121,6 +121,8 @@ function EngineNozzle({
   scale = 1,
   thruster,
   nozzle,
+  plume = false,
+  densePlume = false,
 }: {
   x: number
   y: number
@@ -128,8 +130,11 @@ function EngineNozzle({
   scale?: number
   thruster: MatProps
   nozzle: MatProps
+  plume?: boolean
+  densePlume?: boolean
 }) {
   const s = scale
+  const plumeLen = densePlume ? 0.72 : 0.52
   return (
     <group position={[x, y, z]}>
       {/* Mount flange */}
@@ -157,6 +162,18 @@ function EngineNozzle({
         <sphereGeometry args={[0.055 * s, 10, 8]} />
         <meshStandardMaterial {...thruster} />
       </mesh>
+      {plume && (
+        <group name="thrusterPlume">
+          <mesh position={[0, (-0.18 - plumeLen * 0.35) * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.018 * s, 0.055 * s, plumeLen * s, 8]} />
+            <meshStandardMaterial {...thruster} />
+          </mesh>
+          <mesh position={[0, (-0.18 - plumeLen * 0.72) * s, 0]}>
+            <sphereGeometry args={[(densePlume ? 0.045 : 0.035) * s, 8, 6]} />
+            <meshStandardMaterial {...thruster} />
+          </mesh>
+        </group>
+      )}
     </group>
   )
 }
@@ -179,6 +196,8 @@ function useKitMats(shipId: ShipId) {
 function StrikerKit({ detail }: { detail: DetailLevel }) {
   const m = useKitMats('striker')
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('striker', detail, p)
+  const plume = show('thrusterPlume')
+  const densePlume = detail === 'high'
 
   return (
     <group>
@@ -210,8 +229,24 @@ function StrikerKit({ detail }: { detail: DetailLevel }) {
 
       {show('thruster') && (
         <>
-          <EngineNozzle x={-0.12} y={-0.58} scale={1.15} thruster={m.thruster} nozzle={m.nozzle} />
-          <EngineNozzle x={0.12} y={-0.58} scale={1.15} thruster={m.thruster} nozzle={m.nozzle} />
+          <EngineNozzle
+            x={-0.12}
+            y={-0.58}
+            scale={1.15}
+            thruster={m.thruster}
+            nozzle={m.nozzle}
+            plume={plume}
+            densePlume={densePlume}
+          />
+          <EngineNozzle
+            x={0.12}
+            y={-0.58}
+            scale={1.15}
+            thruster={m.thruster}
+            nozzle={m.nozzle}
+            plume={plume}
+            densePlume={densePlume}
+          />
           <Box pos={[0, -0.48, 0]} scale={[0.38, 0.14, 0.2]} mat={m.panel} />
         </>
       )}
@@ -235,6 +270,8 @@ function StrikerKit({ detail }: { detail: DetailLevel }) {
 function AegisKit({ detail }: { detail: DetailLevel }) {
   const m = useKitMats('aegis')
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('aegis', detail, p)
+  const plume = show('thrusterPlume')
+  const densePlume = detail === 'high'
 
   return (
     <group>
@@ -272,9 +309,31 @@ function AegisKit({ detail }: { detail: DetailLevel }) {
 
       {show('thruster') && (
         <>
-          <EngineNozzle x={-0.28} y={-0.48} thruster={m.thruster} nozzle={m.nozzle} />
-          <EngineNozzle x={0.28} y={-0.48} thruster={m.thruster} nozzle={m.nozzle} />
-          <EngineNozzle x={0} y={-0.5} scale={0.9} thruster={m.thruster} nozzle={m.nozzle} />
+          <EngineNozzle
+            x={-0.28}
+            y={-0.48}
+            thruster={m.thruster}
+            nozzle={m.nozzle}
+            plume={plume}
+            densePlume={densePlume}
+          />
+          <EngineNozzle
+            x={0.28}
+            y={-0.48}
+            thruster={m.thruster}
+            nozzle={m.nozzle}
+            plume={plume}
+            densePlume={densePlume}
+          />
+          <EngineNozzle
+            x={0}
+            y={-0.5}
+            scale={0.9}
+            thruster={m.thruster}
+            nozzle={m.nozzle}
+            plume={plume}
+            densePlume={densePlume}
+          />
           <Box pos={[0, -0.4, 0]} scale={[0.7, 0.14, 0.24]} mat={m.panel} />
         </>
       )}
@@ -298,6 +357,8 @@ function AegisKit({ detail }: { detail: DetailLevel }) {
 function PhantomKit({ detail }: { detail: DetailLevel }) {
   const m = useKitMats('phantom')
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('phantom', detail, p)
+  const plume = show('thrusterPlume')
+  const densePlume = detail === 'high'
 
   return (
     <group>
@@ -320,7 +381,15 @@ function PhantomKit({ detail }: { detail: DetailLevel }) {
 
       {show('thruster') && (
         <>
-          <EngineNozzle x={0} y={-0.58} scale={0.95} thruster={m.thruster} nozzle={m.nozzle} />
+          <EngineNozzle
+            x={0}
+            y={-0.58}
+            scale={0.95}
+            thruster={m.thruster}
+            nozzle={m.nozzle}
+            plume={plume}
+            densePlume={densePlume}
+          />
           <Box pos={[0, -0.48, 0]} scale={[0.2, 0.12, 0.14]} mat={m.panel} />
         </>
       )}

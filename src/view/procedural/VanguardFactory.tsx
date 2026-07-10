@@ -258,6 +258,24 @@ export function VanguardFactory({ detail, mutableMaterials = false, onDiagnostic
                 <sphereGeometry args={[0.048, 12, 10]} />
                 <primitive object={m.glow} attach="material" />
               </mesh>
+              {show('thrusterPlume') && (
+                <group name="thrusterPlume">
+                  <mesh
+                    name="plumeCore"
+                    position={[0, detail === 'high' ? -0.48 : -0.4, 0]}
+                    rotation={[Math.PI / 2, 0, 0]}
+                  >
+                    <cylinderGeometry
+                      args={[0.016, 0.048, detail === 'high' ? 0.7 : 0.5, 8]}
+                    />
+                    <primitive object={m.glow} attach="material" />
+                  </mesh>
+                  <mesh name="plumeTip" position={[0, detail === 'high' ? -0.78 : -0.62, 0]}>
+                    <sphereGeometry args={[detail === 'high' ? 0.042 : 0.032, 8, 6]} />
+                    <primitive object={m.glow} attach="material" />
+                  </mesh>
+                </group>
+              )}
             </group>
           ))}
         </group>

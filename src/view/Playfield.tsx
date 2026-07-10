@@ -74,14 +74,15 @@ export function Playfield() {
     <group>
       <ParallaxCorridor detail={detail} />
 
+      {/* Movement-band chrome only — not physical corridor walls */}
       <mesh position={[cx, cy, -0.02]}>
         <planeGeometry args={[width, height]} />
-        <meshBasicMaterial color="#123048" transparent opacity={0.28} />
+        <meshBasicMaterial color="#071019" transparent opacity={0.14} />
       </mesh>
 
       <lineSegments position={[cx, cy, 0.02]}>
         <edgesGeometry args={[bandGeo]} />
-        <lineBasicMaterial color="#3d8ec4" />
+        <lineBasicMaterial color="#2a6a88" transparent opacity={0.55} />
       </lineSegments>
 
       <PlayerMesh detail={detail} />
@@ -197,8 +198,8 @@ function useInstancedPool(count: number) {
 
 function PlayerBulletInstances() {
   const geometry = useMemo(() => {
-    // Elongated bolt: capsule-like via stretched sphere-ish cylinder baked as box diamond
-    const g = new BoxGeometry(0.12, 0.42, 0.12)
+    // Elongated cyan bolt for direction read under bloom
+    const g = new BoxGeometry(0.1, 0.72, 0.1)
     return g
   }, [])
   const material = useMemo(() => createTokenMaterial('projectilePlayer'), [])
