@@ -1,6 +1,6 @@
 # Powerups and W-cells
 
-Status: ready-for-agent
+Status: `resolved`
 
 ## Problem Statement
 

@@ -1,6 +1,6 @@
 # First playable loop
 
-Status: `ready-for-agent`
+Status: `resolved`
 
 ## Problem Statement
 

@@ -146,7 +146,7 @@ No browser E2E suite required for this PRD.
 ## Out of Scope
 
 - Production art pipeline, final GLBs, VFX polish, audio, rumble
-- No-damage-wave score bonus
+- No-damage-wave score bonus (implemented later; see `docs/design/DESIGN.md` scoring)
 - Procedural primary level generation
 - New powerup types, weapon lines, ship kits, or meta ranks
 - Refunds/respec or Upgrade bay changes
