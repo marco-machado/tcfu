@@ -110,11 +110,20 @@ function PlayerMesh({ detail }: { detail: DetailLevel }) {
     if (!g) return
     g.visible = visible
     g.position.set(p.x, p.y, 0.2)
+    // Tip thrusters toward camera (elevated rear read) and bank with strafe
+    g.rotation.x = -0.52
+    g.rotation.z = -p.vx * 0.055
   })
 
   return (
     <group ref={group} position={[0, 3.5, 0.2]}>
-      <ShipKitVisual key={`${shipId}-${detail}`} shipId={shipId} detail={detail} liveFlash />
+      <ShipKitVisual
+        key={`${shipId}-${detail}`}
+        shipId={shipId}
+        detail={detail}
+        liveFlash
+        liveThrust
+      />
     </group>
   )
 }
@@ -232,7 +241,8 @@ function PlayerBulletInstances() {
 }
 
 function EnemyBulletInstances() {
-  const geometry = useMemo(() => new SphereGeometry(0.14, 8, 8), [])
+  // Warm elongated bolt, shape-distinct from cyan player boxes
+  const geometry = useMemo(() => new BoxGeometry(0.14, 0.52, 0.14), [])
   const material = useMemo(() => createTokenMaterial('projectileEnemy'), [])
   const mesh = useInstancedPool(MAX_ENEMY_BULLETS)
 
@@ -243,7 +253,8 @@ function EnemyBulletInstances() {
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
-      writeInstance(inst, i, b.x, b.y, 0.26, 1, 1, 1)
+      const rotZ = Math.atan2(b.vx, b.vy)
+      writeInstance(inst, i, b.x, b.y, 0.26, 1, 1, 1, rotZ)
       i++
     }
     for (let j = i; j < MAX_ENEMY_BULLETS; j++) hideInstance(inst, j)

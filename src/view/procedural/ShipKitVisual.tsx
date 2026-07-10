@@ -6,6 +6,7 @@ import { presentationFxState } from '../../presentation/fxState'
 import { materialToken, type MaterialTokenId } from './materialTokens'
 import type { DetailLevel } from './registry'
 import { hasKitPart, kitRecipe } from './registry'
+import { ThrusterPlume } from './ThrusterPlume'
 import { VanguardFactory } from './VanguardFactory'
 
 type Props = {
@@ -13,6 +14,8 @@ type Props = {
   detail: DetailLevel
   liveFlash?: boolean
   flash?: number
+  /** Scale thruster plumes from live player velocity (Run). Hangar leaves false. */
+  liveThrust?: boolean
 }
 
 type MatProps = {
@@ -113,7 +116,7 @@ function Box({
   )
 }
 
-/** Engine: outer ring, tapered bell, dark throat, hot core, optional plume. */
+/** Engine: bulkier bell, dark throat, hot core, optional live plume. */
 function EngineNozzle({
   x,
   y,
@@ -123,6 +126,7 @@ function EngineNozzle({
   nozzle,
   plume = false,
   densePlume = false,
+  liveThrust = false,
 }: {
   x: number
   y: number
@@ -132,47 +136,38 @@ function EngineNozzle({
   nozzle: MatProps
   plume?: boolean
   densePlume?: boolean
+  liveThrust?: boolean
 }) {
   const s = scale
-  const plumeLen = densePlume ? 0.72 : 0.52
   return (
     <group position={[x, y, z]}>
-      {/* Mount flange */}
-      <mesh position={[0, 0.04 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.13 * s, 0.13 * s, 0.04 * s, 12]} />
+      <mesh position={[0, 0.05 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.15 * s, 0.15 * s, 0.05 * s, 12]} />
         <meshStandardMaterial {...nozzle} />
       </mesh>
-      {/* Outer bell (tapers toward rear) */}
       <mesh position={[0, -0.02 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.1 * s, 0.125 * s, 0.14 * s, 12]} />
+        <cylinderGeometry args={[0.11 * s, 0.145 * s, 0.18 * s, 12]} />
         <meshStandardMaterial {...nozzle} />
       </mesh>
-      {/* Inner throat */}
-      <mesh position={[0, -0.05 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.055 * s, 0.07 * s, 0.12 * s, 10]} />
+      <mesh position={[0, -0.06 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.06 * s, 0.08 * s, 0.14 * s, 10]} />
         <meshStandardMaterial {...nozzle} />
       </mesh>
-      {/* Hot plasma core */}
-      <mesh position={[0, -0.08 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.04 * s, 0.035 * s, 0.1 * s, 8]} />
+      <mesh position={[0, -0.1 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.045 * s, 0.04 * s, 0.12 * s, 8]} />
         <meshStandardMaterial {...thruster} />
       </mesh>
-      {/* Exhaust bloom nub */}
-      <mesh position={[0, -0.15 * s, 0]}>
-        <sphereGeometry args={[0.055 * s, 10, 8]} />
+      <mesh position={[0, -0.16 * s, 0]}>
+        <sphereGeometry args={[0.06 * s, 10, 8]} />
         <meshStandardMaterial {...thruster} />
       </mesh>
       {plume && (
-        <group name="thrusterPlume">
-          <mesh position={[0, (-0.18 - plumeLen * 0.35) * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.018 * s, 0.055 * s, plumeLen * s, 8]} />
-            <meshStandardMaterial {...thruster} />
-          </mesh>
-          <mesh position={[0, (-0.18 - plumeLen * 0.72) * s, 0]}>
-            <sphereGeometry args={[(densePlume ? 0.045 : 0.035) * s, 8, 6]} />
-            <meshStandardMaterial {...thruster} />
-          </mesh>
-        </group>
+        <ThrusterPlume
+          scale={s}
+          dense={densePlume}
+          thruster={thruster}
+          live={liveThrust}
+        />
       )}
     </group>
   )
@@ -193,7 +188,7 @@ function useKitMats(shipId: ShipId) {
   )
 }
 
-function StrikerKit({ detail }: { detail: DetailLevel }) {
+function StrikerKit({ detail, liveThrust }: { detail: DetailLevel; liveThrust: boolean }) {
   const m = useKitMats('striker')
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('striker', detail, p)
   const plume = show('thrusterPlume')
@@ -201,53 +196,55 @@ function StrikerKit({ detail }: { detail: DetailLevel }) {
 
   return (
     <group>
-      <Box pos={[0, 0.1, 0]} scale={[0.32, 1.05, 0.24]} mat={m.hull} />
-      <Box pos={[0, 0.7, 0]} scale={[0.24, 0.35, 0.2]} mat={m.hull} />
-      <Box pos={[0, 1.0, 0]} scale={[0.16, 0.28, 0.14]} mat={m.panel} />
-      <Box pos={[0, 0.15, -0.1]} scale={[0.22, 0.85, 0.08]} mat={m.panel} />
-      <Box pos={[0, 0.2, 0.12]} scale={[0.1, 0.9, 0.05]} mat={m.panel} />
+      <Box pos={[0, 0.1, 0]} scale={[0.34, 1.12, 0.28]} mat={m.hull} />
+      <Box pos={[0, 0.72, 0]} scale={[0.26, 0.38, 0.22]} mat={m.hull} />
+      <Box pos={[0, 1.05, 0]} scale={[0.18, 0.32, 0.16]} mat={m.panel} />
+      <Box pos={[0, 0.15, -0.12]} scale={[0.24, 0.9, 0.1]} mat={m.panel} />
+      <Box pos={[0, 0.2, 0.14]} scale={[0.12, 0.95, 0.06]} mat={m.panel} />
 
       {show('gunPods') && (
         <>
-          <Box pos={[-0.2, 0.55, 0.06]} scale={[0.09, 0.62, 0.09]} mat={m.nozzle} />
-          <Box pos={[0.2, 0.55, 0.06]} scale={[0.09, 0.62, 0.09]} mat={m.nozzle} />
-          <Box pos={[-0.2, 0.9, 0.06]} scale={[0.07, 0.12, 0.07]} mat={m.accent} />
-          <Box pos={[0.2, 0.9, 0.06]} scale={[0.07, 0.12, 0.07]} mat={m.accent} />
+          <Box pos={[-0.22, 0.55, 0.08]} scale={[0.1, 0.68, 0.1]} mat={m.nozzle} />
+          <Box pos={[0.22, 0.55, 0.08]} scale={[0.1, 0.68, 0.1]} mat={m.nozzle} />
+          <Box pos={[-0.22, 0.95, 0.08]} scale={[0.08, 0.14, 0.08]} mat={m.accent} />
+          <Box pos={[0.22, 0.95, 0.08]} scale={[0.08, 0.14, 0.08]} mat={m.accent} />
         </>
       )}
 
       {show('wings') && (
         <>
-          <Box pos={[-0.42, -0.2, 0]} scale={[0.38, 0.55, 0.07]} rot={[0, 0, 0.5]} mat={m.hull} />
-          <Box pos={[0.42, -0.2, 0]} scale={[0.38, 0.55, 0.07]} rot={[0, 0, -0.5]} mat={m.hull} />
-          <Box pos={[-0.38, 0.2, 0]} scale={[0.32, 0.18, 0.06]} rot={[0, 0, 0.25]} mat={m.panel} />
-          <Box pos={[0.38, 0.2, 0]} scale={[0.32, 0.18, 0.06]} rot={[0, 0, -0.25]} mat={m.panel} />
-          <Box pos={[-0.55, -0.35, 0]} scale={[0.12, 0.35, 0.05]} rot={[0, 0, 0.55]} mat={m.accent} />
-          <Box pos={[0.55, -0.35, 0]} scale={[0.12, 0.35, 0.05]} rot={[0, 0, -0.55]} mat={m.accent} />
+          <Box pos={[-0.48, -0.18, 0]} scale={[0.48, 0.58, 0.1]} rot={[0, 0, 0.48]} mat={m.hull} />
+          <Box pos={[0.48, -0.18, 0]} scale={[0.48, 0.58, 0.1]} rot={[0, 0, -0.48]} mat={m.hull} />
+          <Box pos={[-0.42, 0.22, 0]} scale={[0.36, 0.2, 0.08]} rot={[0, 0, 0.25]} mat={m.panel} />
+          <Box pos={[0.42, 0.22, 0]} scale={[0.36, 0.2, 0.08]} rot={[0, 0, -0.25]} mat={m.panel} />
+          <Box pos={[-0.62, -0.38, 0]} scale={[0.14, 0.38, 0.06]} rot={[0, 0, 0.55]} mat={m.accent} />
+          <Box pos={[0.62, -0.38, 0]} scale={[0.14, 0.38, 0.06]} rot={[0, 0, -0.55]} mat={m.accent} />
         </>
       )}
 
       {show('thruster') && (
         <>
           <EngineNozzle
-            x={-0.12}
-            y={-0.58}
-            scale={1.15}
+            x={-0.14}
+            y={-0.62}
+            scale={1.2}
             thruster={m.thruster}
             nozzle={m.nozzle}
             plume={plume}
             densePlume={densePlume}
+            liveThrust={liveThrust}
           />
           <EngineNozzle
-            x={0.12}
-            y={-0.58}
-            scale={1.15}
+            x={0.14}
+            y={-0.62}
+            scale={1.2}
             thruster={m.thruster}
             nozzle={m.nozzle}
             plume={plume}
             densePlume={densePlume}
+            liveThrust={liveThrust}
           />
-          <Box pos={[0, -0.48, 0]} scale={[0.38, 0.14, 0.2]} mat={m.panel} />
+          <Box pos={[0, -0.5, 0]} scale={[0.42, 0.16, 0.22]} mat={m.panel} />
         </>
       )}
 
@@ -267,7 +264,7 @@ function StrikerKit({ detail }: { detail: DetailLevel }) {
   )
 }
 
-function AegisKit({ detail }: { detail: DetailLevel }) {
+function AegisKit({ detail, liveThrust }: { detail: DetailLevel; liveThrust: boolean }) {
   const m = useKitMats('aegis')
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('aegis', detail, p)
   const plume = show('thrusterPlume')
@@ -275,66 +272,68 @@ function AegisKit({ detail }: { detail: DetailLevel }) {
 
   return (
     <group>
-      <Box pos={[0, 0, 0]} scale={[0.78, 0.68, 0.36]} mat={m.hull} />
-      <Box pos={[0, 0.42, 0]} scale={[0.52, 0.32, 0.3]} mat={m.hull} />
-      <Box pos={[0, 0.68, 0]} scale={[0.32, 0.22, 0.22]} mat={m.panel} />
-      <Box pos={[0, 0.05, -0.14]} scale={[0.62, 0.5, 0.1]} mat={m.panel} />
-      {/* Armor plates */}
-      <Box pos={[-0.35, 0.1, 0.16]} scale={[0.28, 0.4, 0.08]} mat={m.panel} />
-      <Box pos={[0.35, 0.1, 0.16]} scale={[0.28, 0.4, 0.08]} mat={m.panel} />
+      <Box pos={[0, 0, 0]} scale={[0.82, 0.72, 0.4]} mat={m.hull} />
+      <Box pos={[0, 0.45, 0]} scale={[0.56, 0.34, 0.32]} mat={m.hull} />
+      <Box pos={[0, 0.72, 0]} scale={[0.34, 0.24, 0.24]} mat={m.panel} />
+      <Box pos={[0, 0.05, -0.16]} scale={[0.66, 0.52, 0.12]} mat={m.panel} />
+      <Box pos={[-0.38, 0.1, 0.18]} scale={[0.3, 0.42, 0.1]} mat={m.panel} />
+      <Box pos={[0.38, 0.1, 0.18]} scale={[0.3, 0.42, 0.1]} mat={m.panel} />
 
       {show('wings') && (
         <>
-          <Box pos={[-0.72, -0.02, 0]} scale={[0.48, 0.52, 0.14]} mat={m.hull} />
-          <Box pos={[0.72, -0.02, 0]} scale={[0.48, 0.52, 0.14]} mat={m.hull} />
-          <Box pos={[-0.85, 0.1, 0.05]} scale={[0.2, 0.35, 0.1]} mat={m.panel} />
-          <Box pos={[0.85, 0.1, 0.05]} scale={[0.2, 0.35, 0.1]} mat={m.panel} />
+          <Box pos={[-0.78, -0.02, 0]} scale={[0.52, 0.56, 0.16]} mat={m.hull} />
+          <Box pos={[0.78, -0.02, 0]} scale={[0.52, 0.56, 0.16]} mat={m.hull} />
+          <Box pos={[-0.9, 0.1, 0.06]} scale={[0.22, 0.38, 0.12]} mat={m.panel} />
+          <Box pos={[0.9, 0.1, 0.06]} scale={[0.22, 0.38, 0.12]} mat={m.panel} />
         </>
       )}
 
       {show('shieldRing') && (
         <>
-          <mesh position={[0, 0.08, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.52, 0.032, 8, 32]} />
+          <mesh position={[0, 0.08, 0.22]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.55, 0.034, 8, 32]} />
             <meshStandardMaterial {...m.accent} />
           </mesh>
-          <mesh position={[0, 0.08, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.38, 0.02, 6, 24]} />
+          <mesh position={[0, 0.08, 0.22]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.4, 0.022, 6, 24]} />
             <meshStandardMaterial {...m.thruster} />
           </mesh>
-          <Box pos={[-0.58, 0.18, 0.1]} scale={[0.16, 0.16, 0.12]} mat={m.accent} />
-          <Box pos={[0.58, 0.18, 0.1]} scale={[0.16, 0.16, 0.12]} mat={m.accent} />
+          <Box pos={[-0.6, 0.18, 0.12]} scale={[0.16, 0.16, 0.12]} mat={m.accent} />
+          <Box pos={[0.6, 0.18, 0.12]} scale={[0.16, 0.16, 0.12]} mat={m.accent} />
         </>
       )}
 
       {show('thruster') && (
         <>
           <EngineNozzle
-            x={-0.28}
-            y={-0.48}
+            x={-0.3}
+            y={-0.52}
             thruster={m.thruster}
             nozzle={m.nozzle}
             plume={plume}
             densePlume={densePlume}
+            liveThrust={liveThrust}
           />
           <EngineNozzle
-            x={0.28}
-            y={-0.48}
+            x={0.3}
+            y={-0.52}
             thruster={m.thruster}
             nozzle={m.nozzle}
             plume={plume}
             densePlume={densePlume}
+            liveThrust={liveThrust}
           />
           <EngineNozzle
             x={0}
-            y={-0.5}
-            scale={0.9}
+            y={-0.54}
+            scale={0.95}
             thruster={m.thruster}
             nozzle={m.nozzle}
             plume={plume}
             densePlume={densePlume}
+            liveThrust={liveThrust}
           />
-          <Box pos={[0, -0.4, 0]} scale={[0.7, 0.14, 0.24]} mat={m.panel} />
+          <Box pos={[0, -0.42, 0]} scale={[0.74, 0.16, 0.26]} mat={m.panel} />
         </>
       )}
 
@@ -354,7 +353,7 @@ function AegisKit({ detail }: { detail: DetailLevel }) {
   )
 }
 
-function PhantomKit({ detail }: { detail: DetailLevel }) {
+function PhantomKit({ detail, liveThrust }: { detail: DetailLevel; liveThrust: boolean }) {
   const m = useKitMats('phantom')
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('phantom', detail, p)
   const plume = show('thrusterPlume')
@@ -362,20 +361,20 @@ function PhantomKit({ detail }: { detail: DetailLevel }) {
 
   return (
     <group>
-      <Box pos={[0, 0.08, 0]} scale={[0.22, 1.05, 0.16]} mat={m.hull} />
-      <Box pos={[0, 0.65, 0]} scale={[0.16, 0.32, 0.13]} mat={m.hull} />
-      <Box pos={[0, 0.92, 0]} scale={[0.1, 0.22, 0.1]} mat={m.panel} />
-      <Box pos={[0, 0.1, -0.06]} scale={[0.14, 0.8, 0.06]} mat={m.panel} />
-      <Box pos={[0, 0.15, 0.08]} scale={[0.08, 0.75, 0.04]} mat={m.panel} />
+      <Box pos={[0, 0.08, 0]} scale={[0.24, 1.12, 0.18]} mat={m.hull} />
+      <Box pos={[0, 0.68, 0]} scale={[0.18, 0.34, 0.14]} mat={m.hull} />
+      <Box pos={[0, 0.96, 0]} scale={[0.12, 0.24, 0.11]} mat={m.panel} />
+      <Box pos={[0, 0.1, -0.07]} scale={[0.15, 0.85, 0.07]} mat={m.panel} />
+      <Box pos={[0, 0.15, 0.09]} scale={[0.09, 0.8, 0.05]} mat={m.panel} />
 
       {show('wings') && (
         <>
-          <Box pos={[-0.3, 0.05, 0]} scale={[0.42, 0.14, 0.05]} rot={[0, 0, 0.08]} mat={m.hull} />
-          <Box pos={[0.3, 0.05, 0]} scale={[0.42, 0.14, 0.05]} rot={[0, 0, -0.08]} mat={m.hull} />
-          <Box pos={[-0.28, -0.32, 0]} scale={[0.22, 0.38, 0.04]} rot={[0, 0, 0.4]} mat={m.panel} />
-          <Box pos={[0.28, -0.32, 0]} scale={[0.22, 0.38, 0.04]} rot={[0, 0, -0.4]} mat={m.panel} />
-          <Box pos={[-0.42, 0.05, 0.03]} scale={[0.2, 0.03, 0.02]} mat={m.accent} />
-          <Box pos={[0.42, 0.05, 0.03]} scale={[0.2, 0.03, 0.02]} mat={m.accent} />
+          <Box pos={[-0.34, 0.05, 0]} scale={[0.48, 0.16, 0.06]} rot={[0, 0, 0.08]} mat={m.hull} />
+          <Box pos={[0.34, 0.05, 0]} scale={[0.48, 0.16, 0.06]} rot={[0, 0, -0.08]} mat={m.hull} />
+          <Box pos={[-0.3, -0.34, 0]} scale={[0.24, 0.42, 0.05]} rot={[0, 0, 0.4]} mat={m.panel} />
+          <Box pos={[0.3, -0.34, 0]} scale={[0.24, 0.42, 0.05]} rot={[0, 0, -0.4]} mat={m.panel} />
+          <Box pos={[-0.48, 0.05, 0.03]} scale={[0.22, 0.04, 0.025]} mat={m.accent} />
+          <Box pos={[0.48, 0.05, 0.03]} scale={[0.22, 0.04, 0.025]} mat={m.accent} />
         </>
       )}
 
@@ -383,14 +382,15 @@ function PhantomKit({ detail }: { detail: DetailLevel }) {
         <>
           <EngineNozzle
             x={0}
-            y={-0.58}
-            scale={0.95}
+            y={-0.62}
+            scale={1.05}
             thruster={m.thruster}
             nozzle={m.nozzle}
             plume={plume}
             densePlume={densePlume}
+            liveThrust={liveThrust}
           />
-          <Box pos={[0, -0.48, 0]} scale={[0.2, 0.12, 0.14]} mat={m.panel} />
+          <Box pos={[0, -0.5, 0]} scale={[0.22, 0.14, 0.16]} mat={m.panel} />
         </>
       )}
 
@@ -407,31 +407,56 @@ function KitBody({
   shipId,
   detail,
   mutableMaterials,
+  liveThrust,
 }: {
   shipId: ShipId
   detail: DetailLevel
   mutableMaterials: boolean
+  liveThrust: boolean
 }) {
   switch (shipId) {
     case 'striker':
-      return <StrikerKit detail={detail} />
+      return <StrikerKit detail={detail} liveThrust={liveThrust} />
     case 'aegis':
-      return <AegisKit detail={detail} />
+      return <AegisKit detail={detail} liveThrust={liveThrust} />
     case 'phantom':
-      return <PhantomKit detail={detail} />
+      return <PhantomKit detail={detail} liveThrust={liveThrust} />
     case 'vanguard':
-      return <VanguardFactory detail={detail} mutableMaterials={mutableMaterials} />
+      return (
+        <VanguardFactory
+          detail={detail}
+          mutableMaterials={mutableMaterials}
+          liveThrust={liveThrust}
+        />
+      )
     default:
-      return <VanguardFactory detail={detail} mutableMaterials={mutableMaterials} />
+      return (
+        <VanguardFactory
+          detail={detail}
+          mutableMaterials={mutableMaterials}
+          liveThrust={liveThrust}
+        />
+      )
   }
 }
 
 /** Catalog id → bespoke procedural kit graph (Hangar + Run). */
-export function ShipKitVisual({ shipId, detail, liveFlash = false, flash = 0 }: Props) {
+export function ShipKitVisual({
+  shipId,
+  detail,
+  liveFlash = false,
+  flash = 0,
+  liveThrust = false,
+}: Props) {
   const group = useFlashDriver(liveFlash, flash, `${shipId}-${detail}`)
   return (
     <group ref={group}>
-      <KitBody shipId={shipId} detail={detail} mutableMaterials={liveFlash} />
+      <KitBody
+        shipId={shipId}
+        detail={detail}
+        mutableMaterials={liveFlash}
+        liveThrust={liveThrust}
+      />
     </group>
   )
 }

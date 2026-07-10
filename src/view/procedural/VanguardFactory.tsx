@@ -11,11 +11,14 @@ import type { DetailLevel } from './registry'
 import { hasKitPart } from './registry'
 import { cloneRoleMaterial, getRoleMaterial } from './MaterialLibrary'
 import { collectModelDiagnostics } from './ModelDiagnostics'
+import { materialToken } from './materialTokens'
+import { ThrusterPlume } from './ThrusterPlume'
 
 type Props = {
   detail: DetailLevel
   /** When true, materials are clones so hit-flash can mutate safely. */
   mutableMaterials?: boolean
+  liveThrust?: boolean
   onDiagnostics?: (d: ReturnType<typeof collectModelDiagnostics>) => void
 }
 
@@ -96,7 +99,12 @@ function makeNozzleBell(): LatheGeometry {
  * tapered lathe nose, extruded wings with bevel, lathe canopy, multi-part nozzles,
  * panel materials from shared kit, named meshes, separate from hitbox authority.
  */
-export function VanguardFactory({ detail, mutableMaterials = false, onDiagnostics }: Props) {
+export function VanguardFactory({
+  detail,
+  mutableMaterials = false,
+  liveThrust = false,
+  onDiagnostics,
+}: Props) {
   const root = useRef<Group>(null)
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('vanguard', detail, p)
   const m = useMemo(
@@ -111,6 +119,17 @@ export function VanguardFactory({ detail, mutableMaterials = false, onDiagnostic
     }),
     [mutableMaterials],
   )
+  const plumeMat = useMemo(() => {
+    const t = materialToken('thrusterPlayer')
+    return {
+      color: t.color,
+      emissive: t.emissive,
+      emissiveIntensity: t.emissiveIntensity,
+      metalness: t.metalness,
+      roughness: t.roughness,
+      toneMapped: t.toneMapped,
+    }
+  }, [])
 
   const wingL = useMemo(() => makeWingGeometry(true), [])
   const wingR = useMemo(() => makeWingGeometry(false), [])
@@ -240,41 +259,31 @@ export function VanguardFactory({ detail, mutableMaterials = false, onDiagnostic
           {([-0.15, 0.15] as const).map((x) => (
             <group key={x} name={x < 0 ? 'leftEngine' : 'rightEngine'} position={[x, 0, 0]}>
               <mesh name="nozzleFlange" position={[0, 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.09, 0.09, 0.035, 14]} />
+                <cylinderGeometry args={[0.11, 0.11, 0.04, 14]} />
                 <primitive object={m.nozzle} attach="material" />
               </mesh>
-              <mesh name="nozzleBell" geometry={bell} position={[0, -0.02, 0]}>
+              <mesh name="nozzleBell" geometry={bell} position={[0, -0.02, 0]} scale={[1.15, 1.15, 1.2]}>
                 <primitive object={m.nozzle} attach="material" />
               </mesh>
               <mesh name="nozzleThroat" position={[0, -0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.045, 0.055, 0.08, 12]} />
+                <cylinderGeometry args={[0.05, 0.06, 0.1, 12]} />
                 <primitive object={m.nozzle} attach="material" />
               </mesh>
-              <mesh name="plasmaCore" position={[0, -0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.032, 0.028, 0.08, 10]} />
+              <mesh name="plasmaCore" position={[0, -0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.036, 0.03, 0.1, 10]} />
                 <primitive object={m.glow} attach="material" />
               </mesh>
-              <mesh name="exhaustNub" position={[0, -0.16, 0]}>
-                <sphereGeometry args={[0.048, 12, 10]} />
+              <mesh name="exhaustNub" position={[0, -0.17, 0]}>
+                <sphereGeometry args={[0.055, 12, 10]} />
                 <primitive object={m.glow} attach="material" />
               </mesh>
               {show('thrusterPlume') && (
-                <group name="thrusterPlume">
-                  <mesh
-                    name="plumeCore"
-                    position={[0, detail === 'high' ? -0.48 : -0.4, 0]}
-                    rotation={[Math.PI / 2, 0, 0]}
-                  >
-                    <cylinderGeometry
-                      args={[0.016, 0.048, detail === 'high' ? 0.7 : 0.5, 8]}
-                    />
-                    <primitive object={m.glow} attach="material" />
-                  </mesh>
-                  <mesh name="plumeTip" position={[0, detail === 'high' ? -0.78 : -0.62, 0]}>
-                    <sphereGeometry args={[detail === 'high' ? 0.042 : 0.032, 8, 6]} />
-                    <primitive object={m.glow} attach="material" />
-                  </mesh>
-                </group>
+                <ThrusterPlume
+                  scale={1.1}
+                  dense={detail === 'high'}
+                  thruster={plumeMat}
+                  live={liveThrust}
+                />
               )}
             </group>
           ))}

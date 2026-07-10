@@ -41,13 +41,13 @@ export const PLAYER_ACCEL = 40
 export const PLAYER_DECEL = 50
 
 /**
- * Run camera framing (view-only). Elevated slightly behind the ship along
- * the stream axis (lower Y), looking up the band for depth and thruster read.
- * Not a trench vanishing-point rewrite of the XY playfield.
+ * Run camera framing (view-only). Elevated behind the ship along the stream
+ * axis (lower Y), pitched up the band for thruster/depth read. Not a trench
+ * vanishing-point rewrite of the XY playfield.
  */
-export const CAMERA_POS = { x: 0, y: 2.1, z: 13.8 } as const
-export const CAMERA_LOOK_AT = { x: 0, y: 7.6, z: -0.55 } as const
-export const CAMERA_FOV = 48
+export const CAMERA_POS = { x: 0, y: 0.55, z: 11.6 } as const
+export const CAMERA_LOOK_AT = { x: 0, y: 8.2, z: -1.1 } as const
+export const CAMERA_FOV = 54
 
 export const MAX_PLAYER_BULLETS = 64
 export const MAX_ENEMY_BULLETS = 160
