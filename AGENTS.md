@@ -20,6 +20,10 @@ Use the `playwright-cli` skill to test your changes in a browser.
 
 Use [`docs/design/VISUAL_IDENTITY.md`](docs/design/VISUAL_IDENTITY.md) as the source of truth for visual identity, including color, typography, shape, motion, voice, and asset direction.
 
+## Image generation
+
+Before checking for `GEMINI_API_KEY`, inspect the image-generation capabilities available in the current environment, including tools, installed skills, and relevant plugins. When a skill, prompt, or asset workflow calls for image generation, prefer an available built-in capability that can complete the work without a project API key. Check for `GEMINI_API_KEY` only after capability discovery and only when the selected image-generation workflow explicitly requires it.
+
 ## Agent skills
 
 ### Issue tracker

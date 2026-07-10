@@ -69,9 +69,17 @@ Color is semantic. Cyan never means danger; magenta never means a beneficial pic
 
 ## Image direction
 
-When external image generation becomes available, use this art brief:
+Before checking for provider credentials, inspect the image-generation tools and skills available in the current environment. Prefer a built-in capability when one is available; check for an API key only when the selected workflow explicitly requires it.
+
+Use this art brief for title-screen key art:
 
 > TCFU title-screen key art for a high-fidelity vertical arcade space shooter. A lone angular interceptor seen from elevated rear three-quarter view holds the center of a narrow colossal space corridor. Cold cyan engine signal and precision lane brackets face a distant wall of warm amber-magenta hostile craft and weapons fire. Dark brushed-metal structures, deep black void, restrained emissive bloom, strong readable silhouettes, disciplined asymmetrical composition, generous negative space for a compact logo, cinematic PBR, no text, no watermark, no purple cyberpunk city, no retro pixels.
+
+### Key-art reference
+
+![Generated Corridor Signal key-art reference](assets/corridor-signal-key-art-reference.png)
+
+Use this generated concept as a directional reference for the rear three-quarter interceptor silhouette, open vertical combat lane, cold player-versus-warm-threat color split, bracket telemetry, dark hard-surface corridor, and restrained emissive treatment. It is not a final layout master: future title and store compositions should introduce the brief’s disciplined asymmetry and protect a clearer negative-space field for the lockup.
 
 ## Applications and next assets
 
@@ -79,6 +87,6 @@ When external image generation becomes available, use this art brief:
 2. HUD icon family — HP, life, shield, bomb, W-cell, Scrap, weapon tier.
 3. World decals — corridor brackets, hazard ticks, salvage chevrons.
 4. Ship-kit submarks — one silhouette-led mark per Vanguard, Striker, Aegis, Phantom.
-5. Key art and store capsule — generate from the image brief once credentials are available.
+5. Key art and store capsule — generate from the image brief with the best available image-generation capability; provider credentials are a workflow-specific fallback, not a prerequisite.
 
 Every new asset should pass three checks: recognizable in silhouette, assigned a semantic color role, and visibly related to either the corridor brackets or forward vector.
