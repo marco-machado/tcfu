@@ -13,7 +13,8 @@ Authored patterns + playlist pools. No full procedural geometry.
 ## Wave lifecycle
 
 - Gap ~0.75 s between waves.
-- Clear bonus if all wave enemies dead before 8 s after last spawn.
+- Clear bonus if all wave enemies dead before 8 s after last spawn: `floor(250 × (1 + 0.1 × (waveIndex − 1)))`.
+- No-damage bonus if player HP never decreased during the wave (shield absorb OK): `floor(150 × (1 + 0.1 × (waveIndex − 1)))`, awarded when the wave enters gap; stacks with clear when both apply.
 
 ## Playlist
 

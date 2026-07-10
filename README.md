@@ -35,4 +35,4 @@ npm run build
 
 ## Scaffold status
 
-Menus + 4:3 stage + Run canvas with movement band, player placeholder, fixed timestep, and input sampling. Full combat/waves/content are next (vertical slice).
+Playable endless survival: combat, 24-pattern playlist with set-pieces, W-cells / powerups, meta Upgrade bay, ship kits, and interim procedural presentation. See `docs/design/DESIGN.md`.

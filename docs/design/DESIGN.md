@@ -4,7 +4,7 @@ Implementable design for a desktop 4:3 vertical-scrolling 3D arcade spaceshooter
 
 **Glossary:** root [`CONTEXT.md`](../../CONTEXT.md).  
 **Catalogs:** [`catalogs/`](./catalogs/).  
-**Research:** [`research/r3f-architecture.md`](./research/r3f-architecture.md), [`research/art-pipeline.md`](./research/art-pipeline.md).  
+**Research:** [`research/r3f-architecture.md`](./research/r3f-architecture.md), [`research/art-pipeline.md`](./research/art-pipeline.md), [`research/procedural-premium-interim.md`](./research/procedural-premium-interim.md).  
 **Decisions source:** wayfinder map [`.scratch/spaceshooter-design/map.md`](../../.scratch/spaceshooter-design/map.md).
 
 Rule: **decisions and rationale here**; IDs, numbers, and lists in catalogs.
@@ -67,13 +67,13 @@ No mid-run ship swap.
 | Source | Rule |
 |--------|------|
 | Kill | Enemy base points × wave multiplier |
-| Wave clear | Flat bonus, light scale with wave index |
-| Pickup | Small points |
+| Wave clear | `floor(250 × (1 + 0.1 × (waveIndex − 1)))` if all wave enemies die before the 8 s clear window |
+| Pickup | Small flat points (constant in sim; effect is primary) |
 | Survival tick | **None** |
-| No-damage wave | Bonus if no HP lost that wave |
+| No-damage wave | `floor(150 × (1 + 0.1 × (waveIndex − 1)))` if no **HP** lost during the wave (shield absorb still qualifies); awarded when the wave ends (gap), independent of wave clear |
 | Death | No score loss |
 
-Wave multiplier: `1 + 0.05 × (waveIndex - 1)`, **cap 3.0**. Display integer score.
+Wave multiplier: `1 + 0.05 × (waveIndex - 1)`, **cap 3.0**. Display integer score. Bounty powerup doubles kill score only (not clear, no-damage, pickup, W-cells, or Scrap).
 
 ### Ship unlocks
 
@@ -243,7 +243,8 @@ Set-piece: first wave **10**, then every **10**; milder fire mult; optional stre
 - Hi-fi sci-fi PBR; readability first (cyan player / warm enemy / gold-green pickups).
 - Post: bloom + light vignette; no DOF/SSR in Run.
 - Quality: Low / Medium / High; **60 fps** intent at Medium.
-- Authoring: **Tripo → GLB**, **GPT-image-2** concepts; prompts in [`research/art-pipeline.md`](./research/art-pipeline.md).
+- **Interim (now):** premium **procedural** meshes, material tokens, and light parallax — not production GLBs yet. Shape and acceptance: [`research/procedural-premium-interim.md`](./research/procedural-premium-interim.md), ADR 0005.
+- **Later authoring:** **Tripo → GLB**, **GPT-image-2** concepts; prompts in [`research/art-pipeline.md`](./research/art-pipeline.md).
 
 ### Audio
 
