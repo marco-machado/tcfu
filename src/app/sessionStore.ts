@@ -9,6 +9,7 @@ import { metaModifiersFromRanks, scrapEarnMultFromRanks } from '../sim/metaModif
 import { kitsNewlyUnlocked, resolveSelectedShip } from '../sim/shipKits'
 import { buildRunSummary, type RunSummary } from '../sim/summary'
 import { getWorld, resetWorld } from '../sim/world'
+import { resetPresentationFx } from '../presentation/fxState'
 
 export type LastRunSummary = RunSummary
 
@@ -28,7 +29,10 @@ type SessionState = {
   meta: MetaState
   highScores: HighScoreEntry[]
   lastRun: LastRunSummary | null
+  settingsReturn: ScreenId
   setScreen: (screen: ScreenId) => void
+  openSettings: (returnTo: ScreenId) => void
+  closeSettings: () => void
   selectShip: (shipId: ShipId) => void
   startRun: () => void
   endRun: (summary: LastRunSummary) => void
@@ -48,7 +52,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   meta: loadMeta(),
   highScores: loadHighScores(),
   lastRun: null,
+  settingsReturn: 'title',
   setScreen: (screen) => set({ screen }),
+  openSettings: (returnTo) => set({ screen: 'settings', settingsReturn: returnTo }),
+  closeSettings: () => set((state) => ({ screen: state.settingsReturn, settingsReturn: 'title' })),
   selectShip: (shipId) => {
     const resolved = resolveSelectedShip(shipId, get().careerBest)
     saveLastShip(resolved)
@@ -62,6 +69,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
     const mods = metaModifiersFromRanks(get().meta.ranks)
     resetWorld(shipId, mods)
+    resetPresentationFx()
     set({ screen: 'run', lastRun: null })
   },
   endRun: (summary) => set({ screen: 'results', lastRun: summary }),

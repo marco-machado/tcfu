@@ -79,6 +79,11 @@ export function nextWeaponTierThreshold(wCells: number): number | null {
   return tierThresholds.find((threshold) => wCells < threshold) ?? null
 }
 
+/** W-cells required to reach the given tier (0 for the base tier). */
+export function weaponTierFloor(tier: WeaponTier): number {
+  return tier === 0 ? 0 : tierThresholds[tier - 1]!
+}
+
 export function weaponFor(shipId: ShipId, tier: WeaponTier): WeaponStats {
   const base = weaponTiers[shipId][tier]!
   const damageMult = shipKit(shipId).damageMult

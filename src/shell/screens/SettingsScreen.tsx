@@ -6,7 +6,7 @@ import { resetHighScores } from '../../persist/highScores'
 export function SettingsScreen() {
   const settings = useSessionStore((s) => s.settings)
   const setSettings = useSessionStore((s) => s.setSettings)
-  const setScreen = useSessionStore((s) => s.setScreen)
+  const closeSettings = useSessionStore((s) => s.closeSettings)
   const refreshMeta = useSessionStore((s) => s.refreshMeta)
   const refreshHighScores = useSessionStore((s) => s.refreshHighScores)
 
@@ -87,7 +87,7 @@ export function SettingsScreen() {
           Reset high scores
         </button>
       </div>
-      <button type="button" onClick={() => setScreen('title')}>
+      <button type="button" onClick={closeSettings}>
         Back
       </button>
     </div>
