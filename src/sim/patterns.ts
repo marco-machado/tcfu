@@ -337,14 +337,20 @@ const LATE_POOL: WavePattern[] = [LATE_RAZOR_PAIR, LATE_PRISM_GRID, LATE_GAUNTLE
 
 const LATE_ELITE_POOL: WavePattern[] = [LATE_RAZOR_PAIR, LATE_MIXED_ELITES, LATE_PRISM_GRID]
 
-export const ALL_PATTERN_IDS = [
+const ALL_PATTERNS = [
   ...INTRO,
   ...EASY_POOL,
   ...MID_POOL,
   ...LATE_POOL,
   SET_COLOSSUS,
   SET_COLOSSUS_PRISM,
-].map((p) => p.id)
+]
+
+export const ALL_PATTERN_IDS = ALL_PATTERNS.map((p) => p.id)
+
+export function patternById(id: string): WavePattern | null {
+  return ALL_PATTERNS.find((p) => p.id === id) ?? null
+}
 
 export function isSetPieceWave(waveIndex: number): boolean {
   return waveIndex >= 10 && waveIndex % 10 === 0

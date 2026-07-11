@@ -2,6 +2,7 @@ import { emptyCommands } from '../input/commands'
 import { resetPresentationFx } from '../presentation/fxState'
 import { stepWorld } from '../sim/step'
 import { getWorld } from '../sim/world'
+import { useDebugStore } from './debugMode'
 import { useSessionStore } from './sessionStore'
 
 type TestHooks = {
@@ -194,8 +195,8 @@ export function installTestHooks(): void {
       const store = useSessionStore.getState()
       store.setSettings({ ...store.settings, reducedMotion: enabled, screenShake: !enabled })
     },
-    hideDebugUi() {
-      // No player-facing debug UI ships; nothing to hide.
+    hideDebugUi(hidden: boolean) {
+      useDebugStore.getState().setHidden(hidden)
     },
   }
 }

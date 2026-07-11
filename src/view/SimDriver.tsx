@@ -6,6 +6,7 @@ import { FIXED_DT, MAX_SIM_STEPS } from '../sim/constants'
 import { isRunReadyForResults, stepWorld } from '../sim/step'
 import { getWorld } from '../sim/world'
 import { useSessionStore } from '../app/sessionStore'
+import { debugTimeScale } from '../app/debugMode'
 
 export function SimDriver() {
   const acc = useRef(0)
@@ -49,7 +50,7 @@ export function SimDriver() {
     }
     const autoFire = useSessionStore.getState().settings.autoFire
 
-    acc.current += Math.min(delta, 0.1) * timeScale
+    acc.current += Math.min(delta, 0.1) * timeScale * debugTimeScale()
     let steps = 0
     let bombEdge = commands.bomb
     while (acc.current >= FIXED_DT && steps < MAX_SIM_STEPS) {

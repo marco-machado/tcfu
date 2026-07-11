@@ -3,6 +3,8 @@ import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
 import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
 import { useSessionStore } from '../app/sessionStore'
+import { isDebugMode } from '../app/debugMode'
+import { DebugHitboxes } from './DebugHitboxes'
 import { Playfield } from './Playfield'
 import { PresentationDriver } from './PresentationDriver'
 import { applyStudioEnvironment } from './procedural/setupEnvironment'
@@ -43,6 +45,7 @@ export function CanvasRoot() {
       <directionalLight position={[0, -4, 6]} intensity={0.85} color="#7cc8e8" />
 
       <SimDriver />
+      {isDebugMode() && <DebugHitboxes />}
       <Playfield />
       <PresentationDriver />
       <QualityDiagnostics />

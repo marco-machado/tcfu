@@ -79,3 +79,11 @@ _Avoid_: Story mode, mission select
 **Presentation event**:
 A discrete combat signal (hit, kill, bomb, pickup, shield break, death) emitted for view, audio, and rumble consumers. Not a sim entity and not combat authority.
 _Avoid_: VFX state as gameplay truth, particle as entity
+
+**Debug run**:
+A Run played under debug mode, backed by the sandboxed save and excluded from high scores and career best.
+_Avoid_: Test run (ambiguous with automated harnesses), cheat mode
+
+**Sandboxed save**:
+The ephemeral debug-only persistence layer, seeded independently and never read from or written to real persistence.
+_Avoid_: Save slot, profile, real save with flags

@@ -55,7 +55,7 @@ import {
   waveClearBonus,
   waveMultiplier,
 } from './constants'
-import { isSetPieceWave, patternForWave, type PathId, type SpawnEvent } from './patterns'
+import { isSetPieceWave, patternById, patternForWave, type PathId, type SpawnEvent } from './patterns'
 import type {
   Enemy,
   EnemyBullet,
@@ -129,7 +129,7 @@ function pickWeightedPowerup(world: World, types?: PowerupType[]): PowerupType {
   return DROP_WEIGHTS[DROP_WEIGHTS.length - 1]!.type
 }
 
-function spawnPowerup(world: World, type: PowerupType, x: number, y: number): boolean {
+export function spawnPowerup(world: World, type: PowerupType, x: number, y: number): boolean {
   if (activePowerupCount(world) >= MAX_POWERUPS) return false
   const slot = acquirePowerup(world)
   if (!slot) return false
@@ -278,7 +278,7 @@ function mercyClearEnemyBullets(world: World): void {
   }
 }
 
-function applyPlayerDamage(world: World, amount: number): void {
+export function applyPlayerDamage(world: World, amount: number): void {
   if (amount <= 0 || world.session.runOver) return
   const p = world.player
   if (p.iFrames > 0) return
@@ -366,7 +366,11 @@ function hitsPlayerBody(player: { x: number; y: number; hitboxR: number }, e: En
   )
 }
 
-function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: number): void {
+export function acquireEnemySlot(world: World): Enemy | null {
+  return acquireEnemy(world)
+}
+
+export function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: number): void {
   const stats = kindStats(event.kind)
   const hpScale = enemyHpScale(wave)
   const shotScale = enemyShotSpeedScale(wave)
@@ -447,7 +451,7 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
   }
 }
 
-function beginWave(world: World, waveIndex: number): void {
+export function beginWave(world: World, waveIndex: number): void {
   world.session.wave = waveIndex
   let speed = streamSpeedForWave(waveIndex)
   if (isSetPieceWave(waveIndex)) speed *= SET_PIECE_STREAM_MULT
@@ -477,6 +481,10 @@ function enterGap(world: World): void {
   tryAwardNoDamage(world)
   world.waves.phase = 'gap'
   world.waves.gapElapsed = 0
+  if (world.waves.debugPatternId !== null) {
+    world.waves.debugPatternId = null
+    world.waves.suspended = true
+  }
 }
 
 function tryAwardClear(world: World): void {
@@ -507,7 +515,9 @@ function stepWaves(world: World, dt: number): void {
   }
 
   if (w.phase === 'spawning') {
-    const pattern = patternForWave(world.session.wave)
+    const pattern =
+      (w.debugPatternId !== null ? patternById(w.debugPatternId) : null) ??
+      patternForWave(world.session.wave)
     const scale = eventTimeScale(world.session.wave)
     w.patternElapsed += dt / scale
 

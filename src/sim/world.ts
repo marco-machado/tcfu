@@ -117,6 +117,7 @@ export function createWorld(
       waveSpawned: 0,
       waveKilled: 0,
       nextPowerupEventIndex: 0,
+      debugPatternId: null,
     },
     powerupDryElapsed: 0,
     rng: Math.random,

@@ -134,6 +134,8 @@ export type WaveDirector = {
   waveSpawned: number
   waveKilled: number
   nextPowerupEventIndex: number
+  /** Debug-triggered pattern id; overrides playlist selection until it completes. */
+  debugPatternId: string | null
 }
 
 export type RunSession = {
