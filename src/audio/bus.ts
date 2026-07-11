@@ -1,5 +1,6 @@
 import { musicGain, sfxGain } from '../sim/presentation'
 import type { PresentationEventType } from '../sim/presentation'
+import musicUrl from '../../assets/audio/music/corridor-signal-loop.mp3'
 
 export type AudioSettings = {
   master: number
@@ -164,7 +165,19 @@ export function playSfx(type: PresentationEventType | 'ui_confirm' | 'ui_move', 
   }
 }
 
-export function playMusicStub(_settings: AudioSettings): void {
-  // Music channel reserved; default volume 0 and no track yet.
-  void musicGain
+let musicEl: HTMLAudioElement | null = null
+
+export function syncMusic(settings: AudioSettings): void {
+  const gain = musicGain(settings.master, settings.music)
+  if (!musicEl) {
+    if (!unlocked || gain <= 0) return
+    musicEl = new Audio(musicUrl)
+    musicEl.loop = true
+  }
+  musicEl.volume = Math.min(1, gain)
+  if (gain <= 0) {
+    musicEl.pause()
+  } else if (musicEl.paused && unlocked) {
+    void musicEl.play()
+  }
 }

@@ -17,7 +17,7 @@ const KEY = 'tcfu.settings'
 const defaults: Settings = {
   quality: 'medium',
   master: 100,
-  music: 0,
+  music: 60,
   sfx: 80,
   screenShake: true,
   reducedMotion: false,
