@@ -1,6 +1,6 @@
 # Spaceshooter — Design Doc
 
-Implementable design for a desktop 4:3 vertical-scrolling 3D arcade spaceshooter (React Three Fiber). Single-player **endless survival**.
+Implementable design for a vertical-scrolling 3D arcade spaceshooter (React Three Fiber). Single-player **endless survival**.
 
 **Glossary:** root [`CONTEXT.md`](../../CONTEXT.md).  
 **Catalogs:** [`catalogs/`](./catalogs/).  
@@ -21,7 +21,7 @@ A hi-fi sci-fi vertical shmup: classic arcade readability in full 3D presentatio
 
 | Constraint | Spec |
 |------------|------|
-| Platform | Desktop only; **4:3** fixed stage (letterbox; never stretch) |
+| Platform | Web browser; responsive viewport |
 | Mode | **Endless survival** only |
 | Multiplayer / online | None (local high scores only) |
 | Stack | Vite + React + R3F + Drei + TypeScript |
@@ -113,7 +113,7 @@ Right-handed sim space; **1 unit ≈ 1 m**.
 
 ### Viewport
 
-- Aspect **4:3**; perspective FOV **~40°** vertical.
+- Perspective FOV **~40°** vertical.
 - Fixed down-corridor camera; look slightly above band center.
 - **Tiny cosmetic camera sway** only (no aim/hit impact).
 - No player-lag camera follow.
@@ -273,7 +273,7 @@ Rumble: damage ~100 ms weak; life loss ~200 ms; bomb ~150 ms.
 
 ### UI shell
 
-- DOM over canvas; logical stage **1024×768** (4:3), letterboxed.
+- DOM over canvas; shell adapts to the viewport.
 - **Title:** Play, High Scores, Settings.
 - **Hangar:** ship grid, preview, Launch, Upgrade bay, Scrap/best, last ship.
 - **Run HUD:** score, wave, lives, HP, shield, bombs, weapon tier, W-cells, timed powerups; boss bar on set-piece; chrome in outer margins only.

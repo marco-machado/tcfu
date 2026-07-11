@@ -1,6 +1,6 @@
 # Spaceshooter
 
-Desktop 4:3 vertical-scrolling arcade space shooter in full 3D (React Three Fiber). Single-player endless survival.
+Vertical-scrolling arcade space shooter in full 3D (React Three Fiber). Single-player endless survival.
 
 ## Language
 

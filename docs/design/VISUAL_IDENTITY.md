@@ -23,7 +23,7 @@ The name remains **TCFU**. Do not invent or publish an expansion until the game 
 
 The insignia combines three game truths:
 
-1. **Corridor brackets** — the fixed movement band and 4:3 frame.
+1. **Corridor brackets** — the fixed movement band.
 2. **Forward vector** — the player ship pressing into the world stream.
 3. **Split signal ticks** — cyan player telemetry meeting amber hostile pressure.
 
@@ -45,7 +45,7 @@ Use the full lockup on title, store art, and major results moments. Use the insi
 | Ice white | `--ice-white` | `#EAF8FF` | Primary text and hot cores |
 | Muted steel | `--muted-steel` | `#819AAA` | Secondary text and inactive data |
 
-Color is semantic. Cyan never means danger; magenta never means a beneficial pickup. Most screens should be at least 70% void and steel so signals remain meaningful.
+Color is semantic. Cyan never means danger; magenta never means a beneficial pickup. Most screens should be at least 70% void and steel, so signals remain meaningful.
 
 ## Typography
 

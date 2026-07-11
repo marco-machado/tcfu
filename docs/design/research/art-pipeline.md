@@ -5,7 +5,7 @@ Source ticket: `.scratch/spaceshooter-design/issues/10-art-direction-pipeline.md
 
 ## Question
 
-How to specify high-fidelity sci-fi presentation for a web R3F endless vertical shmup (planar combat, small hitboxes, 4:3 desktop).
+How to specify high-fidelity sci-fi presentation for a web R3F endless vertical shmup (planar combat, small hitboxes).
 
 ## Art direction
 

@@ -1,6 +1,6 @@
 # TCFU
 
-Desktop 4:3 vertical-scrolling 3D arcade spaceshooter (React Three Fiber).
+Vertical-scrolling 3D arcade spaceshooter (React Three Fiber).
 
 ## Design
 
