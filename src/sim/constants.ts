@@ -47,7 +47,9 @@ export const PLAYER_DECEL = 50
  */
 export const CAMERA_POS = { x: 0, y: 0.55, z: 11.6 } as const
 export const CAMERA_LOOK_AT = { x: 0, y: 8.2, z: -1.1 } as const
-export const CAMERA_FOV = 54
+export const CAMERA_FOV = 75
+/** Ceiling for aspect-compensated FOV so narrow portrait viewports do not go fisheye. */
+export const CAMERA_FOV_MAX = 115
 
 export const MAX_PLAYER_BULLETS = 64
 export const MAX_ENEMY_BULLETS = 160

@@ -668,7 +668,7 @@ function GateArches({ count }: { count: number }) {
   const place = useMemo(
     () => (u: (k: number) => number, i: number) => ({
       x: 0,
-      y: 5 + i * (34 / Math.max(1, count)) + u(1) * 2,
+      y: 5 + i * (58 / Math.max(1, count)) + u(1) * 2,
       z: -1.7,
       scale: 1,
       rotZ: 0,
@@ -687,7 +687,7 @@ function GateArches({ count }: { count: number }) {
       accentMaterial={accentMaterial}
       factor={0.42}
       minY={-6}
-      span={34}
+      span={58}
     />
   )
 }
@@ -708,23 +708,24 @@ function StreamRibbon() {
   useLayoutEffect(() => () => material.dispose(), [material])
 
   useMemo(() => {
-    tex.repeat.set(1, 2)
+    // Deck must outrun the fog far plane so its end never silhouettes at wide FOV.
+    tex.repeat.set(1, 2.9)
   }, [tex])
 
   useFrame((_, delta) => {
-    tex.offset.y += (getWorld().streamSpeed * delta * tex.repeat.y) / 46
+    tex.offset.y += (getWorld().streamSpeed * delta * tex.repeat.y) / 66
   })
 
   return (
-    <mesh position={[0, 9, -0.42]} material={material} renderOrder={-6}>
-      <planeGeometry args={[14.4, 46]} />
+    <mesh position={[0, 19, -0.42]} material={material} renderOrder={-6}>
+      <planeGeometry args={[14.4, 66]} />
     </mesh>
   )
 }
 
 function EdgeRails({ dashCount }: { dashCount: number }) {
   const dashRef = useRef<InstancedMesh>(null)
-  const railGeo = useDisposable(() => new BoxGeometry(0.09, 46, 0.09))
+  const railGeo = useDisposable(() => new BoxGeometry(0.09, 66, 0.09))
   const dashGeo = useDisposable(() => new BoxGeometry(0.13, 0.85, 0.12))
   const railMaterial = useMemo(
     () =>
@@ -778,8 +779,8 @@ function EdgeRails({ dashCount }: { dashCount: number }) {
 
   return (
     <>
-      <mesh position={[-6.42, 9, -0.3]} geometry={railGeo} material={railMaterial} />
-      <mesh position={[6.42, 9, -0.3]} geometry={railGeo} material={railMaterial} />
+      <mesh position={[-6.42, 19, -0.3]} geometry={railGeo} material={railMaterial} />
+      <mesh position={[6.42, 19, -0.3]} geometry={railGeo} material={railMaterial} />
       <instancedMesh
         ref={dashRef}
         args={[dashGeo, dashMaterial, dashCount]}
