@@ -103,6 +103,12 @@
       "skillPath": "skills/misc/migrate-to-shoehorn/SKILL.md",
       "computedHash": "8f1a623a019abca0ab5e22e8deaae375829368cc1344016010201cf650331d33"
     },
+    "music": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "music/SKILL.md",
+      "computedHash": "8eb2ab5ca4f8a6d5f4c20964bc98d5e76eda5e0f0c532f34ea8dadde48e8974f"
+    },
     "obsidian-vault": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -163,6 +169,12 @@
       "skillPath": "skills/in-progress/setup-ts-deep-modules/SKILL.md",
       "computedHash": "609aee622bcb0f517b956a42cc9103ae7d76ecaab09fa0abdb54ad178b583198"
     },
+    "sound-effects": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "sound-effects/SKILL.md",
+      "computedHash": "54ec05122413cbc956b28fbd81c676e44eb0fdbbf6459ee3b367b2c7a1350b02"
+    },
     "tdd": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -174,6 +186,12 @@
       "sourceType": "github",
       "skillPath": "skills/productivity/teach/SKILL.md",
       "computedHash": "9cd31ea42b40915ea5fd3949ed229b217d1dfad07dd93d9b0db771dcdd6a6c8a"
+    },
+    "text-to-speech": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "text-to-speech/SKILL.md",
+      "computedHash": "ce96454df84df2c8196ce7a650ac178185f3a62b32c2f1fd6250f05ec4982ff0"
     },
     "threejs-3d-generator": {
       "source": "majidmanzarpour/threejs-game-skills",
