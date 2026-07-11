@@ -7,6 +7,9 @@ import { getWorld } from '../sim/world'
 
 const proxy = new Object3D()
 
+/** Only set-piece kinds use AABB hitboxes; a handful is plenty. */
+const MAX_AABB_HITBOXES = 8
+
 function place(
   mesh: InstancedMesh,
   index: number,
@@ -49,8 +52,10 @@ export function DebugHitboxes() {
     for (const e of world.enemies) {
       if (!e.active) continue
       if (e.halfW > 0 && e.halfH > 0) {
-        place(aabbs, boxCount, e.x, e.y, e.halfW * 2, e.halfH * 2)
-        boxCount += 1
+        if (boxCount < MAX_AABB_HITBOXES) {
+          place(aabbs, boxCount, e.x, e.y, e.halfW * 2, e.halfH * 2)
+          boxCount += 1
+        }
         continue
       }
       place(rings, ringCount, e.x, e.y, e.r, e.r)
@@ -81,7 +86,11 @@ export function DebugHitboxes() {
         <ringGeometry args={[0.92, 1, 24]} />
         <meshBasicMaterial color="#ff5050" depthTest={false} transparent opacity={0.9} />
       </instancedMesh>
-      <instancedMesh ref={enemyBoxes} args={[undefined, undefined, 8]} frustumCulled={false}>
+      <instancedMesh
+        ref={enemyBoxes}
+        args={[undefined, undefined, MAX_AABB_HITBOXES]}
+        frustumCulled={false}
+      >
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial color="#ff5050" wireframe depthTest={false} transparent opacity={0.9} />
       </instancedMesh>

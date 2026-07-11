@@ -3,8 +3,15 @@ import { saveCareerBest } from '../persist/careerBest'
 import { saveMeta } from '../persist/meta'
 import { enableStorageSandbox } from '../persist/storage'
 
-const DEBUG_SCRAP = 9_999
-const DEBUG_CAREER_BEST = 999_999
+export const DEBUG_SCRAP = 9_999
+export const DEBUG_CAREER_BEST = 999_999
+
+/** Engages the sandboxed save and seeds it with max Scrap and all kits unlocked. */
+export function seedSandboxedSave(): void {
+  enableStorageSandbox()
+  saveMeta({ scrap: DEBUG_SCRAP, ranks: { arsenal: 0, hull: 0, salvage: 0, thrust: 0 } })
+  saveCareerBest(DEBUG_CAREER_BEST)
+}
 
 const active =
   import.meta.env.DEV &&
@@ -13,11 +20,7 @@ const active =
 
 // Sandbox must engage at module evaluation, before the session store reads
 // persistence during its own module init.
-if (active) {
-  enableStorageSandbox()
-  saveMeta({ scrap: DEBUG_SCRAP, ranks: { arsenal: 0, hull: 0, salvage: 0, thrust: 0 } })
-  saveCareerBest(DEBUG_CAREER_BEST)
-}
+if (active) seedSandboxedSave()
 
 export function isDebugMode(): boolean {
   return active

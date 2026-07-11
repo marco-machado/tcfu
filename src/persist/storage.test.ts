@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { disableStorageSandbox, enableStorageSandbox, readJson, writeJson } from './storage'
 import { loadMeta, saveMeta } from './meta'
 import { loadCareerBest, saveCareerBest } from './careerBest'
 
 afterEach(() => {
   disableStorageSandbox()
+  vi.unstubAllGlobals()
 })
 
 describe('storage sandbox', () => {
@@ -24,6 +25,16 @@ describe('storage sandbox', () => {
     writeJson('tcfu.test', { value: 42 })
     disableStorageSandbox()
     expect(readJson('tcfu.test', { value: 0 })).toEqual({ value: 0 })
+  })
+
+  it('never touches localStorage while the sandbox is active', () => {
+    const fake = { getItem: vi.fn(() => null), setItem: vi.fn() }
+    vi.stubGlobal('localStorage', fake)
+    enableStorageSandbox()
+    writeJson('tcfu.test', { value: 42 })
+    expect(readJson('tcfu.test', { value: 0 })).toEqual({ value: 42 })
+    expect(fake.getItem).not.toHaveBeenCalled()
+    expect(fake.setItem).not.toHaveBeenCalled()
   })
 
   it('persists meta and career best through the sandbox', () => {

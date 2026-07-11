@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isDebugMode, useDebugStore } from '../app/debugMode'
 import {
   debugAddScore,
@@ -11,6 +11,7 @@ import {
   debugJumpToWave,
   debugKillPlayer,
   debugSetGodMode,
+  debugSetPaused,
   debugSetShield,
   debugSpawnEnemy,
   debugSpawnPowerup,
@@ -21,11 +22,10 @@ import {
 import { ALL_PATTERN_IDS } from '../sim/patterns'
 import { weaponTierForWCells } from '../sim/weapons'
 import { getWorld } from '../sim/world'
-import type { EnemyKind, PowerupType } from '../sim/types'
+import { ENEMY_KINDS, POWERUP_TYPES, type ScreenId } from '../sim/types'
 
-const ENEMY_KINDS: EnemyKind[] = ['drone', 'dart', 'gunner', 'sidecar', 'razor', 'prism', 'colossus']
-const POWERUP_TYPES: PowerupType[] = ['shield', 'bomb_stock', 'repair', 'rate_up', 'spread_up', 'score_mult']
 const TIME_SCALES = [0.25, 0.5, 1, 2]
+const POLL_MS = 250
 
 const panelStyle: CSSProperties = {
   position: 'absolute',
@@ -67,6 +67,24 @@ function Btn({ label, onClick, on }: { label: string; onClick: () => void; on?: 
   )
 }
 
+/** Re-renders on an interval, but only when the displayed world snapshot changed. */
+function useWorldSnapshot(snapshot: () => string): void {
+  const snapRef = useRef(snapshot)
+  snapRef.current = snapshot
+  const [, setSnap] = useState('')
+  useEffect(() => {
+    const poll = window.setInterval(
+      () =>
+        setSnap((prev) => {
+          const next = snapRef.current()
+          return next === prev ? prev : next
+        }),
+      POLL_MS,
+    )
+    return () => window.clearInterval(poll)
+  }, [])
+}
+
 export function DebugBadge() {
   const hidden = useDebugStore((s) => s.hidden)
   if (!isDebugMode() || hidden) return null
@@ -91,35 +109,86 @@ export function DebugBadge() {
   )
 }
 
+/** Entity counts shown while the sim overlay is on, panel open or not. */
+export function DebugCounts() {
+  const overlay = useDebugStore((s) => s.overlay)
+  const hidden = useDebugStore((s) => s.hidden)
+  useWorldSnapshot(() => {
+    const w = getWorld()
+    return [
+      w.enemies.filter((e) => e.active).length,
+      w.enemyBullets.filter((b) => b.active).length,
+      w.playerBullets.filter((b) => b.active).length,
+      w.powerups.filter((p) => p.active).length,
+    ].join(',')
+  })
+  if (!isDebugMode() || hidden || !overlay) return null
+  const world = getWorld()
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 8,
+        left: 8,
+        zIndex: 40,
+        background: 'rgba(6, 10, 18, 0.85)',
+        color: '#cfeaff',
+        font: '11px monospace',
+        padding: '2px 8px',
+        borderRadius: 4,
+        pointerEvents: 'none',
+      }}
+    >
+      enemies {world.enemies.filter((e) => e.active).length} | ebullets{' '}
+      {world.enemyBullets.filter((b) => b.active).length} | pbullets{' '}
+      {world.playerBullets.filter((b) => b.active).length} | powerups{' '}
+      {world.powerups.filter((p) => p.active).length}
+    </div>
+  )
+}
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')
+  )
+}
+
 export function DebugPanel() {
   const { panelOpen, setPanelOpen, timeScale, setTimeScale, overlay, setOverlay, hidden } =
     useDebugStore()
   const [pattern, setPattern] = useState(ALL_PATTERN_IDS[0] ?? '')
   const [jumpWave, setJumpWave] = useState('10')
-  const [, forceRender] = useState(0)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === ',') setPanelOpen(!useDebugStore.getState().panelOpen)
+      if (e.key !== ',' || isTypingTarget(e.target)) return
+      setPanelOpen(!useDebugStore.getState().panelOpen)
     }
     window.addEventListener('keydown', onKey)
-    const poll = window.setInterval(() => forceRender((n) => n + 1), 250)
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      window.clearInterval(poll)
-    }
+    return () => window.removeEventListener('keydown', onKey)
   }, [setPanelOpen])
+
+  useWorldSnapshot(() => {
+    const w = getWorld()
+    const p = w.player
+    return [
+      w.waves.suspended,
+      w.session.wave,
+      w.session.paused,
+      p.hp,
+      p.lives,
+      p.bombs,
+      p.wCells,
+      p.shield,
+      p.godMode,
+    ].join(',')
+  })
 
   if (!isDebugMode() || hidden) return null
   if (!panelOpen) return null
 
   const world = getWorld()
-  const counts = {
-    enemies: world.enemies.filter((e) => e.active).length,
-    enemyBullets: world.enemyBullets.filter((b) => b.active).length,
-    playerBullets: world.playerBullets.filter((b) => b.active).length,
-    powerups: world.powerups.filter((p) => p.active).length,
-  }
   const p = world.player
 
   return (
@@ -219,9 +288,7 @@ export function DebugPanel() {
         <Btn
           label={world.session.paused ? 'Unpause' : 'Pause'}
           on={world.session.paused}
-          onClick={() => {
-            world.session.paused = !world.session.paused
-          }}
+          onClick={() => debugSetPaused(world, !world.session.paused)}
         />
         <Btn label="Step frame" onClick={() => debugStepOneFrame(world)} />
       </div>
@@ -230,11 +297,16 @@ export function DebugPanel() {
       <div style={rowStyle}>
         <Btn label="Hitboxes" on={overlay} onClick={() => setOverlay(!overlay)} />
       </div>
-      <div>
-        enemies {counts.enemies} | ebullets {counts.enemyBullets}
-        <br />
-        pbullets {counts.playerBullets} | powerups {counts.powerups}
-      </div>
     </div>
+  )
+}
+
+export default function DebugUi({ screen }: { screen: ScreenId }) {
+  return (
+    <>
+      <DebugBadge />
+      {screen === 'run' && <DebugPanel />}
+      {screen === 'run' && <DebugCounts />}
+    </>
   )
 }

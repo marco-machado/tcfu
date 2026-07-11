@@ -2,10 +2,15 @@ import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
 import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
+import { Suspense, lazy } from 'react'
 import { useSessionStore } from '../app/sessionStore'
 import { isDebugMode } from '../app/debugMode'
-import { DebugHitboxes } from './DebugHitboxes'
 import { Playfield } from './Playfield'
+
+// Dynamic import under a DEV constant so production builds drop the overlay chunk.
+const DebugHitboxes = import.meta.env.DEV
+  ? lazy(() => import('./DebugHitboxes').then((m) => ({ default: m.DebugHitboxes })))
+  : null
 import { PresentationDriver } from './PresentationDriver'
 import { applyStudioEnvironment } from './procedural/setupEnvironment'
 import { QualityDiagnostics } from './QualityDiagnostics'
@@ -45,7 +50,11 @@ export function CanvasRoot() {
       <directionalLight position={[0, -4, 6]} intensity={0.85} color="#7cc8e8" />
 
       <SimDriver />
-      {isDebugMode() && <DebugHitboxes />}
+      {DebugHitboxes && isDebugMode() && (
+        <Suspense fallback={null}>
+          <DebugHitboxes />
+        </Suspense>
+      )}
       <Playfield />
       <PresentationDriver />
       <QualityDiagnostics />

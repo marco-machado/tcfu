@@ -7,16 +7,22 @@ import { RunScreen } from '../shell/screens/RunScreen'
 import { ResultsScreen } from '../shell/screens/ResultsScreen'
 import { HighScoresScreen } from '../shell/screens/HighScoresScreen'
 import { SettingsScreen } from '../shell/screens/SettingsScreen'
-import { DebugBadge, DebugPanel } from '../shell/DebugPanel'
 import { isDebugMode } from './debugMode'
+import { Suspense, lazy } from 'react'
+
+// Dynamic import under a DEV constant so production builds drop the debug UI chunk.
+const DebugUi = import.meta.env.DEV ? lazy(() => import('../shell/DebugPanel')) : null
 
 export function App() {
   const screen = useSessionStore((s) => s.screen)
 
   return (
     <Stage>
-      {isDebugMode() && <DebugBadge />}
-      {isDebugMode() && screen === 'run' && <DebugPanel />}
+      {DebugUi && isDebugMode() && (
+        <Suspense fallback={null}>
+          <DebugUi screen={screen} />
+        </Suspense>
+      )}
       {screen === 'title' && <TitleScreen />}
       {screen === 'hangar' && <HangarScreen />}
       {screen === 'upgradeBay' && <UpgradeBayScreen />}

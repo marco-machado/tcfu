@@ -21,10 +21,10 @@ import {
 import { patternById } from './patterns'
 import { applyPlayerDamage, bossBarFromWorld, stepWorld } from './step'
 import { weaponTierForWCells } from './weapons'
-import type { EnemyKind } from './types'
+import { ENEMY_KINDS } from './types'
 import { createWorld } from './world'
 
-const ALL_KINDS: EnemyKind[] = ['drone', 'dart', 'gunner', 'sidecar', 'razor', 'prism', 'colossus']
+const ALL_KINDS = ENEMY_KINDS
 
 function activeEnemies(world: ReturnType<typeof createWorld>) {
   return world.enemies.filter((e) => e.active)
@@ -99,6 +99,17 @@ describe('debugTriggerPattern', () => {
     expect(world.session.wave).toBe(1)
   })
 
+  it('stays resumed after the pattern when waves were already running', () => {
+    const world = createWorld()
+    debugTriggerPattern(world, 'intro_01')
+    for (let i = 0; i < 60 * 20; i++) {
+      world.player.iFrames = 1
+      stepWorld(world, 1 / 60, emptyCommands())
+    }
+    expect(world.waves.suspended).toBe(false)
+    expect(world.session.wave).toBeGreaterThan(1)
+  })
+
   it('rejects unknown pattern ids', () => {
     const world = suspendedWorld()
     expect(debugTriggerPattern(world, 'nope')).toBe(false)
@@ -144,12 +155,12 @@ describe('stat controls', () => {
     expect(world.player.hp).toBe(world.player.maxHp)
   })
 
-  it('clamps lives between 1 and 9', () => {
+  it('never lets lives drop below 1', () => {
     const world = suspendedWorld()
     debugAdjustLives(world, -99)
     expect(world.player.lives).toBe(1)
-    debugAdjustLives(world, 99)
-    expect(world.player.lives).toBe(9)
+    debugAdjustLives(world, 5)
+    expect(world.player.lives).toBe(6)
   })
 
   it('clamps bombs between 0 and maxBombs', () => {
@@ -193,11 +204,12 @@ describe('god mode', () => {
     for (let i = 0; i < 60 * 5; i++) stepWorld(world, 1 / 60, emptyCommands())
     expect(debugIsGodMode(world)).toBe(true)
     const hp = world.player.hp
+    const shield = world.player.shield
     applyPlayerDamage(world, 1)
     expect(world.player.hp).toBe(hp)
+    expect(world.player.shield).toBe(shield)
     debugSetGodMode(world, false)
     expect(debugIsGodMode(world)).toBe(false)
-    expect(world.player.iFrames).toBe(0)
   })
 })
 

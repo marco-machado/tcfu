@@ -1,27 +1,40 @@
 import { emptyCommands } from '../input/commands'
 import { FIXED_DT, SPAWN_Y } from './constants'
-import { patternById } from './patterns'
-import {
-  acquireEnemySlot,
-  applyPlayerDamage,
-  beginWave,
-  configureEnemy,
-  spawnPowerup,
-  stepWorld,
-} from './step'
+import { patternById, type PathId } from './patterns'
+import { acquireEnemy, applyPlayerDamage, beginWave, configureEnemy, spawnPowerup, stepWorld } from './step'
 import type { Enemy, EnemyKind, PowerupType, World } from './types'
-import { WEAPON_TIER_MAX, weaponTierForWCells, type WeaponTier } from './weapons'
+import {
+  WEAPON_TIER_MAX,
+  WEAPON_TIER_THRESHOLDS,
+  weaponTierForWCells,
+  type WeaponTier,
+} from './weapons'
 
-const DEBUG_LIVES_MAX = 9
 const DEBUG_SCORE_STEP = 10_000
-const TIER_W_CELLS: Record<WeaponTier, number> = { 0: 0, 1: 20, 2: 50, 3: 100 }
+/** Distance above the ship a debug powerup enters, matching organic drop feel. */
+const POWERUP_SPAWN_AHEAD = 9
+
+function wCellsForTier(tier: WeaponTier): number {
+  return tier === 0 ? 0 : WEAPON_TIER_THRESHOLDS[tier - 1]!
+}
+
+/** The path each kind most commonly uses in the authored wave catalog. */
+const CANONICAL_PATH: Record<EnemyKind, PathId> = {
+  drone: 'drift_down',
+  dart: 'dive',
+  gunner: 'hold_and_shot',
+  sidecar: 'drift_down',
+  razor: 'hold_and_shot',
+  prism: 'hold_and_shot',
+  colossus: 'hold_and_shot',
+}
 
 export function debugSpawnEnemy(world: World, kind: EnemyKind): Enemy | null {
-  const slot = acquireEnemySlot(world)
+  const slot = acquireEnemy(world)
   if (!slot) return null
   configureEnemy(
     slot,
-    { t: 0, kind, x: 0, y: SPAWN_Y, path: kind === 'colossus' ? 'hold_and_shot' : 'drift_down' },
+    { t: 0, kind, x: 0, y: SPAWN_Y, path: CANONICAL_PATH[kind] },
     world.session.wave,
     world.streamSpeed,
   )
@@ -30,8 +43,10 @@ export function debugSpawnEnemy(world: World, kind: EnemyKind): Enemy | null {
 
 export function debugTriggerPattern(world: World, patternId: string): boolean {
   if (!patternById(patternId)) return false
+  const wasSuspended = world.waves.suspended
   beginWave(world, world.session.wave)
   world.waves.debugPatternId = patternId
+  world.waves.debugResuspend = wasSuspended
   world.waves.suspended = false
   return true
 }
@@ -47,7 +62,7 @@ export function debugJumpToWave(world: World, waveIndex: number): void {
 }
 
 export function debugSpawnPowerup(world: World, type: PowerupType): boolean {
-  return spawnPowerup(world, type, world.player.x, world.player.y + 9)
+  return spawnPowerup(world, type, world.player.x, world.player.y + POWERUP_SPAWN_AHEAD)
 }
 
 export function debugAdjustHp(world: World, delta: number): void {
@@ -57,7 +72,7 @@ export function debugAdjustHp(world: World, delta: number): void {
 
 export function debugAdjustLives(world: World, delta: number): void {
   const p = world.player
-  p.lives = Math.max(1, Math.min(DEBUG_LIVES_MAX, p.lives + delta))
+  p.lives = Math.max(1, p.lives + delta)
 }
 
 export function debugAdjustBombs(world: World, delta: number): void {
@@ -68,7 +83,7 @@ export function debugAdjustBombs(world: World, delta: number): void {
 export function debugAdjustWeaponTier(world: World, delta: number): void {
   const current = weaponTierForWCells(world.player.wCells)
   const next = Math.max(0, Math.min(WEAPON_TIER_MAX, current + delta)) as WeaponTier
-  world.player.wCells = TIER_W_CELLS[next]
+  world.player.wCells = wCellsForTier(next)
 }
 
 export function debugSetShield(world: World, on: boolean): void {
@@ -76,11 +91,11 @@ export function debugSetShield(world: World, on: boolean): void {
 }
 
 export function debugSetGodMode(world: World, on: boolean): void {
-  world.player.iFrames = on ? Number.POSITIVE_INFINITY : 0
+  world.player.godMode = on
 }
 
 export function debugIsGodMode(world: World): boolean {
-  return world.player.iFrames === Number.POSITIVE_INFINITY
+  return world.player.godMode
 }
 
 export function debugAddScore(world: World, amount: number = DEBUG_SCORE_STEP): void {
@@ -89,6 +104,7 @@ export function debugAddScore(world: World, amount: number = DEBUG_SCORE_STEP): 
 
 export function debugKillPlayer(world: World): void {
   const p = world.player
+  p.godMode = false
   p.shield = false
   p.iFrames = 0
   p.hp = 1
@@ -99,6 +115,10 @@ export function debugKillPlayer(world: World): void {
 export function debugClearAll(world: World): void {
   for (const e of world.enemies) e.active = false
   for (const b of world.enemyBullets) b.active = false
+}
+
+export function debugSetPaused(world: World, paused: boolean): void {
+  world.session.paused = paused
 }
 
 export function debugStepOneFrame(world: World): void {

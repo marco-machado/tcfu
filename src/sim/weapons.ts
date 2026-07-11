@@ -18,7 +18,8 @@ export type WeaponStats = {
 export type WeaponTier = 0 | 1 | 2 | 3
 
 export const WEAPON_TIER_MAX: WeaponTier = 3
-const tierThresholds = [20, 50, 100] as const
+export const WEAPON_TIER_THRESHOLDS = [20, 50, 100] as const
+const tierThresholds = WEAPON_TIER_THRESHOLDS
 
 const straight = (offsetX: number, damage: number, vy: number, r = 0.12, pierce = 0): WeaponShot => ({
   offsetX,

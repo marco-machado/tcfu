@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { isDebugMode } from './debugMode'
+import { debugSuspendWaves } from '../sim/debugActions'
 import type { ScreenId, ShipId } from '../sim/types'
 import { loadCareerBest, recordCareerBest } from '../persist/careerBest'
 import { loadLastShip, saveLastShip } from '../persist/lastShip'
@@ -70,7 +71,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
     const mods = metaModifiersFromRanks(get().meta.ranks)
     const world = resetWorld(shipId, mods)
-    if (isDebugMode()) world.waves.suspended = true
+    if (import.meta.env.DEV && isDebugMode()) debugSuspendWaves(world, true)
     resetPresentationFx()
     set({ screen: 'run', lastRun: null })
   },

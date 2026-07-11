@@ -15,9 +15,26 @@ export type ScreenId =
 
 export type Vec2 = { x: number; y: number }
 
-export type EnemyKind = 'drone' | 'dart' | 'gunner' | 'sidecar' | 'razor' | 'prism' | 'colossus'
+export const ENEMY_KINDS = [
+  'drone',
+  'dart',
+  'gunner',
+  'sidecar',
+  'razor',
+  'prism',
+  'colossus',
+] as const
+export type EnemyKind = (typeof ENEMY_KINDS)[number]
 export type EnemyClass = 'fodder' | 'grunt' | 'elite' | 'set_piece'
-export type PowerupType = 'shield' | 'bomb_stock' | 'repair' | 'rate_up' | 'spread_up' | 'score_mult'
+export const POWERUP_TYPES = [
+  'shield',
+  'bomb_stock',
+  'repair',
+  'rate_up',
+  'spread_up',
+  'score_mult',
+] as const
+export type PowerupType = (typeof POWERUP_TYPES)[number]
 export type ShotStyle =
   | 'none'
   | 'down'
@@ -41,6 +58,8 @@ export type PlayerState = {
   wCells: number
   shield: boolean
   iFrames: number
+  /** Debug-only sustained invulnerability; never set during normal play. */
+  godMode: boolean
   shipId: ShipId
   fireCooldown: number
   hitboxR: number
@@ -136,6 +155,8 @@ export type WaveDirector = {
   nextPowerupEventIndex: number
   /** Debug-triggered pattern id; overrides playlist selection until it completes. */
   debugPatternId: string | null
+  /** Suspension state to restore once a debug-triggered pattern completes. */
+  debugResuspend: boolean
 }
 
 export type RunSession = {

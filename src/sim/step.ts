@@ -95,7 +95,7 @@ function acquireEnemyBullet(world: World): EnemyBullet | null {
   return null
 }
 
-function acquireEnemy(world: World): Enemy | null {
+export function acquireEnemy(world: World): Enemy | null {
   for (const e of world.enemies) {
     if (!e.active) return e
   }
@@ -281,7 +281,7 @@ function mercyClearEnemyBullets(world: World): void {
 export function applyPlayerDamage(world: World, amount: number): void {
   if (amount <= 0 || world.session.runOver) return
   const p = world.player
-  if (p.iFrames > 0) return
+  if (p.godMode || p.iFrames > 0) return
 
   if (p.shield) {
     p.shield = false
@@ -364,10 +364,6 @@ function hitsPlayerBody(player: { x: number; y: number; hitboxR: number }, e: En
     { x: player.x, y: player.y, r: player.hitboxR },
     { x: e.x, y: e.y, r: e.r },
   )
-}
-
-export function acquireEnemySlot(world: World): Enemy | null {
-  return acquireEnemy(world)
 }
 
 export function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: number): void {
@@ -483,7 +479,7 @@ function enterGap(world: World): void {
   world.waves.gapElapsed = 0
   if (world.waves.debugPatternId !== null) {
     world.waves.debugPatternId = null
-    world.waves.suspended = true
+    world.waves.suspended = world.waves.debugResuspend
   }
 }
 
