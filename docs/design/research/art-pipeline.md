@@ -14,7 +14,7 @@ How to specify high-fidelity sci-fi presentation for a web R3F endless vertical 
 | Tone | Dark void + luminous tech: cold metals, emissive thrusters, neon accent edges, readable faction colors |
 | Materials | PBR (metal/rough/normal/emissive), cinematic grade |
 | Scale | Hero player/elites detailed; fodder simpler, same language |
-| Readability (hard) | Silhouette and team color beat detail. Player shots cool/cyan; enemy warm/magenta-orange; pickups gold/green. If bloom washes bullets, reduce bloom |
+| Readability (hard) | Silhouette and team color beat detail. Player shots cool/cyan; enemy warm/amber-orange; pickups gold/green. If bloom washes bullets, reduce bloom |
 
 ## Lighting and post
 
@@ -37,7 +37,7 @@ Primary production path for meshes and concept/albedo guidance:
 
 - Format: **GLB** (glTF binary).
 - Prefer Draco (and Meshopt when useful); textures KTX2/Basis when practical.
-- Scale at import so gameplay units match sim (1 unit ≈ 1 m); hitbox is design data, not mesh bounds.
+- Scale at import so gameplay units match sim (1 unit ≈ 1 m); hitbox is design data, not mesh bounds. Enemy hitbox shapes come from [`../catalogs/enemies.md`](../catalogs/enemies.md) (circles; colossus AABB 2.0×1.2); never derive them from generated mesh size.
 - Name files by catalog id: `ship_vanguard.glb`, `enemy_drone.glb`, etc.
 - Fodder: instance-friendly, single LOD; player/colossus: optional 2 LOD.
 - Placeholders OK until Tripo finals land.
@@ -81,7 +81,7 @@ Orthographic turnaround sheet of a {NAME} space fighter for a vertical shmup, th
 **Enemies:**
 
 ```
-Game-ready concept of a {ENEMY_ID} hostile craft, warm magenta-orange accent lights, hostile silhouette distinct from player cyan, {CLASS} size ({SIZE_HINT}), readable from top-down/chase camera, single subject.
+Game-ready concept of a {ENEMY_ID} hostile craft, warm amber-orange accent lights, hostile silhouette distinct from player cyan, {CLASS} size ({SIZE_HINT}), readable from top-down/chase camera, single subject.
 ```
 
 | Id | CLASS | SIZE_HINT |
@@ -101,7 +101,7 @@ Simple glowing energy projectile, {COLOR}, soft core bright rim, transparent bac
 ```
 
 - Player: `COLOR = cyan-blue`
-- Enemy: `COLOR = magenta-orange`
+- Enemy: `COLOR = amber-orange`
 - Pickup: `COLOR = gold` / `lime green` for repair/shield as needed
 
 ### Tripo — mesh generation
@@ -122,7 +122,7 @@ Fallback: Tripo text-to-3D with the prompts below.
 - `aegis`: wide armored escort with shield ring emitters
 - `phantom`: ultra-slim stealth dart interceptor
 
-**Per enemy SUBJECT one-liners:** use table names above (e.g. `small hostile drone with magenta lights`).
+**Per enemy SUBJECT one-liners:** use table names above (e.g. `small hostile drone with amber-orange lights`).
 
 **Tripo post checklist (before engine):**
 

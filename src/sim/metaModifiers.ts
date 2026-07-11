@@ -59,7 +59,7 @@ export function metaModifiersFromRanks(ranks: MetaRanks): MetaModifiers {
   const thrust = clampMetaRank(ranks.thrust)
 
   const weaponDamageMult = arsenal === 0 ? 1 : arsenal === 1 ? 1.05 : arsenal === 2 ? 1.1 : 1.15
-  const moveSpeedMult = thrust === 0 ? 1 : thrust === 1 ? 1.05 : 1.1
+  const moveSpeedMult = thrust === 0 ? 1 : thrust === 1 ? 1.05 : thrust === 2 ? 1.1 : 1.15
   const dropChanceMult = salvage === 0 ? 1 : salvage === 1 ? 1.15 : 1.3
 
   return {
@@ -134,7 +134,7 @@ export const META_RANK_EFFECTS: Record<MetaBranch, [string, string, string]> = {
   thrust: [
     'Move speed +5%',
     'Move speed +10% total',
-    'Move speed +10%; forward band +0.5',
+    'Move speed +15%; forward band +0.5',
   ],
 }
 

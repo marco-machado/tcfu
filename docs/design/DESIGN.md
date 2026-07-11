@@ -300,7 +300,7 @@ Summary (detail: [`research/r3f-architecture.md`](./research/r3f-architecture.md
 - Internal 2D collision module; no Rapier/cannon for gameplay.
 - Persist: high scores, `tcfu.meta`, `tcfu.settings`, last ship.
 
-**ADR (when implementing):** fixed-timestep sim outside React render; simple 2D collision; R3F as view only — create under `docs/adr/` at stack lock time.
+**ADR:** fixed-timestep sim outside React render, simple 2D collision, R3F as view only: recorded in [ADR 0006](../adr/0006-fixed-timestep-sim-view-only-r3f.md).
 
 Suggested folders: `src/app`, `src/shell`, `src/sim`, `src/view`, `src/input`, `src/persist`.
 

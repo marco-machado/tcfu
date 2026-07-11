@@ -53,7 +53,7 @@ Ranks are linear within a branch (must own N−1 to buy N). Branches independent
 |------|-----|--------|
 | 1 | thrust_1 | Move speed +5% |
 | 2 | thrust_2 | Move speed +10% total |
-| 3 | thrust_3 | Move speed +10% total; forward band max Y +0.5 |
+| 3 | thrust_3 | Move speed +15% total; forward band max Y +0.5 |
 
 ## Settings
 

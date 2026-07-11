@@ -1,5 +1,8 @@
 # Interim procedural presentation before production GLB
 
+Status: accepted
+Date: 2026-07-10
+
 Long-term art remains hi-fi PBR via **Tripo → GLB** and **GPT-image-2** concepts (`docs/design/research/art-pipeline.md`). For the next presentation craft pass we deliberately **do not** take that pipeline: we raise **runtime procedural** meshes, materials, and light parallax scenery to a premium interim bar so the full frame (kits, enemies, shots, pickups, corridor) stops reading as a tech demo.
 
 **Why now:** production mesh authoring is deferred; arcade readability and kit identity still need to ship. **Why not skip to GLB:** scope and tooling cost. **Why not only juice/post:** Presentation v1 already landed events, bloom tiers, and SFX; remaining gap is silhouette and material craft.

@@ -21,9 +21,11 @@ Authored patterns + playlist pools. No full procedural geometry.
 | Band | Waves | Pool |
 |------|-------|------|
 | Intro | 1–3 | Fixed sequence below |
-| Early | 4–10 | pool_easy |
-| Mid | 11–20 | pool_mid; every 5th wave elite-tagged |
+| Early | 4–10 | pool_easy; wave 10 is set-piece |
+| Mid | 11–20 | pool_mid; every 5th wave elite-tagged; wave 20 is set-piece |
 | Late | 21+ | pool_late; every 5th elite mix; every 10th set-piece |
+
+The set-piece override takes precedence over pool selection in every band (ADR 0002).
 
 Set-piece schedule: wave **10**, **20**, **30**, …  
 Total authored patterns target: **24** (3 intro + 8 easy + 7 mid + 4 late + 2 set-piece).

@@ -120,7 +120,7 @@ describe('metaModifiersFromRanks', () => {
     expect(t2.moveSpeedMult).toBe(1.1)
     expect(t2.bandMaxYBonus).toBe(0)
     const t3 = metaModifiersFromRanks({ arsenal: 0, hull: 0, salvage: 0, thrust: 3 })
-    expect(t3.moveSpeedMult).toBe(1.1)
+    expect(t3.moveSpeedMult).toBe(1.15)
     expect(t3.bandMaxYBonus).toBe(0.5)
   })
 })

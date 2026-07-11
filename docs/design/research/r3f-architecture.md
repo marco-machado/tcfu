@@ -71,9 +71,9 @@ PBR, bloom, particles, mesh LOD live in `view/` and assets. Sim emits **events**
 
 Sample devices once per display frame into a command buffer; sim steps reuse that sample for the frame’s fixed steps.
 
-### ADR candidate
+### ADR
 
-Lock in an ADR: fixed-timestep sim outside React render; R3F mutates from world; no per-frame React entity state; simple 2D collision module.
+Recorded as [ADR 0006](../../adr/0006-fixed-timestep-sim-view-only-r3f.md): fixed-timestep sim outside React render; R3F mutates from world; no per-frame React entity state; simple 2D collision module.
 
 ## References
 

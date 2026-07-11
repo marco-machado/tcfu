@@ -71,7 +71,7 @@ Color is semantic. Cyan never means danger; magenta never means a beneficial pic
 
 ## Image direction
 
-Before checking for provider credentials, inspect the image-generation tools and skills available in the current environment. Prefer a built-in capability when one is available; check for an API key only when the selected workflow explicitly requires it.
+Capability discovery and credential policy for generating assets live in `AGENTS.md` under "Image generation".
 
 Use this art brief for title-screen key art:
 
