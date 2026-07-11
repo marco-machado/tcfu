@@ -1,4 +1,5 @@
 export type PresentationEventType =
+  | 'fire'
   | 'player_hit'
   | 'shield_break'
   | 'life_loss'

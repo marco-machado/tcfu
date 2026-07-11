@@ -640,6 +640,7 @@ function stepFire(world: World, commands: Commands): void {
   }
 
   p.fireCooldown = p.rateUp > 0 ? weapon.cooldown * RATE_UP_COOLDOWN_MULT : weapon.cooldown
+  pushPresentation(world.presentation, { type: 'fire', x: p.x, y: p.y })
 }
 
 function stepBomb(world: World, commands: Commands): void {

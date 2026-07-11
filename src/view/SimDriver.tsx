@@ -7,6 +7,7 @@ import { isRunReadyForResults, stepWorld } from '../sim/step'
 import { getWorld } from '../sim/world'
 import { useSessionStore } from '../app/sessionStore'
 import { debugTimeScale } from '../app/debugMode'
+import { setMusicGamePaused } from '../audio/bus'
 
 export function SimDriver() {
   const acc = useRef(0)
@@ -20,6 +21,8 @@ export function SimDriver() {
     if (commands.pause && !world.session.runOver) {
       world.session.paused = !world.session.paused
     }
+
+    setMusicGamePaused(world.session.paused && !world.session.runOver)
 
     if (world.session.paused && !world.session.runOver) return
 

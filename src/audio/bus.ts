@@ -2,6 +2,22 @@ import { musicGain, sfxGain } from '../sim/presentation'
 import type { PresentationEventType } from '../sim/presentation'
 import menuMusicUrl from '../../assets/audio/music/corridor-signal-loop.mp3'
 import combatMusicUrl from '../../assets/audio/music/hard-lock-target.mp3'
+import lanceFireUrl from '../../assets/audio/sfx/lance-fire.mp3'
+import playerHitUrl from '../../assets/audio/sfx/player-hit.mp3'
+import shieldBreakUrl from '../../assets/audio/sfx/shield-break.mp3'
+import lifeLossUrl from '../../assets/audio/sfx/life-loss.mp3'
+import deathUrl from '../../assets/audio/sfx/death.mp3'
+import killUrl from '../../assets/audio/sfx/kill.mp3'
+import bombUrl from '../../assets/audio/sfx/bomb.mp3'
+import pickupUrl from '../../assets/audio/sfx/pickup.mp3'
+import grazeUrl from '../../assets/audio/sfx/graze.mp3'
+import comboBreakUrl from '../../assets/audio/sfx/combo-break.mp3'
+import tierUpUrl from '../../assets/audio/sfx/tier-up.mp3'
+import waveClearUrl from '../../assets/audio/sfx/wave-clear.mp3'
+import uiConfirmUrl from '../../assets/audio/sfx/ui-confirm.mp3'
+import uiMoveUrl from '../../assets/audio/sfx/ui-move.mp3'
+
+export type SfxType = PresentationEventType | 'ui_confirm' | 'ui_move'
 
 export type AudioSettings = {
   master: number
@@ -29,6 +45,7 @@ export function unlockAudio(): void {
   if (!c) return
   unlocked = true
   if (c.state === 'suspended') void c.resume()
+  loadAllSamples(c)
 }
 
 export function isAudioUnlocked(): boolean {
@@ -100,13 +117,83 @@ function noise(
   src.stop(t0 + duration + 0.02)
 }
 
-export function playSfx(type: PresentationEventType | 'ui_confirm' | 'ui_move', settings: AudioSettings): void {
+/**
+ * Generated sample per event. `gain` scales the normalized file against the
+ * SFX bus; `vary` is the +/- playbackRate jitter that keeps rapid repeats from
+ * sounding machine-gunned (0 for melodic cues so their pitch stays true).
+ */
+type SampleSpec = { url: string; gain: number; vary: number }
+
+const SAMPLE_SPECS: Partial<Record<SfxType, SampleSpec>> = {
+  fire: { url: lanceFireUrl, gain: 0.2, vary: 0.06 },
+  player_hit: { url: playerHitUrl, gain: 0.4, vary: 0.05 },
+  shield_break: { url: shieldBreakUrl, gain: 0.35, vary: 0.04 },
+  life_loss: { url: lifeLossUrl, gain: 0.45, vary: 0.03 },
+  death: { url: deathUrl, gain: 0.5, vary: 0.03 },
+  kill: { url: killUrl, gain: 0.25, vary: 0.08 },
+  bomb: { url: bombUrl, gain: 0.55, vary: 0.02 },
+  pickup: { url: pickupUrl, gain: 0.3, vary: 0 },
+  graze: { url: grazeUrl, gain: 0.15, vary: 0.06 },
+  combo_break: { url: comboBreakUrl, gain: 0.3, vary: 0 },
+  tier_up: { url: tierUpUrl, gain: 0.4, vary: 0 },
+  wave_clear: { url: waveClearUrl, gain: 0.45, vary: 0 },
+  ui_confirm: { url: uiConfirmUrl, gain: 0.35, vary: 0 },
+  ui_move: { url: uiMoveUrl, gain: 0.25, vary: 0 },
+}
+
+const sampleBuffers = new Map<SfxType, AudioBuffer>()
+const sampleLoading = new Set<SfxType>()
+
+function loadSample(c: AudioContext, type: SfxType): void {
+  const spec = SAMPLE_SPECS[type]
+  if (!spec || sampleBuffers.has(type) || sampleLoading.has(type)) return
+  sampleLoading.add(type)
+  void fetch(spec.url)
+    .then((r) => r.arrayBuffer())
+    .then((data) => c.decodeAudioData(data))
+    .then((buffer) => {
+      sampleBuffers.set(type, buffer)
+    })
+    .catch(() => {
+      sampleLoading.delete(type)
+    })
+}
+
+function loadAllSamples(c: AudioContext): void {
+  for (const type of Object.keys(SAMPLE_SPECS) as SfxType[]) loadSample(c, type)
+}
+
+/** Plays the generated sample if decoded; returns false to fall back to synth. */
+function playSample(c: AudioContext, type: SfxType, gain: number): boolean {
+  const spec = SAMPLE_SPECS[type]
+  if (!spec) return false
+  const buffer = sampleBuffers.get(type)
+  if (!buffer) {
+    loadSample(c, type)
+    return false
+  }
+  const src = c.createBufferSource()
+  src.buffer = buffer
+  src.playbackRate.value = 1 - spec.vary + Math.random() * spec.vary * 2
+  const g = c.createGain()
+  g.gain.value = spec.gain * gain
+  src.connect(g)
+  g.connect(c.destination)
+  src.start()
+  return true
+}
+
+export function playSfx(type: SfxType, settings: AudioSettings): void {
   const gain = sfxGain(settings.master, settings.sfx)
   if (gain <= 0) return
   const c = getCtx()
   if (!c || c.state === 'suspended') return
 
+  if (playSample(c, type, gain)) return
+
   switch (type) {
+    case 'fire':
+      break
     case 'player_hit':
       tone(c, vary(170), 0.1, gain, 'sawtooth', { glideTo: 90 })
       noise(c, 0.12, gain * 0.8, { freq: 500, type: 'lowpass' })
@@ -175,6 +262,43 @@ const musicUrls: Record<MusicTrack, string> = {
 
 const musicEls: Partial<Record<MusicTrack, HTMLAudioElement>> = {}
 let currentTrack: MusicTrack = 'menu'
+let hiddenSuspend = false
+let pauseSuspend = false
+
+function musicSuspended(): boolean {
+  return hiddenSuspend || pauseSuspend
+}
+
+function applyMusicSuspend(): void {
+  const el = musicEls[currentTrack]
+  if (!el) return
+  if (musicSuspended()) {
+    el.pause()
+  } else if (el.paused && el.volume > 0 && unlocked) {
+    void el.play()
+  }
+}
+
+export function setMusicGamePaused(paused: boolean): void {
+  if (paused === pauseSuspend) return
+  pauseSuspend = paused
+  applyMusicSuspend()
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    hiddenSuspend = document.hidden
+    applyMusicSuspend()
+  })
+  window.addEventListener('blur', () => {
+    hiddenSuspend = true
+    applyMusicSuspend()
+  })
+  window.addEventListener('focus', () => {
+    hiddenSuspend = document.hidden
+    applyMusicSuspend()
+  })
+}
 
 export function syncMusic(settings: AudioSettings, track: MusicTrack = currentTrack): void {
   if (track !== currentTrack) {
@@ -194,7 +318,7 @@ export function syncMusic(settings: AudioSettings, track: MusicTrack = currentTr
     musicEls[track] = el
   }
   el.volume = Math.min(1, gain)
-  if (gain <= 0) {
+  if (gain <= 0 || musicSuspended()) {
     el.pause()
   } else if (el.paused && unlocked) {
     void el.play()

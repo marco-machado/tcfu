@@ -15,6 +15,7 @@ import {
   type BufferGeometry,
 } from 'three'
 import { getWorld } from '../../sim/world'
+import { useSessionStore } from '../../app/sessionStore'
 import { bakeParts, type GeoPart } from './bakeGeometry'
 import {
   getMicroNoiseTexture,
@@ -32,6 +33,17 @@ type Props = {
 
 const _proxy = new Object3D()
 const _color = new Color()
+
+/**
+ * Stream speed for backdrop scrolling; 0 while a live run is paused. Menu
+ * backdrops keep scrolling even if a quit run left the world paused.
+ */
+function scrollSpeed(): number {
+  const world = getWorld()
+  const inRun = useSessionStore.getState().screen === 'run'
+  if (inRun && world.session.paused && !world.session.runOver) return 0
+  return world.streamSpeed
+}
 
 /** Deterministic pseudo-random in [0, 1) from integer seed. */
 function hash01(n: number): number {
@@ -104,7 +116,7 @@ function Backdrop() {
   useLayoutEffect(() => () => material.dispose(), [material])
 
   useFrame((_, delta) => {
-    const speed = getWorld().streamSpeed
+    const speed = scrollSpeed()
     tex.offset.y += speed * delta * 0.0035
     tex.offset.x = Math.sin(tex.offset.y * 2.1) * 0.006
   })
@@ -165,7 +177,7 @@ function StarLayer({
   useLayoutEffect(() => () => material.dispose(), [material])
 
   useFrame((_, delta) => {
-    scrollAndRecycle(items, getWorld().streamSpeed * delta * factor, -8, 44)
+    scrollAndRecycle(items, scrollSpeed() * delta * factor, -8, 44)
     writeItems(mesh.current, items)
   })
 
@@ -204,7 +216,7 @@ function NebulaWisps({ count }: { count: number }) {
   }, [placements])
 
   useFrame((_, delta) => {
-    const dy = getWorld().streamSpeed * delta * 0.05
+    const dy = scrollSpeed() * delta * 0.05
     for (let i = 0; i < placements.length; i++) {
       const state = group.current[i]
       const obj = refs.current[i]
@@ -309,7 +321,7 @@ function AsteroidField({ count }: { count: number }) {
   )
 
   useFrame((_, delta) => {
-    const dy = getWorld().streamSpeed * delta
+    const dy = scrollSpeed() * delta
     scrollAndRecycle(itemsA, dy * 0.3, -6, 42)
     scrollAndRecycle(itemsB, dy * 0.22, -6, 42)
     writeItems(meshA.current, itemsA)
@@ -430,7 +442,7 @@ function InstancedPropSet({
   )
 
   useFrame((_, delta) => {
-    const dy = getWorld().streamSpeed * delta * factor
+    const dy = scrollSpeed() * delta * factor
     for (let vi = 0; vi < itemSets.length; vi++) {
       const items = itemSets[vi]!
       scrollAndRecycle(items, dy, minY, span)
@@ -583,7 +595,7 @@ function BeaconPylons({ count }: { count: number }) {
   )
 
   useFrame((state, delta) => {
-    const dy = getWorld().streamSpeed * delta * 0.55
+    const dy = scrollSpeed() * delta * 0.55
     scrollAndRecycle(items, dy, -4, 40)
     writeItems(hullRef.current, items)
     const lamp = lampRef.current
@@ -713,7 +725,7 @@ function StreamRibbon() {
   }, [tex])
 
   useFrame((_, delta) => {
-    tex.offset.y += (getWorld().streamSpeed * delta * tex.repeat.y) / 66
+    tex.offset.y += (scrollSpeed() * delta * tex.repeat.y) / 66
   })
 
   return (
@@ -773,7 +785,7 @@ function EdgeRails({ dashCount }: { dashCount: number }) {
   )
 
   useFrame((_, delta) => {
-    scrollAndRecycle(items, getWorld().streamSpeed * delta * 1.25, -2, 42)
+    scrollAndRecycle(items, scrollSpeed() * delta * 1.25, -2, 42)
     writeItems(dashRef.current, items)
   })
 
@@ -820,7 +832,7 @@ function LanePlates({ count }: { count: number }) {
   )
 
   useFrame((_, delta) => {
-    scrollAndRecycle(items, getWorld().streamSpeed * delta, -3, 40)
+    scrollAndRecycle(items, scrollSpeed() * delta, -3, 40)
     writeItems(mesh.current, items)
   })
 
@@ -860,7 +872,7 @@ function LaneSeams({ count }: { count: number }) {
   )
 
   useFrame((_, delta) => {
-    scrollAndRecycle(items, getWorld().streamSpeed * delta, -2, 40)
+    scrollAndRecycle(items, scrollSpeed() * delta, -2, 40)
     writeItems(mesh.current, items)
   })
 
@@ -910,7 +922,7 @@ function LaneChevrons({ count }: { count: number }) {
   }, [count])
 
   useFrame((_, delta) => {
-    scrollAndRecycle(items, getWorld().streamSpeed * delta, -2, 40)
+    scrollAndRecycle(items, scrollSpeed() * delta, -2, 40)
     writeItems(mesh.current, items)
   })
 
@@ -956,8 +968,7 @@ function SpeedStreaks({ count }: { count: number }) {
   )
 
   useFrame((_, delta) => {
-    const world = getWorld()
-    const speed = world.streamSpeed
+    const speed = scrollSpeed()
     const stretch = 0.75 + (speed / 4) * 0.85
     const dy = speed * delta * 1.5
     for (const item of items) {
@@ -1014,7 +1025,7 @@ function DustMotes({ count }: { count: number }) {
   )
 
   useFrame((_, delta) => {
-    const dy = getWorld().streamSpeed * delta * 1.8
+    const dy = scrollSpeed() * delta * 1.8
     for (const item of items) {
       item.y -= dy * (0.7 + item.seed * 0.6)
       if (item.y < -3) item.y += 28

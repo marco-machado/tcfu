@@ -8,7 +8,7 @@ import { ResultsScreen } from '../shell/screens/ResultsScreen'
 import { HighScoresScreen } from '../shell/screens/HighScoresScreen'
 import { SettingsScreen } from '../shell/screens/SettingsScreen'
 import { isDebugMode } from './debugMode'
-import { syncMusic } from '../audio/bus'
+import { setMusicGamePaused, syncMusic } from '../audio/bus'
 import { Suspense, lazy, useEffect } from 'react'
 
 // Dynamic import under a DEV constant so production builds drop the debug UI chunk.
@@ -19,6 +19,7 @@ export function App() {
   const settings = useSessionStore((s) => s.settings)
 
   useEffect(() => {
+    if (screen !== 'run') setMusicGamePaused(false)
     syncMusic(settings, screen === 'run' ? 'combat' : 'menu')
   }, [screen, settings])
 
