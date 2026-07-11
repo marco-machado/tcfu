@@ -163,6 +163,25 @@ export const SET_PIECE_STREAM_MULT = 0.85
 export const ENEMY_BULLET_R = 0.15
 export const ENEMY_BULLET_DAMAGE = 1
 
+/** Near-miss ring beyond the hitbox; bullets crossing it award a graze once. */
+export const GRAZE_RADIUS_BONUS = 0.55
+export const GRAZE_SCORE = 15
+/** Graze tops the combo timer up to this floor without extending the chain. */
+export const GRAZE_COMBO_TOPUP = 0.8
+
+export const COMBO_WINDOW = 2.5
+export const COMBO_SCORE_STEP = 0.02
+export const COMBO_SCORE_CAP = 2
+/** Kill-chain multiplier: 1 + step per chained kill, capped. */
+export function comboMultiplier(combo: number): number {
+  if (combo <= 1) return 1
+  return Math.min(COMBO_SCORE_CAP, 1 + (combo - 1) * COMBO_SCORE_STEP)
+}
+
+/** Powerups inside this radius home toward the player; speed ramps as they close. */
+export const MAGNET_RADIUS = 2.6
+export const MAGNET_MAX_SPEED = 11
+
 export const IFRAMES_HIT = 1.0
 export const IFRAMES_RESPAWN = 2.0
 export const IFRAMES_SHIELD = 0.5

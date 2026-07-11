@@ -6,6 +6,7 @@ import { useSessionStore } from '../app/sessionStore'
 import { Playfield } from './Playfield'
 import { PresentationDriver } from './PresentationDriver'
 import { applyStudioEnvironment } from './procedural/setupEnvironment'
+import { QualityDiagnostics } from './QualityDiagnostics'
 import { SimDriver } from './SimDriver'
 
 export function CanvasRoot() {
@@ -33,22 +34,23 @@ export function CanvasRoot() {
         outputColorSpace: SRGBColorSpace,
       }}
     >
-      <color attach="background" args={['#020508']} />
-      {fogOn ? <fog attach="fog" args={['#020508', 14, 42]} /> : null}
-      <ambientLight intensity={0.06} />
-      <hemisphereLight args={['#3a5568', '#020508', 0.18]} />
-      <directionalLight position={[3, 10, 8]} intensity={0.72} color="#c8e4ff" />
-      <directionalLight position={[-5, 1, 3]} intensity={0.18} color="#1a3048" />
-      <directionalLight position={[0, -4, 6]} intensity={0.35} color="#40b0e0" />
+      <color attach="background" args={['#030710']} />
+      {fogOn ? <fog attach="fog" args={['#040a14', 18, 52]} /> : null}
+      <ambientLight intensity={0.15} />
+      <hemisphereLight args={['#547693', '#070c14', 0.5]} />
+      <directionalLight position={[3, 10, 8]} intensity={1.1} color="#c8e4ff" />
+      <directionalLight position={[-6, 2, 4]} intensity={0.3} color="#2a4a68" />
+      <directionalLight position={[0, -4, 6]} intensity={0.85} color="#7cc8e8" />
 
       <SimDriver />
       <Playfield />
       <PresentationDriver />
+      <QualityDiagnostics />
 
       {bloom && (
         <EffectComposer multisampling={0}>
-          <Bloom luminanceThreshold={0.55} intensity={0.72} mipmapBlur luminanceSmoothing={0.15} />
-          <Vignette eskil={false} offset={0.18} darkness={0.62} />
+          <Bloom luminanceThreshold={0.62} intensity={0.85} mipmapBlur luminanceSmoothing={0.2} />
+          <Vignette eskil={false} offset={0.16} darkness={0.55} />
         </EffectComposer>
       )}
     </Canvas>

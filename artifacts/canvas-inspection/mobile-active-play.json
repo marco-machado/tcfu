@@ -1,0 +1,90 @@
+{
+  "url": "http://localhost:5173",
+  "mode": "mobile",
+  "state": "active-play",
+  "seed": 1337,
+  "screenshotPath": "artifacts/canvas-inspection/mobile-active-play.png",
+  "result": {
+    "ok": true,
+    "reason": "nonblank",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 664
+    },
+    "drawingBuffer": {
+      "width": 390,
+      "height": 664
+    },
+    "alphaPixels": 4097,
+    "variance": 254,
+    "colorBuckets": 137,
+    "metrics": {
+      "colorBuckets": 212,
+      "colorEntropyBits": 3.57,
+      "edgeDensity": 0.228,
+      "luminance": {
+        "mean": 35.1,
+        "p5": 16.7,
+        "p95": 60.2,
+        "contrast": 43.4
+      },
+      "dominantColorShare": 0.37,
+      "nonBackgroundShare": 0.63
+    },
+    "renderBudget": {
+      "tier": "mobile",
+      "note": "starting-point budget; adjust per game and document overrides",
+      "rows": [
+        {
+          "metric": "calls",
+          "actual": 110,
+          "limit": 150,
+          "ok": true
+        },
+        {
+          "metric": "triangles",
+          "actual": 11323,
+          "limit": 300000,
+          "ok": true
+        },
+        {
+          "metric": "geometries",
+          "actual": 108,
+          "limit": 200,
+          "ok": true
+        },
+        {
+          "metric": "textures",
+          "actual": 23,
+          "limit": 40,
+          "ok": true
+        }
+      ],
+      "withinBudget": true
+    },
+    "diagnostics": {
+      "calls": 110,
+      "triangles": 11323,
+      "geometries": 108,
+      "textures": 23,
+      "renderer": {
+        "calls": 110,
+        "triangles": 11323,
+        "geometries": 108,
+        "textures": 23
+      },
+      "programs": 30,
+      "dpr": 1,
+      "fps": 5.9,
+      "wave": 3,
+      "enemies": 6,
+      "enemyBullets": 12,
+      "playerBullets": 4,
+      "powerups": 3
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

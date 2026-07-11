@@ -1,4 +1,6 @@
+import { emptyCommands } from '../input/commands'
 import { pushPresentation } from '../sim/presentation'
+import { stepWorld } from '../sim/step'
 import { getWorld } from '../sim/world'
 import { useSessionStore } from './sessionStore'
 
@@ -6,6 +8,8 @@ type AcceptanceSeam = {
   getWorld: typeof getWorld
   sessionStore: typeof useSessionStore
   pushPresentation: typeof pushPresentation
+  stepWorld: typeof stepWorld
+  emptyCommands: typeof emptyCommands
 }
 
 declare global {
@@ -25,5 +29,7 @@ export function installAcceptanceSeam(): void {
     getWorld,
     sessionStore: useSessionStore,
     pushPresentation,
+    stepWorld,
+    emptyCommands,
   }
 }

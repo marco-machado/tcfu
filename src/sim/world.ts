@@ -17,7 +17,7 @@ function emptyPlayerBullet(): PlayerBullet {
 }
 
 function emptyEnemyBullet(): EnemyBullet {
-  return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.15, damage: 1 }
+  return { active: false, x: 0, y: 0, vx: 0, vy: 0, r: 0.15, damage: 1, grazed: false }
 }
 
 function emptyPowerup(_: unknown, id: number): Powerup {
@@ -51,6 +51,7 @@ function emptyEnemy(_: unknown, id: number): Enemy {
     phase: 'none',
     phaseElapsed: 0,
     age: 0,
+    hitFlash: 0,
   }
 }
 
@@ -93,6 +94,10 @@ export function createWorld(
       runOver: false,
       endHold: 0,
       deathFlash: 0,
+      combo: 0,
+      comboTimer: 0,
+      bestCombo: 0,
+      grazes: 0,
     },
     streamSpeed: streamSpeedForWave(1),
     playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyPlayerBullet),

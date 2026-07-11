@@ -69,6 +69,8 @@ export type EnemyBullet = {
   vy: number
   r: number
   damage: number
+  /** True once this bullet has awarded a graze; one graze per bullet. */
+  grazed: boolean
 }
 
 export type Enemy = {
@@ -101,6 +103,8 @@ export type Enemy = {
   phaseElapsed: number
   /** Seconds alive; contact damage arms after CONTACT_ARM_TIME. */
   age: number
+  /** Seconds remaining of damage flash (view-facing). */
+  hitFlash: number
 }
 
 export type Powerup = {
@@ -143,6 +147,13 @@ export type RunSession = {
   endHold: number
   /** Visual death flash timer (seconds remaining). */
   deathFlash: number
+  /** Current kill-chain length; decays when comboTimer expires or on hull damage. */
+  combo: number
+  /** Seconds left to extend the chain; refreshed on kill, topped up by graze. */
+  comboTimer: number
+  bestCombo: number
+  /** Total near-miss grazes this Run. */
+  grazes: number
 }
 
 /** Returns a value in [0, 1). Injectable for deterministic drop tests. */

@@ -16,6 +16,8 @@ export type RunSummary = {
   scrapEarnMult: number
   careerBest: number
   unlockedKitNames: string[]
+  bestCombo: number
+  grazes: number
 }
 
 export function buildRunSummary(
@@ -41,5 +43,7 @@ export function buildRunSummary(
     scrapEarnMult,
     careerBest: career.careerBest,
     unlockedKitNames: career.unlockedKitNames ?? [],
+    bestCombo: world.session.bestCombo,
+    grazes: world.session.grazes,
   }
 }

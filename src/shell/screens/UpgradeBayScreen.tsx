@@ -25,8 +25,10 @@ export function UpgradeBayScreen() {
 
   return (
     <div className="screen">
-      <h2>Upgrade bay</h2>
-      <p className="muted">Scrap {meta.scrap} · No refunds · Applies on next Launch</p>
+      <header className="screen-header">
+        <h2>Upgrade bay</h2>
+        <p className="screen-kicker">Scrap {meta.scrap} · No refunds · Applies on next Launch</p>
+      </header>
       <div className="bay-grid">
         {META_BRANCHES.map((branch) => {
           const rank = meta.ranks[branch]

@@ -23,6 +23,14 @@ export type SceneryExtras = {
   starCount: number
   streakCount: number
   distantSilhouettes: boolean
+  wispCount: number
+  asteroidCount: number
+  derelictCount: number
+  pylonCount: number
+  gateCount: number
+  dustCount: number
+  railDashCount: number
+  chevronCount: number
 }
 
 export type EnemyPartId = 'body' | 'accent' | 'optionalDetail'
@@ -225,12 +233,48 @@ export function sceneryLayers(detail: DetailLevel): SceneryLayerId[] {
 /** Deep-space density knobs; mid layer is distant silhouettes, not trench walls. */
 export function sceneryExtras(detail: DetailLevel): SceneryExtras {
   if (detail === 'low') {
-    return { starCount: 48, streakCount: 10, distantSilhouettes: false }
+    return {
+      starCount: 56,
+      streakCount: 12,
+      distantSilhouettes: false,
+      wispCount: 0,
+      asteroidCount: 10,
+      derelictCount: 0,
+      pylonCount: 4,
+      gateCount: 0,
+      dustCount: 0,
+      railDashCount: 10,
+      chevronCount: 10,
+    }
   }
   if (detail === 'medium') {
-    return { starCount: 72, streakCount: 18, distantSilhouettes: true }
+    return {
+      starCount: 110,
+      streakCount: 22,
+      distantSilhouettes: true,
+      wispCount: 5,
+      asteroidCount: 22,
+      derelictCount: 9,
+      pylonCount: 7,
+      gateCount: 2,
+      dustCount: 30,
+      railDashCount: 18,
+      chevronCount: 15,
+    }
   }
-  return { starCount: 96, streakCount: 26, distantSilhouettes: true }
+  return {
+    starCount: 130,
+    streakCount: 30,
+    distantSilhouettes: true,
+    wispCount: 6,
+    asteroidCount: 26,
+    derelictCount: 9,
+    pylonCount: 8,
+    gateCount: 3,
+    dustCount: 40,
+    railDashCount: 22,
+    chevronCount: 15,
+  }
 }
 
 export function hasKitPart(id: ShipId, detail: DetailLevel, part: KitPartId): boolean {

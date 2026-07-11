@@ -25,10 +25,12 @@ export function HangarScreen() {
 
   return (
     <div className="screen">
-      <h2>Hangar</h2>
-      <p className="muted">
-        Career best {careerBest.toLocaleString()} · Scrap {meta.scrap}
-      </p>
+      <header className="screen-header">
+        <h2>Hangar</h2>
+        <p className="screen-kicker">
+          Career best {careerBest.toLocaleString()} · Scrap {meta.scrap}
+        </p>
+      </header>
       <div className="hangar-layout">
         <div className="ship-grid">
           {SHIP_KIT_IDS.map((id) => {

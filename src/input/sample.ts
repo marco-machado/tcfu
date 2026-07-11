@@ -6,6 +6,33 @@ let pauseWasDown = false
 let padBombWasDown = false
 let padPauseWasDown = false
 
+/** Virtual touch state written by the on-screen controls. */
+const touch = {
+  active: false,
+  moveX: 0,
+  moveY: 0,
+  bombQueued: false,
+  pauseQueued: false,
+}
+
+export function setTouchMove(active: boolean, x: number, y: number): void {
+  touch.active = active
+  touch.moveX = active ? x : 0
+  touch.moveY = active ? y : 0
+}
+
+export function queueTouchBomb(): void {
+  touch.bombQueued = true
+}
+
+export function queueTouchPause(): void {
+  touch.pauseQueued = true
+}
+
+export function isTouchSessionActive(): boolean {
+  return touch.active
+}
+
 function onKeyDown(e: KeyboardEvent): void {
   keys.add(e.code)
   if (
@@ -104,5 +131,21 @@ export function sampleCommands(): Commands {
   pauseWasDown = pauseDown
 
   sampleGamepad(c)
+
+  if (touch.active) {
+    if (Math.abs(touch.moveX) > Math.abs(c.moveX)) c.moveX = touch.moveX
+    if (Math.abs(touch.moveY) > Math.abs(c.moveY)) c.moveY = touch.moveY
+    // Touch play always autofires; there is no comfortable third finger.
+    c.fire = true
+  }
+  if (touch.bombQueued) {
+    c.bomb = true
+    touch.bombQueued = false
+  }
+  if (touch.pauseQueued) {
+    c.pause = true
+    touch.pauseQueued = false
+  }
+
   return c
 }

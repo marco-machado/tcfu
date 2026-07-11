@@ -13,8 +13,8 @@ let baked: ReturnType<PMREMGenerator['fromScene']>['texture'] | null = null
 export function applyStudioEnvironment(renderer: WebGLRenderer, scene: Scene): void {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
-  // Deep void: low exposure; IBL only enough for metal edge read
-  renderer.toneMappingExposure = 0.82
+  // Deep void with a readable stream: exposure high enough for hull specular
+  renderer.toneMappingExposure = 1.12
 
   if (!baked) {
     const pmrem = new PMREMGenerator(renderer)
@@ -22,5 +22,5 @@ export function applyStudioEnvironment(renderer: WebGLRenderer, scene: Scene): v
     pmrem.dispose()
   }
   scene.environment = baked
-  scene.environmentIntensity = 0.28
+  scene.environmentIntensity = 0.45
 }

@@ -1,4 +1,5 @@
 import {
+  Color,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   type Material,
@@ -40,8 +41,11 @@ export function getRoleMaterial(role: MaterialRole): Material {
   switch (role) {
     case 'bodyPrimary': {
       const t = materialToken('hullCold')
+      // Panel map is mid-grey; overdrive base color so the mapped hull keeps
+      // the token's intended value.
+      const lifted = new Color(t.color).multiplyScalar(1.9)
       mat = new MeshPhysicalMaterial({
-        color: t.color,
+        color: lifted,
         map: panelMap(),
         metalness: 0.92,
         roughness: 0.32,
@@ -56,8 +60,9 @@ export function getRoleMaterial(role: MaterialRole): Material {
     }
     case 'bodySecondary': {
       const t = materialToken('hullPanel')
+      const lifted = new Color(t.color).multiplyScalar(1.8)
       mat = new MeshStandardMaterial({
-        color: t.color,
+        color: lifted,
         map: panelMap(),
         metalness: 0.78,
         roughness: 0.52,
@@ -75,7 +80,7 @@ export function getRoleMaterial(role: MaterialRole): Material {
         metalness: 0.55,
         roughness: 0.28,
         emissive: t.emissive,
-        emissiveIntensity: t.emissiveIntensity,
+        emissiveIntensity: Math.max(1.2, t.emissiveIntensity),
         toneMapped: false,
         envMapIntensity: 0.9,
       })

@@ -6,6 +6,10 @@ export type PresentationEventType =
   | 'kill'
   | 'bomb'
   | 'pickup'
+  | 'graze'
+  | 'combo_break'
+  | 'tier_up'
+  | 'wave_clear'
 
 export type PresentationEvent = {
   type: PresentationEventType

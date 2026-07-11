@@ -45,8 +45,8 @@ function PreviewStage({
         />
       </mesh>
 
-      <group ref={pivot} rotation={[0.42, 0.55, 0.06]} position={[0, -0.05, 0]}>
-        <group scale={1.22}>
+      <group ref={pivot} rotation={[0.42, 0.55, 0.06]} position={[0, -0.16, 0]}>
+        <group scale={1.05}>
           <ShipKitVisual key={`${shipId}-${detail}`} shipId={shipId} detail={detail} />
         </group>
       </group>
@@ -65,7 +65,7 @@ export function ShipKitPreview({ shipId }: Props) {
       <Canvas
         className="kit-preview-r3f"
         dpr={quality === 'high' ? 1.75 : quality === 'medium' ? 1.35 : 1}
-        camera={{ position: [1.85, -1.15, 2.45], fov: 26, near: 0.1, far: 40 }}
+        camera={{ position: [1.9, 1.35, 2.75], fov: 30, near: 0.1, far: 40 }}
         gl={{
           antialias: quality !== 'low',
           alpha: false,
@@ -73,16 +73,16 @@ export function ShipKitPreview({ shipId }: Props) {
           outputColorSpace: SRGBColorSpace,
         }}
         onCreated={({ camera, gl, scene }) => {
-          camera.lookAt(0, 0.05, 0)
+          camera.lookAt(0, -0.1, 0)
           applyStudioEnvironment(gl, scene)
         }}
       >
-        <color attach="background" args={['#03070e']} />
-        <fog attach="fog" args={['#03070e', 5, 10]} />
+        <color attach="background" args={['#071120']} />
+        <fog attach="fog" args={['#071120', 5.5, 11]} />
 
-        <ambientLight intensity={0.16} />
-        <hemisphereLight args={['#90b8d8', '#060a10', 0.48]} />
-        <directionalLight position={[3.2, 3.8, 4.5]} intensity={1.55} color="#f0f7ff" />
+        <ambientLight intensity={0.3} />
+        <hemisphereLight args={['#9cc2de', '#0a1018', 0.75]} />
+        <directionalLight position={[3.2, 3.8, 4.5]} intensity={2.3} color="#f0f7ff" />
         <directionalLight position={[-3.2, 1.2, 1.5]} intensity={0.42} color="#3a6a98" />
         <directionalLight position={[0.2, -2.5, 2.5]} intensity={0.48} color="#58c8ff" />
         <pointLight position={[0, -0.7, 0.15]} intensity={0.45} color="#40c0ff" distance={2.2} />

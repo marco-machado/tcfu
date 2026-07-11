@@ -6,7 +6,10 @@ export function HighScoresScreen() {
 
   return (
     <div className="screen">
-      <h2>High Scores</h2>
+      <header className="screen-header">
+        <h2>High Scores</h2>
+        <p className="screen-kicker">Local flight records</p>
+      </header>
       {scores.length === 0 ? (
         <p className="muted">No scores yet</p>
       ) : (

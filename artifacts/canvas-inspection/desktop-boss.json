@@ -1,0 +1,90 @@
+{
+  "url": "http://localhost:5173",
+  "mode": "desktop",
+  "state": "boss",
+  "seed": 1337,
+  "screenshotPath": "artifacts/canvas-inspection/desktop-boss.png",
+  "result": {
+    "ok": true,
+    "reason": "nonblank",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "drawingBuffer": {
+      "width": 1280,
+      "height": 720
+    },
+    "alphaPixels": 4096,
+    "variance": 253,
+    "colorBuckets": 155,
+    "metrics": {
+      "colorBuckets": 231,
+      "colorEntropyBits": 4.04,
+      "edgeDensity": 0.255,
+      "luminance": {
+        "mean": 39.7,
+        "p5": 17.3,
+        "p95": 75.3,
+        "contrast": 58
+      },
+      "dominantColorShare": 0.296,
+      "nonBackgroundShare": 0.704
+    },
+    "renderBudget": {
+      "tier": "desktop",
+      "note": "starting-point budget; adjust per game and document overrides",
+      "rows": [
+        {
+          "metric": "calls",
+          "actual": 103,
+          "limit": 300,
+          "ok": true
+        },
+        {
+          "metric": "triangles",
+          "actual": 9893,
+          "limit": 750000,
+          "ok": true
+        },
+        {
+          "metric": "geometries",
+          "actual": 108,
+          "limit": 300,
+          "ok": true
+        },
+        {
+          "metric": "textures",
+          "actual": 23,
+          "limit": 60,
+          "ok": true
+        }
+      ],
+      "withinBudget": true
+    },
+    "diagnostics": {
+      "calls": 103,
+      "triangles": 9893,
+      "geometries": 108,
+      "textures": 23,
+      "renderer": {
+        "calls": 103,
+        "triangles": 9893,
+        "geometries": 108,
+        "textures": 23
+      },
+      "programs": 29,
+      "dpr": 1,
+      "fps": 19.2,
+      "wave": 10,
+      "enemies": 12,
+      "enemyBullets": 64,
+      "playerBullets": 4,
+      "powerups": 0
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

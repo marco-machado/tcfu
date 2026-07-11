@@ -3,10 +3,16 @@ import { circleAabb, circleCircle } from './collision'
 import {
   BOMB_DAMAGE,
   COLOSSUS,
+  COMBO_WINDOW,
   CONTACT_ARM_TIME,
   CULL_X_MAX,
   CULL_Y_MIN,
   DART,
+  GRAZE_COMBO_TOPUP,
+  GRAZE_RADIUS_BONUS,
+  GRAZE_SCORE,
+  MAGNET_MAX_SPEED,
+  MAGNET_RADIUS,
   DEATH_HOLD,
   DROP_CHANCE,
   DROP_WEIGHTS,
@@ -38,6 +44,7 @@ import {
   SPREAD_UP_OFFSET,
   WAVE_CLEAR_WINDOW,
   WAVE_GAP,
+  comboMultiplier,
   enemyFireCooldownScale,
   enemyHpScale,
   enemyShotSpeedScale,
@@ -164,6 +171,16 @@ function stepPowerups(world: World, dt: number): void {
   for (const powerup of world.powerups) {
     if (!powerup.active) continue
     powerup.y -= world.streamSpeed * dt
+
+    const dx = player.x - powerup.x
+    const dy = player.y - powerup.y
+    const dist = Math.hypot(dx, dy)
+    if (dist > 1e-6 && dist < MAGNET_RADIUS && !world.session.runOver) {
+      const pull = MAGNET_MAX_SPEED * (1 - (dist / MAGNET_RADIUS) * 0.65)
+      powerup.x += (dx / dist) * pull * dt
+      powerup.y += (dy / dist) * pull * dt
+    }
+
     if (!onPlayfield(powerup.x, powerup.y)) {
       powerup.active = false
       continue
@@ -186,17 +203,69 @@ function wCellsForEnemy(enemyClass: EnemyClass): number {
 }
 
 function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId' | 'x' | 'y'>): void {
-  world.session.kills += 1
+  const session = world.session
+  session.kills += 1
+
+  session.combo += 1
+  session.comboTimer = COMBO_WINDOW
+  if (session.combo > session.bestCombo) session.bestCombo = session.combo
+
+  const tierBefore = weaponTierForWCells(world.player.wCells)
   world.player.wCells += wCellsForEnemy(enemy.class) * world.meta.wCellEarnMult
-  const mult = waveMultiplier(enemy.waveId > 0 ? enemy.waveId : world.session.wave)
-  let killScore = enemy.points * mult
+  if (weaponTierForWCells(world.player.wCells) > tierBefore) {
+    pushPresentation(world.presentation, { type: 'tier_up', x: world.player.x, y: world.player.y })
+  }
+
+  const mult = waveMultiplier(enemy.waveId > 0 ? enemy.waveId : session.wave)
+  let killScore = enemy.points * mult * comboMultiplier(session.combo)
   if (world.player.scoreMult > 0) killScore *= SCORE_MULT_KILL
-  world.session.score += Math.floor(killScore)
-  if (enemy.waveId === world.session.wave) {
+  session.score += Math.floor(killScore)
+  if (enemy.waveId === session.wave) {
     world.waves.waveKilled += 1
   }
   pushPresentation(world.presentation, { type: 'kill', x: enemy.x, y: enemy.y })
   tryDropOnKill(world, enemy)
+}
+
+const COMBO_BREAK_MIN = 5
+
+function breakCombo(world: World): void {
+  const session = world.session
+  if (session.combo >= COMBO_BREAK_MIN) {
+    pushPresentation(world.presentation, {
+      type: 'combo_break',
+      x: world.player.x,
+      y: world.player.y,
+    })
+  }
+  session.combo = 0
+  session.comboTimer = 0
+}
+
+function stepCombo(world: World, dt: number): void {
+  const session = world.session
+  if (session.combo <= 0) return
+  session.comboTimer -= dt
+  if (session.comboTimer <= 0) breakCombo(world)
+}
+
+function stepGraze(world: World): void {
+  const p = world.player
+  if (p.iFrames > 0 || world.session.runOver) return
+  const grazeR = p.hitboxR + GRAZE_RADIUS_BONUS
+  for (const b of world.enemyBullets) {
+    if (!b.active || b.grazed) continue
+    if (!circleCircle({ x: p.x, y: p.y, r: grazeR }, { x: b.x, y: b.y, r: b.r })) continue
+    // A bullet inside the real hitbox is a hit, not a graze; leave it for hazards.
+    if (circleCircle({ x: p.x, y: p.y, r: p.hitboxR }, { x: b.x, y: b.y, r: b.r })) continue
+    b.grazed = true
+    world.session.grazes += 1
+    world.session.score += GRAZE_SCORE
+    if (world.session.combo > 0 && world.session.comboTimer < GRAZE_COMBO_TOPUP) {
+      world.session.comboTimer = GRAZE_COMBO_TOPUP
+    }
+    pushPresentation(world.presentation, { type: 'graze', x: b.x, y: b.y })
+  }
 }
 
 function mercyClearEnemyBullets(world: World): void {
@@ -223,6 +292,7 @@ function applyPlayerDamage(world: World, amount: number): void {
 
   p.hp -= amount
   world.waves.hpLostThisWave = true
+  breakCombo(world)
   if (p.hp > 0) {
     p.iFrames = baseHitIFrames(p.shipId) + world.meta.hitIFramesBonus
     pushPresentation(world.presentation, { type: 'player_hit', x: p.x, y: p.y })
@@ -318,6 +388,7 @@ function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, streamSpeed: 
   e.pathPhase = 0
   e.waveId = wave
   e.age = 0
+  e.hitFlash = 0
   e.phase = 'none'
   e.phaseElapsed = 0
   e.vy = -streamSpeed
@@ -416,6 +487,11 @@ function tryAwardClear(world: World): void {
   if (w.clearElapsed > WAVE_CLEAR_WINDOW) return
   w.clearAwarded = true
   world.session.score += waveClearBonus(world.session.wave)
+  pushPresentation(world.presentation, {
+    type: 'wave_clear',
+    x: world.player.x,
+    y: world.player.y,
+  })
 }
 
 function stepWaves(world: World, dt: number): void {
@@ -621,6 +697,7 @@ function spawnEnemyBullet(
   bullet.vy = vy
   bullet.r = ENEMY_BULLET_R
   bullet.damage = ENEMY_BULLET_DAMAGE
+  bullet.grazed = false
   return true
 }
 
@@ -743,6 +820,7 @@ function stepEnemies(world: World, dt: number): void {
   for (const e of world.enemies) {
     if (!e.active) continue
     e.age += dt
+    if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt)
     advancePath(e, dt, world.streamSpeed)
     stepEnemyPhase(e, dt)
 
@@ -773,6 +851,7 @@ function stepPlayerBulletHits(world: World): void {
       if (!hitsEnemy(b, e)) continue
 
       e.hp -= b.damage
+      e.hitFlash = 0.09
       b.hitEnemyIds.push(e.id)
       if (b.pierce > 0) b.pierce -= 1
       else b.active = false
@@ -839,6 +918,7 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   world.powerupDryElapsed += dt
 
   stepPlayer(world, dt, commands)
+  stepCombo(world, dt)
   stepBomb(world, commands)
   stepPlayerBullets(world, dt)
   stepEnemyBullets(world, dt)
@@ -847,6 +927,7 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   stepEnemies(world, dt)
   stepPlayerBulletHits(world)
   stepPowerups(world, dt)
+  stepGraze(world)
   stepPlayerHazards(world)
 
   world.session.elapsed += dt

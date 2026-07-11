@@ -1,17 +1,16 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import {
-  ExtrudeGeometry,
-  type Group,
-  LatheGeometry,
-  type Material,
-  Shape,
-  Vector2,
-} from 'three'
+import { type Group, type Material } from 'three'
 import type { DetailLevel } from './registry'
 import { hasKitPart, kitRecipe } from './registry'
 import { cloneRoleMaterial, getRoleMaterial } from './MaterialLibrary'
 import { collectModelDiagnostics } from './ModelDiagnostics'
 import { materialToken } from './materialTokens'
+import {
+  makeCanopyLathe,
+  makeNoseLathe,
+  makeNozzleBell,
+  makeWingGeometry,
+} from './shipParts'
 import { ThrusterPlume } from './ThrusterPlume'
 
 type Props = {
@@ -24,74 +23,6 @@ type Props = {
 
 function mat(role: Parameters<typeof getRoleMaterial>[0], mutable: boolean): Material {
   return mutable ? cloneRoleMaterial(role) : getRoleMaterial(role)
-}
-
-function makeWingGeometry(mirror: boolean): ExtrudeGeometry {
-  const shape = new Shape()
-  // Root at x=0, tip at x=1 (local); will scale/place
-  shape.moveTo(0, 0.12)
-  shape.lineTo(0.55, 0.18)
-  shape.lineTo(1.0, 0.05)
-  shape.lineTo(0.95, -0.08)
-  shape.lineTo(0.5, -0.16)
-  shape.lineTo(0.0, -0.14)
-  shape.closePath()
-  const geo = new ExtrudeGeometry(shape, {
-    depth: 0.07,
-    bevelEnabled: true,
-    bevelThickness: 0.012,
-    bevelSize: 0.012,
-    bevelSegments: 2,
-    curveSegments: 1,
-  })
-  geo.rotateX(-Math.PI / 2)
-  if (mirror) geo.scale(-1, 1, 1)
-  geo.translate(mirror ? 0 : 0, 0, 0)
-  geo.computeVertexNormals()
-  return geo
-}
-
-function makeNoseLathe(): LatheGeometry {
-  const pts = [
-    new Vector2(0.0, 0.0),
-    new Vector2(0.09, 0.02),
-    new Vector2(0.11, 0.12),
-    new Vector2(0.08, 0.22),
-    new Vector2(0.04, 0.28),
-    new Vector2(0.0, 0.3),
-  ]
-  const geo = new LatheGeometry(pts, 16)
-  geo.rotateX(-Math.PI / 2)
-  geo.computeVertexNormals()
-  return geo
-}
-
-function makeCanopyLathe(): LatheGeometry {
-  const pts = [
-    new Vector2(0.0, 0.0),
-    new Vector2(0.1, 0.02),
-    new Vector2(0.12, 0.1),
-    new Vector2(0.1, 0.18),
-    new Vector2(0.05, 0.22),
-    new Vector2(0.0, 0.24),
-  ]
-  const geo = new LatheGeometry(pts, 20)
-  geo.rotateX(0.55)
-  geo.computeVertexNormals()
-  return geo
-}
-
-function makeNozzleBell(): LatheGeometry {
-  const pts = [
-    new Vector2(0.06, 0.0),
-    new Vector2(0.07, 0.04),
-    new Vector2(0.09, 0.1),
-    new Vector2(0.11, 0.14),
-  ]
-  const geo = new LatheGeometry(pts, 14)
-  geo.rotateX(Math.PI / 2)
-  geo.computeVertexNormals()
-  return geo
 }
 
 /**

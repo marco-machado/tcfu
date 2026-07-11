@@ -1,0 +1,41 @@
+{
+  "url": "http://localhost:5173",
+  "mode": "desktop",
+  "state": "hangar",
+  "seed": 1337,
+  "screenshotPath": "artifacts/canvas-inspection/desktop-hangar.png",
+  "result": {
+    "ok": true,
+    "reason": "nonblank",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "drawingBuffer": {
+      "width": 1280,
+      "height": 720
+    },
+    "alphaPixels": 4096,
+    "variance": 254,
+    "colorBuckets": 60,
+    "metrics": {
+      "colorBuckets": 97,
+      "colorEntropyBits": 2.35,
+      "edgeDensity": 0.098,
+      "luminance": {
+        "mean": 17.1,
+        "p5": 6.3,
+        "p95": 31.9,
+        "contrast": 25.6
+      },
+      "dominantColorShare": 0.475,
+      "nonBackgroundShare": 0.525
+    },
+    "renderBudget": null,
+    "diagnostics": null
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

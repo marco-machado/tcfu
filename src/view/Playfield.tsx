@@ -1,30 +1,38 @@
 import { useFrame } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
+  AdditiveBlending,
   BoxGeometry,
   Color,
-  type BufferGeometry,
   type Group,
   type InstancedMesh,
+  MeshBasicMaterial,
   Object3D,
-  OctahedronGeometry,
-  SphereGeometry,
+  PlaneGeometry,
 } from 'three'
 import { useSessionStore } from '../app/sessionStore'
 import {
   BAND,
   DEATH_HOLD,
+  MAGNET_RADIUS,
   MAX_ENEMIES,
   MAX_ENEMY_BULLETS,
   MAX_PLAYER_BULLETS,
   MAX_POWERUPS,
 } from '../sim/constants'
-import type { EnemyKind, PowerupType } from '../sim/types'
+import type { Enemy, EnemyKind, PowerupType } from '../sim/types'
 import { getWorld } from '../sim/world'
+import { bakeParts, type GeoPart } from './procedural/bakeGeometry'
 import { createTokenMaterial } from './procedural/createMaterial'
-import { bakeEnemyGeometry, createEnemyMaterial } from './procedural/enemyGeometry'
+import {
+  bakeEnemyAccentGeometry,
+  bakeEnemyGeometry,
+  createEnemyAccentMaterial,
+  createEnemyMaterial,
+} from './procedural/enemyGeometry'
+import { getSoftGlowTexture } from './procedural/ProceduralTextures'
 import { materialToken } from './procedural/materialTokens'
-import { ParallaxCorridor } from './procedural/ParallaxCorridor'
+import { WorldCorridor } from './procedural/WorldCorridor'
 import {
   detailFromQuality,
   type DetailLevel,
@@ -34,6 +42,8 @@ import {
 import { ShipKitVisual } from './procedural/ShipKitVisual'
 
 const _proxy = new Object3D()
+const _color = new Color()
+const HALF = Math.PI / 2
 
 function hideInstance(inst: InstancedMesh, index: number): void {
   _proxy.position.set(0, -200, 0)
@@ -72,17 +82,17 @@ export function Playfield() {
 
   return (
     <group>
-      <ParallaxCorridor detail={detail} />
+      <WorldCorridor detail={detail} />
 
       {/* Movement-band chrome only — not physical corridor walls */}
       <mesh position={[cx, cy, -0.02]}>
         <planeGeometry args={[width, height]} />
-        <meshBasicMaterial color="#071019" transparent opacity={0.14} />
+        <meshBasicMaterial color="#071019" transparent opacity={0.1} />
       </mesh>
 
       <lineSegments position={[cx, cy, 0.02]}>
         <edgesGeometry args={[bandGeo]} />
-        <lineBasicMaterial color="#2a6a88" transparent opacity={0.55} />
+        <lineBasicMaterial color="#2a6a88" transparent opacity={0.4} />
       </lineSegments>
 
       <PlayerMesh detail={detail} />
@@ -90,6 +100,7 @@ export function Playfield() {
       <PlayerBulletInstances />
       <EnemyBulletInstances />
       <EnemyInstances detail={detail} />
+      <TelegraphGlows />
       <PowerupInstances />
     </group>
   )
@@ -117,6 +128,8 @@ function PlayerMesh({ detail }: { detail: DetailLevel }) {
 
   return (
     <group ref={group} position={[0, 3.5, 0.2]}>
+      <pointLight position={[0, 0.2, 1.1]} intensity={3.6} distance={3.6} color="#a8ddff" />
+      <pointLight position={[0, 0.9, 0.5]} intensity={1.4} distance={2.4} color="#cfeaff" />
       <ShipKitVisual
         key={`${shipId}-${detail}`}
         shipId={shipId}
@@ -205,109 +218,198 @@ function useInstancedPool(count: number) {
   return mesh
 }
 
+function useGlowMaterial(color: string, opacity: number) {
+  const material = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        map: getSoftGlowTexture(),
+        color,
+        transparent: true,
+        opacity,
+        blending: AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    [color, opacity],
+  )
+  useLayoutEffect(() => () => material.dispose(), [material])
+  return material
+}
+
 function PlayerBulletInstances() {
-  const geometry = useMemo(() => {
-    // Elongated cyan bolt for direction read under bloom
-    const g = new BoxGeometry(0.1, 0.72, 0.1)
-    return g
-  }, [])
+  const geometry = useMemo(() => new BoxGeometry(0.08, 0.66, 0.08), [])
+  const glowGeo = useMemo(() => new PlaneGeometry(0.26, 0.9), [])
   const material = useMemo(() => createTokenMaterial('projectilePlayer'), [])
+  const glowMaterial = useGlowMaterial('#2a90e8', 0.4)
   const mesh = useInstancedPool(MAX_PLAYER_BULLETS)
+  const glow = useInstancedPool(MAX_PLAYER_BULLETS)
 
   useFrame(() => {
     const inst = mesh.current
-    if (!inst) return
+    const glowInst = glow.current
+    if (!inst || !glowInst) return
     const bullets = getWorld().playerBullets
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
-      writeInstance(inst, i, b.x, b.y, 0.28, 1, 1, 1)
+      const rotZ = Math.atan2(-b.vx, b.vy)
+      writeInstance(inst, i, b.x, b.y, 0.28, 1, 1, 1, rotZ)
+      writeInstance(glowInst, i, b.x, b.y, 0.26, 1, 1, 1, rotZ)
       i++
     }
-    for (let j = i; j < MAX_PLAYER_BULLETS; j++) hideInstance(inst, j)
+    for (let j = i; j < MAX_PLAYER_BULLETS; j++) {
+      hideInstance(inst, j)
+      hideInstance(glowInst, j)
+    }
     inst.count = i
+    glowInst.count = i
     inst.instanceMatrix.needsUpdate = true
+    glowInst.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <instancedMesh
-      ref={mesh}
-      args={[geometry, material, MAX_PLAYER_BULLETS]}
-      frustumCulled={false}
-      castShadow={false}
-      receiveShadow={false}
-    />
+    <>
+      <instancedMesh ref={mesh} args={[geometry, material, MAX_PLAYER_BULLETS]} frustumCulled={false} />
+      <instancedMesh ref={glow} args={[glowGeo, glowMaterial, MAX_PLAYER_BULLETS]} frustumCulled={false} />
+    </>
   )
 }
 
 function EnemyBulletInstances() {
-  // Warm elongated bolt, shape-distinct from cyan player boxes
-  const geometry = useMemo(() => new BoxGeometry(0.14, 0.52, 0.14), [])
-  const material = useMemo(() => createTokenMaterial('projectileEnemy'), [])
+  // Hot plasma bolt: warm core plus additive halo, shape-distinct from player bolts
+  const geometry = useMemo(() => {
+    const g = bakeParts([
+      { kind: 'octahedron', r: 0.13, sy: 1.9 },
+    ])
+    return g
+  }, [])
+  const glowGeo = useMemo(() => new PlaneGeometry(0.62, 0.62), [])
+  const material = useMemo(() => {
+    const m = createTokenMaterial('projectileEnemy')
+    m.emissiveIntensity = 2
+    return m
+  }, [])
+  const glowMaterial = useGlowMaterial('#ff5a30', 0.7)
   const mesh = useInstancedPool(MAX_ENEMY_BULLETS)
+  const glow = useInstancedPool(MAX_ENEMY_BULLETS)
 
   useFrame(() => {
     const inst = mesh.current
-    if (!inst) return
+    const glowInst = glow.current
+    if (!inst || !glowInst) return
     const bullets = getWorld().enemyBullets
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
       const rotZ = Math.atan2(-b.vx, b.vy)
       writeInstance(inst, i, b.x, b.y, 0.26, 1, 1, 1, rotZ)
+      writeInstance(glowInst, i, b.x, b.y, 0.24, 1, 1, 1, 0)
       i++
     }
-    for (let j = i; j < MAX_ENEMY_BULLETS; j++) hideInstance(inst, j)
+    for (let j = i; j < MAX_ENEMY_BULLETS; j++) {
+      hideInstance(inst, j)
+      hideInstance(glowInst, j)
+    }
     inst.count = i
+    glowInst.count = i
     inst.instanceMatrix.needsUpdate = true
+    glowInst.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <instancedMesh
-      ref={mesh}
-      args={[geometry, material, MAX_ENEMY_BULLETS]}
-      frustumCulled={false}
-      castShadow={false}
-      receiveShadow={false}
-    />
+    <>
+      <instancedMesh ref={mesh} args={[geometry, material, MAX_ENEMY_BULLETS]} frustumCulled={false} />
+      <instancedMesh ref={glow} args={[glowGeo, glowMaterial, MAX_ENEMY_BULLETS]} frustumCulled={false} />
+    </>
   )
+}
+
+/** Class hull tint (multiplies the hostile hull material color). */
+const CLASS_TINT: Record<Enemy['class'], [number, number, number]> = {
+  fodder: [1.3, 1.18, 1.05],
+  grunt: [1, 0.95, 1.05],
+  elite: [0.85, 0.68, 0.95],
+  set_piece: [0.7, 0.64, 0.74],
+}
+
+function enemyIdleRotation(kind: EnemyKind, id: number, t: number): number {
+  switch (kind) {
+    case 'prism':
+      return t * 1.1 + id * 0.7
+    case 'drone':
+      return Math.sin(t * 3 + id) * 0.16
+    case 'razor':
+      return Math.sin(t * 1.8 + id) * 0.09
+    case 'colossus':
+      return Math.sin(t * 0.7) * 0.02
+    default:
+      return 0
+  }
 }
 
 function EnemyKindInstances({ kind, detail }: { kind: EnemyKind; detail: DetailLevel }) {
   const geometry = useMemo(() => bakeEnemyGeometry(kind, detail), [kind, detail])
+  const accentGeometry = useMemo(() => bakeEnemyAccentGeometry(kind), [kind])
   const material = useMemo(() => createEnemyMaterial(kind), [kind])
+  const accentMaterial = useMemo(() => createEnemyAccentMaterial(kind), [kind])
   const mesh = useInstancedPool(MAX_ENEMIES)
+  const accent = useInstancedPool(MAX_ENEMIES)
 
   useLayoutEffect(() => {
     return () => {
       geometry.dispose()
+      accentGeometry.dispose()
       material.dispose()
+      accentMaterial.dispose()
     }
-  }, [geometry, material])
+  }, [geometry, accentGeometry, material, accentMaterial])
 
-  useFrame(() => {
+  useFrame((state) => {
     const inst = mesh.current
-    if (!inst) return
+    const accInst = accent.current
+    if (!inst || !accInst) return
+    const t = state.clock.elapsedTime
     const enemies = getWorld().enemies
     let i = 0
     for (const e of enemies) {
       if (!e.active || e.kind !== kind) continue
-      writeInstance(inst, i, e.x, e.y, 0.22, 1, 1, 1)
+      const rotZ = enemyIdleRotation(kind, e.id, t)
+      writeInstance(inst, i, e.x, e.y, 0.22, 1, 1, 1, rotZ)
+      writeInstance(accInst, i, e.x, e.y, 0.23, 1, 1, 1, rotZ)
+      const tint = CLASS_TINT[e.class]
+      const flash = e.hitFlash > 0 ? e.hitFlash / 0.09 : 0
+      _color.setRGB(
+        tint[0] + flash * 2.2,
+        tint[1] + flash * 2.2,
+        tint[2] + flash * 2.2,
+      )
+      inst.setColorAt(i, _color)
       i++
     }
-    for (let j = i; j < MAX_ENEMIES; j++) hideInstance(inst, j)
+    for (let j = i; j < MAX_ENEMIES; j++) {
+      hideInstance(inst, j)
+      hideInstance(accInst, j)
+    }
     inst.count = i
+    accInst.count = i
     inst.instanceMatrix.needsUpdate = true
+    accInst.instanceMatrix.needsUpdate = true
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true
   })
 
   return (
-    <instancedMesh
-      ref={mesh}
-      args={[geometry, material, MAX_ENEMIES]}
-      frustumCulled={false}
-      castShadow={false}
-      receiveShadow={false}
-    />
+    <>
+      <instancedMesh
+        ref={mesh}
+        args={[geometry, material, MAX_ENEMIES]}
+        frustumCulled={false}
+      />
+      <instancedMesh
+        ref={accent}
+        args={[accentGeometry, accentMaterial, MAX_ENEMIES]}
+        frustumCulled={false}
+      />
+    </>
   )
 }
 
@@ -321,50 +423,224 @@ function EnemyInstances({ detail }: { detail: DetailLevel }) {
   )
 }
 
-/** Shape families: sphere, octahedron diamond, box wedge. */
-type PowerupShape = 'orb' | 'diamond' | 'wedge'
+const TELEGRAPH_TIME = 0.45
 
-function PowerupShapePool({
-  shape,
-  types,
-}: {
-  shape: PowerupShape
-  types: PowerupType[]
-}) {
-  const geometry = useMemo((): BufferGeometry => {
-    if (shape === 'orb') return new SphereGeometry(0.32, 12, 12)
-    if (shape === 'diamond') return new OctahedronGeometry(0.34, 0)
-    return new BoxGeometry(0.38, 0.28, 0.28)
-  }, [shape])
+/** Muzzle offset (local Y) where the pre-fire charge glow appears. */
+const MUZZLE_Y: Partial<Record<EnemyKind, number>> = {
+  dart: -0.55,
+  gunner: -0.72,
+  sidecar: 0,
+  razor: -0.35,
+  prism: 0,
+  colossus: -0.65,
+}
 
-  const material = useMemo(() => {
-    const mat = createTokenMaterial('pickupGold')
-    mat.vertexColors = true
-    return mat
+function TelegraphGlows() {
+  const geometry = useMemo(() => new PlaneGeometry(1, 1), [])
+  const material = useGlowMaterial('#ffffff', 0.9)
+  const mesh = useInstancedPool(MAX_ENEMIES)
+
+  useFrame(() => {
+    const inst = mesh.current
+    if (!inst) return
+    const enemies = getWorld().enemies
+    let i = 0
+    for (const e of enemies) {
+      if (!e.active || e.fireInterval <= 0 || e.shotStyle === 'none') continue
+      if (e.shotStyle === 'boss_spray' && e.phase !== 'spray') continue
+      if (e.fireCooldown > TELEGRAPH_TIME) continue
+      const charge = 1 - e.fireCooldown / TELEGRAPH_TIME
+      const size = (0.28 + charge * 0.55) * (e.kind === 'colossus' ? 1.7 : 1)
+      writeInstance(inst, i, e.x, e.y + (MUZZLE_Y[e.kind] ?? 0), 0.3, size, size, 1)
+      _color.setRGB(1, 0.45 + charge * 0.5, 0.25 + charge * 0.6)
+      inst.setColorAt(i, _color)
+      i++
+      if (i >= MAX_ENEMIES) break
+    }
+    for (let j = i; j < MAX_ENEMIES; j++) hideInstance(inst, j)
+    inst.count = i
+    inst.instanceMatrix.needsUpdate = true
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh ref={mesh} args={[geometry, material, MAX_ENEMIES]} frustumCulled={false} />
+  )
+}
+
+/* -------------------------------- Powerups ------------------------------- */
+
+type PowerupRecipe = {
+  hull: GeoPart[]
+  accent: GeoPart[]
+  spin: number
+}
+
+const POWERUP_RECIPES: Record<PowerupType, PowerupRecipe> = {
+  shield: {
+    // Aegis ring: torus shell with hex emitter core
+    hull: [
+      { kind: 'torus', r: 0.3, tube: 0.055, radialSeg: 6, tubularSeg: 22 },
+      { kind: 'box', sx: 0.1, sy: 0.1, sz: 0.08, y: 0.32 },
+      { kind: 'box', sx: 0.1, sy: 0.1, sz: 0.08, y: -0.32 },
+    ],
+    accent: [
+      { kind: 'cylinder', rTop: 0.14, rBottom: 0.14, height: 0.08, rotX: HALF, radialSeg: 6 },
+    ],
+    spin: 0.9,
+  },
+  repair: {
+    // Nanite capsule: shell brackets around a glowing cross
+    hull: [
+      { kind: 'box', sx: 0.12, sy: 0.44, sz: 0.12, x: -0.24 },
+      { kind: 'box', sx: 0.12, sy: 0.44, sz: 0.12, x: 0.24 },
+      { kind: 'box', sx: 0.42, sy: 0.1, sz: 0.12, y: 0.24 },
+      { kind: 'box', sx: 0.42, sy: 0.1, sz: 0.12, y: -0.24 },
+    ],
+    accent: [
+      { kind: 'box', sx: 0.34, sy: 0.12, sz: 0.1 },
+      { kind: 'box', sx: 0.12, sy: 0.34, sz: 0.1 },
+    ],
+    spin: 0,
+  },
+  bomb_stock: {
+    // Warhead: finned sphere with hot core seam
+    hull: [
+      { kind: 'sphere', r: 0.26, wSeg: 10, hSeg: 8 },
+      { kind: 'box', sx: 0.08, sy: 0.3, sz: 0.16, y: -0.3 },
+      { kind: 'box', sx: 0.16, sy: 0.3, sz: 0.08, y: -0.3 },
+      { kind: 'cylinder', rTop: 0.06, rBottom: 0.1, height: 0.12, y: 0.3, radialSeg: 6 },
+    ],
+    accent: [
+      { kind: 'box', sx: 0.56, sy: 0.07, sz: 0.07 },
+      { kind: 'sphere', r: 0.07, y: 0.38, wSeg: 6, hSeg: 5 },
+    ],
+    spin: 0.6,
+  },
+  rate_up: {
+    // Overclock: stacked chevrons pointing up-stream
+    hull: [
+      { kind: 'box', sx: 0.34, sy: 0.12, sz: 0.1, x: -0.14, y: 0.1, rotZ: 0.6 },
+      { kind: 'box', sx: 0.34, sy: 0.12, sz: 0.1, x: 0.14, y: 0.1, rotZ: -0.6 },
+      { kind: 'box', sx: 0.34, sy: 0.12, sz: 0.1, x: -0.14, y: -0.16, rotZ: 0.6 },
+      { kind: 'box', sx: 0.34, sy: 0.12, sz: 0.1, x: 0.14, y: -0.16, rotZ: -0.6 },
+    ],
+    accent: [
+      { kind: 'box', sx: 0.3, sy: 0.05, sz: 0.11, x: -0.12, y: 0.14, rotZ: 0.6 },
+      { kind: 'box', sx: 0.3, sy: 0.05, sz: 0.11, x: 0.12, y: 0.14, rotZ: -0.6 },
+    ],
+    spin: 0,
+  },
+  spread_up: {
+    // Options fan: hub with three angled emitter blades
+    hull: [
+      { kind: 'cylinder', rTop: 0.12, rBottom: 0.12, height: 0.1, rotX: HALF, radialSeg: 8 },
+      { kind: 'box', sx: 0.1, sy: 0.4, sz: 0.08, y: 0.24 },
+      { kind: 'box', sx: 0.1, sy: 0.4, sz: 0.08, x: -0.2, y: 0.16, rotZ: 0.55 },
+      { kind: 'box', sx: 0.1, sy: 0.4, sz: 0.08, x: 0.2, y: 0.16, rotZ: -0.55 },
+    ],
+    accent: [
+      { kind: 'sphere', r: 0.06, y: 0.44, wSeg: 6, hSeg: 5 },
+      { kind: 'sphere', r: 0.06, x: -0.32, y: 0.32, wSeg: 6, hSeg: 5 },
+      { kind: 'sphere', r: 0.06, x: 0.32, y: 0.32, wSeg: 6, hSeg: 5 },
+    ],
+    spin: 0,
+  },
+  score_mult: {
+    // Bounty gem: faceted crystal in a bracket ring
+    hull: [
+      { kind: 'torus', r: 0.32, tube: 0.035, rotX: 0.5, radialSeg: 5, tubularSeg: 18 },
+    ],
+    accent: [
+      { kind: 'octahedron', r: 0.22, sy: 1.35 },
+    ],
+    spin: 1.6,
+  },
+}
+
+function PowerupTypePool({ type }: { type: PowerupType }) {
+  const recipe = POWERUP_RECIPES[type]
+  const hullGeo = useMemo(() => bakeParts(recipe.hull), [recipe])
+  const accentGeo = useMemo(() => bakeParts(recipe.accent), [recipe])
+  const hullMaterial = useMemo(() => {
+    const m = createTokenMaterial('nozzleMetal')
+    m.metalness = 0.85
+    m.roughness = 0.3
+    m.color.set('#4a5a6c')
+    return m
   }, [])
-
-  const mesh = useInstancedPool(MAX_POWERUPS)
-  const color = useMemo(() => new Color(), [])
-  const typeSet = useMemo(() => new Set(types), [types])
+  const accentMaterial = useMemo(() => {
+    const m = createTokenMaterial(POWERUP_TOKENS[type])
+    m.emissiveIntensity = Math.max(1.8, m.emissiveIntensity)
+    m.toneMapped = false
+    return m
+  }, [type])
+  const hull = useInstancedPool(MAX_POWERUPS)
+  const accent = useInstancedPool(MAX_POWERUPS)
 
   useLayoutEffect(() => {
     return () => {
-      geometry.dispose()
-      material.dispose()
+      hullGeo.dispose()
+      accentGeo.dispose()
+      hullMaterial.dispose()
+      accentMaterial.dispose()
     }
-  }, [geometry, material])
+  }, [hullGeo, accentGeo, hullMaterial, accentMaterial])
+
+  useFrame((state) => {
+    const hullInst = hull.current
+    const accInst = accent.current
+    if (!hullInst || !accInst) return
+    const world = getWorld()
+    const t = state.clock.elapsedTime
+    const p = world.player
+    let i = 0
+    for (const powerup of world.powerups) {
+      if (!powerup.active || powerup.type !== type) continue
+      const bob = Math.sin(t * 2.2 + powerup.id * 2) * 0.05
+      const dist = Math.hypot(p.x - powerup.x, p.y - powerup.y)
+      const attracted = dist < MAGNET_RADIUS
+      const pulse = attracted ? 1.18 + Math.sin(t * 10) * 0.08 : 1
+      const rotZ = recipe.spin === 0 ? Math.sin(t * 1.6 + powerup.id) * 0.18 : t * recipe.spin
+      writeInstance(hullInst, i, powerup.x, powerup.y + bob, 0.32, pulse, pulse, pulse, rotZ)
+      writeInstance(accInst, i, powerup.x, powerup.y + bob, 0.33, pulse, pulse, pulse, rotZ)
+      i++
+    }
+    for (let j = i; j < MAX_POWERUPS; j++) {
+      hideInstance(hullInst, j)
+      hideInstance(accInst, j)
+    }
+    hullInst.count = i
+    accInst.count = i
+    hullInst.instanceMatrix.needsUpdate = true
+    accInst.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <>
+      <instancedMesh ref={hull} args={[hullGeo, hullMaterial, MAX_POWERUPS]} frustumCulled={false} />
+      <instancedMesh ref={accent} args={[accentGeo, accentMaterial, MAX_POWERUPS]} frustumCulled={false} />
+    </>
+  )
+}
+
+function PowerupHalos() {
+  const geometry = useMemo(() => new PlaneGeometry(1, 1), [])
+  const material = useGlowMaterial('#ffffff', 0.5)
+  const mesh = useInstancedPool(MAX_POWERUPS)
 
   useFrame((state) => {
     const inst = mesh.current
     if (!inst) return
-    const powerups = getWorld().powerups
+    const world = getWorld()
+    const t = state.clock.elapsedTime
     let i = 0
-    for (const powerup of powerups) {
-      if (!powerup.active || !typeSet.has(powerup.type)) continue
-      const spin = state.clock.elapsedTime * 1.8
-      writeInstance(inst, i, powerup.x, powerup.y, 0.32, 1, 1, 1, spin)
-      color.set(materialToken(POWERUP_TOKENS[powerup.type]).color)
-      inst.setColorAt(i, color)
+    for (const powerup of world.powerups) {
+      if (!powerup.active) continue
+      const size = 1 + Math.sin(t * 3 + powerup.id) * 0.12
+      writeInstance(inst, i, powerup.x, powerup.y, 0.28, size, size, 1)
+      _color.set(materialToken(POWERUP_TOKENS[powerup.type]).emissive)
+      inst.setColorAt(i, _color)
       i++
     }
     for (let j = i; j < MAX_POWERUPS; j++) hideInstance(inst, j)
@@ -373,15 +649,27 @@ function PowerupShapePool({
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true
   })
 
-  return <instancedMesh ref={mesh} args={[geometry, material, MAX_POWERUPS]} frustumCulled={false} />
+  return (
+    <instancedMesh ref={mesh} args={[geometry, material, MAX_POWERUPS]} frustumCulled={false} />
+  )
 }
+
+const POWERUP_TYPE_LIST: PowerupType[] = [
+  'shield',
+  'bomb_stock',
+  'repair',
+  'rate_up',
+  'spread_up',
+  'score_mult',
+]
 
 function PowerupInstances() {
   return (
     <group>
-      <PowerupShapePool shape="orb" types={['shield', 'repair']} />
-      <PowerupShapePool shape="diamond" types={['bomb_stock', 'rate_up', 'score_mult']} />
-      <PowerupShapePool shape="wedge" types={['spread_up']} />
+      <PowerupHalos />
+      {POWERUP_TYPE_LIST.map((type) => (
+        <PowerupTypePool key={type} type={type} />
+      ))}
     </group>
   )
 }

@@ -7,14 +7,24 @@ export function ResultsScreen() {
 
   return (
     <div className="screen">
-      <h2>Results</h2>
+      <header className="screen-header">
+        <h2>Debrief</h2>
+        <p className="screen-kicker">Run telemetry and salvage</p>
+      </header>
       {lastRun ? (
         <div className="results-body">
-          <p className="results-score">Score {lastRun.score}</p>
-          <p className="muted">
-            {lastRun.shipName} · Wave {lastRun.wave} · Kills {lastRun.kills} · Time{' '}
-            {Math.floor(lastRun.timeSec)}s
+          <p className="results-score">
+            <span className="hud-label">Final score</span>
+            {lastRun.score.toLocaleString()}
           </p>
+          <div className="results-stats">
+            <span>{lastRun.shipName}</span>
+            <span>Wave {lastRun.wave}</span>
+            <span>Kills {lastRun.kills}</span>
+            <span>Best chain {lastRun.bestCombo}</span>
+            <span>Grazes {lastRun.grazes}</span>
+            <span>Time {Math.floor(lastRun.timeSec)}s</span>
+          </div>
           <p className="muted">Career best {lastRun.careerBest.toLocaleString()}</p>
           {lastRun.unlockedKitNames.length > 0 ? (
             <p className="unlock-note">
@@ -36,7 +46,7 @@ export function ResultsScreen() {
         <p className="muted">No run data</p>
       )}
       <div className="menu">
-        <button type="button" onClick={startRun}>
+        <button type="button" className="primary-action" onClick={startRun}>
           Quick retry
         </button>
         <button type="button" onClick={() => setScreen('hangar')}>

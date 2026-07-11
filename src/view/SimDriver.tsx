@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { sampleCommands } from '../input/sample'
+import { presentationFxState } from '../presentation/fxState'
 import { FIXED_DT, MAX_SIM_STEPS } from '../sim/constants'
 import { isRunReadyForResults, stepWorld } from '../sim/step'
 import { getWorld } from '../sim/world'
@@ -39,11 +40,20 @@ export function SimDriver() {
 
     finished.current = false
 
-    acc.current += Math.min(delta, 0.1)
+    // Hitstop: gameplay accumulation slows; render/FX keep the real delta.
+    const fx = presentationFxState
+    let timeScale = 1
+    if (fx.hitstopRemaining > 0) {
+      fx.hitstopRemaining = Math.max(0, fx.hitstopRemaining - delta)
+      timeScale = fx.hitstopRemaining > 0 ? fx.hitstopScale : 1
+    }
+    const autoFire = useSessionStore.getState().settings.autoFire
+
+    acc.current += Math.min(delta, 0.1) * timeScale
     let steps = 0
     let bombEdge = commands.bomb
     while (acc.current >= FIXED_DT && steps < MAX_SIM_STEPS) {
-      stepWorld(world, FIXED_DT, { ...commands, bomb: bombEdge })
+      stepWorld(world, FIXED_DT, { ...commands, fire: commands.fire || autoFire, bomb: bombEdge })
       bombEdge = false
       acc.current -= FIXED_DT
       steps++

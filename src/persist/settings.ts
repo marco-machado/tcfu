@@ -7,6 +7,9 @@ export type Settings = {
   master: number
   music: number
   sfx: number
+  screenShake: boolean
+  reducedMotion: boolean
+  autoFire: boolean
 }
 
 const KEY = 'tcfu.settings'
@@ -16,6 +19,9 @@ const defaults: Settings = {
   master: 100,
   music: 0,
   sfx: 80,
+  screenShake: true,
+  reducedMotion: false,
+  autoFire: false,
 }
 
 export function loadSettings(): Settings {
