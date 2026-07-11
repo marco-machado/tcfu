@@ -1,5 +1,5 @@
 import { useSessionStore } from '../../app/sessionStore'
-import { unlockAudio, playSfx, syncMusic } from '../../audio/bus'
+import { unlockAudio, playSfx } from '../../audio/bus'
 import { BrandMark } from '../brand/BrandMark'
 
 export function TitleScreen() {
@@ -8,7 +8,6 @@ export function TitleScreen() {
 
   const goHangar = () => {
     unlockAudio()
-    syncMusic(settings)
     playSfx('ui_confirm', settings)
     setScreen('hangar')
   }

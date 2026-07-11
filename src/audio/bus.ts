@@ -1,6 +1,7 @@
 import { musicGain, sfxGain } from '../sim/presentation'
 import type { PresentationEventType } from '../sim/presentation'
-import musicUrl from '../../assets/audio/music/corridor-signal-loop.mp3'
+import menuMusicUrl from '../../assets/audio/music/corridor-signal-loop.mp3'
+import combatMusicUrl from '../../assets/audio/music/hard-lock-target.mp3'
 
 export type AudioSettings = {
   master: number
@@ -165,19 +166,37 @@ export function playSfx(type: PresentationEventType | 'ui_confirm' | 'ui_move', 
   }
 }
 
-let musicEl: HTMLAudioElement | null = null
+export type MusicTrack = 'menu' | 'combat'
 
-export function syncMusic(settings: AudioSettings): void {
-  const gain = musicGain(settings.master, settings.music)
-  if (!musicEl) {
-    if (!unlocked || gain <= 0) return
-    musicEl = new Audio(musicUrl)
-    musicEl.loop = true
+const musicUrls: Record<MusicTrack, string> = {
+  menu: menuMusicUrl,
+  combat: combatMusicUrl,
+}
+
+const musicEls: Partial<Record<MusicTrack, HTMLAudioElement>> = {}
+let currentTrack: MusicTrack = 'menu'
+
+export function syncMusic(settings: AudioSettings, track: MusicTrack = currentTrack): void {
+  if (track !== currentTrack) {
+    const previous = musicEls[currentTrack]
+    if (previous) {
+      previous.pause()
+      previous.currentTime = 0
+    }
+    currentTrack = track
   }
-  musicEl.volume = Math.min(1, gain)
+  const gain = musicGain(settings.master, settings.music)
+  let el = musicEls[track]
+  if (!el) {
+    if (!unlocked || gain <= 0) return
+    el = new Audio(musicUrls[track])
+    el.loop = true
+    musicEls[track] = el
+  }
+  el.volume = Math.min(1, gain)
   if (gain <= 0) {
-    musicEl.pause()
-  } else if (musicEl.paused && unlocked) {
-    void musicEl.play()
+    el.pause()
+  } else if (el.paused && unlocked) {
+    void el.play()
   }
 }

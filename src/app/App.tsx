@@ -8,13 +8,19 @@ import { ResultsScreen } from '../shell/screens/ResultsScreen'
 import { HighScoresScreen } from '../shell/screens/HighScoresScreen'
 import { SettingsScreen } from '../shell/screens/SettingsScreen'
 import { isDebugMode } from './debugMode'
-import { Suspense, lazy } from 'react'
+import { syncMusic } from '../audio/bus'
+import { Suspense, lazy, useEffect } from 'react'
 
 // Dynamic import under a DEV constant so production builds drop the debug UI chunk.
 const DebugUi = import.meta.env.DEV ? lazy(() => import('../shell/DebugPanel')) : null
 
 export function App() {
   const screen = useSessionStore((s) => s.screen)
+  const settings = useSessionStore((s) => s.settings)
+
+  useEffect(() => {
+    syncMusic(settings, screen === 'run' ? 'combat' : 'menu')
+  }, [screen, settings])
 
   return (
     <Stage>

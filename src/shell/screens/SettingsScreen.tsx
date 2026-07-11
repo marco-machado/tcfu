@@ -1,5 +1,5 @@
 import { useSessionStore } from '../../app/sessionStore'
-import { playSfx, unlockAudio, syncMusic } from '../../audio/bus'
+import { playSfx, unlockAudio } from '../../audio/bus'
 import { saveSettings, type Quality, type Settings } from '../../persist/settings'
 import { resetMeta } from '../../persist/meta'
 import { resetHighScores } from '../../persist/highScores'
@@ -79,7 +79,6 @@ export function SettingsScreen() {
     saveSettings(next)
     setSettings(next)
     unlockAudio()
-    syncMusic(next)
     playSfx('ui_move', next)
   }
 
