@@ -263,17 +263,17 @@ export function sceneryExtras(detail: DetailLevel): SceneryExtras {
     }
   }
   return {
-    starCount: 130,
-    streakCount: 30,
+    starCount: 170,
+    streakCount: 34,
     distantSilhouettes: true,
-    wispCount: 6,
-    asteroidCount: 26,
-    derelictCount: 9,
-    pylonCount: 8,
-    gateCount: 3,
-    dustCount: 40,
-    railDashCount: 22,
-    chevronCount: 15,
+    wispCount: 9,
+    asteroidCount: 36,
+    derelictCount: 14,
+    pylonCount: 11,
+    gateCount: 4,
+    dustCount: 60,
+    railDashCount: 26,
+    chevronCount: 18,
   }
 }
 

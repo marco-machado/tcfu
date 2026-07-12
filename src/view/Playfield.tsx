@@ -78,7 +78,6 @@ export function Playfield() {
   const height = BAND.maxY - BAND.minY
   const cx = (BAND.minX + BAND.maxX) / 2
   const cy = (BAND.minY + BAND.maxY) / 2
-  const bandGeo = useMemo(() => new BoxGeometry(width, height, 0.01), [width, height])
 
   return (
     <group>
@@ -89,11 +88,6 @@ export function Playfield() {
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial color="#071019" transparent opacity={0.1} />
       </mesh>
-
-      <lineSegments position={[cx, cy, 0.02]}>
-        <edgesGeometry args={[bandGeo]} />
-        <lineBasicMaterial color="#2a6a88" transparent opacity={0.4} />
-      </lineSegments>
 
       <PlayerMesh detail={detail} />
       <DeathBurst />
@@ -108,10 +102,11 @@ export function Playfield() {
 
 function PlayerMesh({ detail }: { detail: DetailLevel }) {
   const group = useRef<Group>(null)
+  const bank = useRef(0)
   // Ship is fixed for the Run; session selection matches world.player.shipId at launch.
   const shipId = useSessionStore((s) => s.selectedShip)
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const world = getWorld()
     const p = world.player
     const dead = world.session.runOver
@@ -121,9 +116,12 @@ function PlayerMesh({ detail }: { detail: DetailLevel }) {
     if (!g) return
     g.visible = visible
     g.position.set(p.x, p.y, 0.2)
-    // Tip thrusters toward camera (elevated rear read) and bank with strafe
+    // Tip thrusters toward camera (elevated rear read) and bank with strafe.
+    // Bank is damped so it eases instead of snapping when vx changes or zeroes at the band edge.
+    const targetBank = -p.vx * 0.04
+    bank.current += (targetBank - bank.current) * (1 - Math.exp(-delta * 9))
     g.rotation.x = -0.52
-    g.rotation.z = -p.vx * 0.055
+    g.rotation.z = bank.current
   })
 
   return (

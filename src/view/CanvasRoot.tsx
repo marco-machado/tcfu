@@ -43,9 +43,9 @@ export function CanvasRoot() {
     >
       <color attach="background" args={['#030710']} />
       {fogOn ? <fog attach="fog" args={['#040a14', 18, 52]} /> : null}
-      <ambientLight intensity={0.15} />
-      <hemisphereLight args={['#547693', '#070c14', 0.5]} />
-      <directionalLight position={[3, 10, 8]} intensity={1.1} color="#c8e4ff" />
+      <ambientLight intensity={0.22} />
+      <hemisphereLight args={['#547693', '#070c14', 0.65]} />
+      <directionalLight position={[3, 10, 8]} intensity={1.45} color="#c8e4ff" />
       <directionalLight position={[-6, 2, 4]} intensity={0.3} color="#2a4a68" />
       <directionalLight position={[0, -4, 6]} intensity={0.85} color="#7cc8e8" />
 
