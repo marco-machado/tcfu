@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { emptyCommands, type Commands } from '../input/commands'
 import {
+  BAND,
   CONTACT_ARM_TIME,
   DEATH_HOLD,
   DROP_WEIGHTS,
@@ -16,6 +17,7 @@ import {
   WAVE_GAP,
   BOMB_DAMAGE,
   SET_PIECE_STREAM_MULT,
+  SPAWN_Y,
   playerMoveBounds,
   scrapForRun,
   streamSpeedForWave,
@@ -262,7 +264,7 @@ describe('sim world step combat offense', () => {
     const enemies = activeEnemies(world)
     expect(enemies.length).toBe(4)
     expect(enemies.every((e) => e.kind === 'drone')).toBe(true)
-    expect(enemies[0].y).toBeLessThanOrEqual(18)
+    expect(enemies[0].y).toBeLessThanOrEqual(SPAWN_Y)
 
     const yBefore = enemies[0].y
     steps(world, 60, idle())
@@ -671,7 +673,7 @@ describe('sim world step combat defense and terminal', () => {
     const bounds = playerMoveBounds()
     steps(world, 120, { ...emptyCommands(), moveY: 1 })
     expect(world.player.y).toBeLessThanOrEqual(bounds.maxY + 1e-6)
-    expect(world.player.y).toBeLessThan(7 - 0.5)
+    expect(world.player.y).toBeLessThan(BAND.maxY - 0.5)
     steps(world, 120, { ...emptyCommands(), moveY: -1 })
     expect(world.player.y).toBeGreaterThanOrEqual(bounds.minY - 1e-6)
   })

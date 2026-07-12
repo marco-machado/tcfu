@@ -9,7 +9,7 @@ export const BAND = {
   minX: -6,
   maxX: 6,
   minY: 1.5,
-  maxY: 7,
+  maxY: 15,
 } as const
 
 /** Visual hull half-extents used to keep the ship mesh inside the band. */
@@ -191,13 +191,15 @@ export const IFRAMES_BOMB = 0.75
 export const MERCY_CLEAR_R = 3
 export const BOMB_DAMAGE = 5
 
-export const SPAWN_Y = 18
+export const SPAWN_Y = 26
 export const CULL_Y_MIN = -2
+/** Above the visible top of the z=0 plane at standard aspect so bullets exit off-screen. */
+export const CULL_Y_MAX = 34
 export const CULL_X_MAX = 10
 
 export const WAVE_GAP = 0.75
 export const WAVE_CLEAR_WINDOW = 8
-export const HOLD_Y = 12
+export const HOLD_Y = 15
 
 export const HP_RAMP = 0.04
 export const HP_CAP = 2.5

@@ -6,6 +6,7 @@ import {
   COMBO_WINDOW,
   CONTACT_ARM_TIME,
   CULL_X_MAX,
+  CULL_Y_MAX,
   CULL_Y_MIN,
   DART,
   GRAZE_COMBO_TOPUP,
@@ -671,7 +672,7 @@ function stepPlayerBullets(world: World, dt: number): void {
     if (!b.active) continue
     b.x += b.vx * dt
     b.y += b.vy * dt
-    if (b.y > SPAWN_Y + 2 || b.y < CULL_Y_MIN || Math.abs(b.x) > CULL_X_MAX) {
+    if (b.y > CULL_Y_MAX || b.y < CULL_Y_MIN || Math.abs(b.x) > CULL_X_MAX) {
       b.active = false
     }
   }
@@ -682,7 +683,7 @@ function stepEnemyBullets(world: World, dt: number): void {
     if (!b.active) continue
     b.x += b.vx * dt
     b.y += b.vy * dt
-    if (b.y < CULL_Y_MIN || b.y > SPAWN_Y + 2 || Math.abs(b.x) > CULL_X_MAX) {
+    if (b.y < CULL_Y_MIN || b.y > CULL_Y_MAX || Math.abs(b.x) > CULL_X_MAX) {
       b.active = false
     }
   }
