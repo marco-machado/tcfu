@@ -17,6 +17,8 @@ import { CAMERA_FOV, CAMERA_FOV_MAX, CAMERA_LOOK_AT, CAMERA_POS, STREAM_BASE_SPE
 import { drainPresentation, type PresentationEvent } from '../sim/presentation'
 import { getWorld } from '../sim/world'
 import { presentationFxState, triggerHitstop } from '../presentation/fxState'
+import { debugCameraLive, debugCameraOverride } from '../presentation/debugCamera'
+import { isDebugMode } from '../app/debugMode'
 
 const MAX_FX = 128
 const MAX_RINGS = 24
@@ -210,6 +212,16 @@ function pseudoNoise(t: number, seed: number): number {
   return (x - Math.floor(x)) * 2 - 1
 }
 
+const EMPTY_OVERRIDE: typeof debugCameraOverride = {
+  fov: null,
+  posX: null,
+  posY: null,
+  posZ: null,
+  lookX: null,
+  lookY: null,
+  lookZ: null,
+}
+
 const TRAUMA_DECAY = 1.5
 const MAX_SHAKE_OFFSET = 0.4
 const MAX_SHAKE_ROLL = 0.045
@@ -393,7 +405,6 @@ export function PresentationDriver() {
 
     /* Camera rig: base + speed FOV + sway + trauma shake + roll. */
     const cam = camera as PerspectiveCamera
-    const p = world.player
     swayT.current += dt
     shakeTime.current += dt
     trauma.current = Math.max(0, trauma.current - TRAUMA_DECAY * dt)
@@ -402,19 +413,24 @@ export function PresentationDriver() {
       if (fovPunch.current < 0.001) fovPunch.current = 0
     }
 
+    const debug = isDebugMode()
+    const ov = debug ? debugCameraOverride : EMPTY_OVERRIDE
     const speedRatio = world.streamSpeed / STREAM_BASE_SPEED
     const speedFov = (speedRatio - 1) * 9
-    const targetFov = baseFovForAspect(cam.aspect) + speedFov + fovPunch.current
+    const baseFov = baseFovForAspect(cam.aspect)
+    const targetFov = (ov.fov ?? baseFov) + speedFov + fovPunch.current
     if (Math.abs(cam.fov - targetFov) > 0.01) {
       cam.fov += (targetFov - cam.fov) * Math.min(1, delta * 6)
       cam.updateProjectionMatrix()
     }
 
     const la = lookAt.current
-    let px = basePos.current.x + p.x * 0.055
-    let py = basePos.current.y
-    let pz = basePos.current.z
-    let lx = la.x + p.x * 0.14
+    const lay = ov.lookY ?? la.y
+    const laz = ov.lookZ ?? la.z
+    let px = ov.posX ?? basePos.current.x
+    let py = ov.posY ?? basePos.current.y
+    let pz = ov.posZ ?? basePos.current.z
+    let lx = ov.lookX ?? la.x
 
     if (swayOn && !world.session.paused) {
       const a = 0.05
@@ -425,7 +441,7 @@ export function PresentationDriver() {
       lx += Math.sin(t * 0.5) * a * 0.35
     }
 
-    let roll = -p.vx * 0.006
+    let roll = 0
     if (shakeOn && trauma.current > 0) {
       const shake = trauma.current * trauma.current
       const freq = shakeTime.current * 30
@@ -435,8 +451,19 @@ export function PresentationDriver() {
     }
 
     camera.position.set(px, py, pz)
-    camera.lookAt(lx, la.y, la.z)
+    camera.lookAt(lx, lay, laz)
     camera.rotation.z += roll
+
+    if (debug) {
+      debugCameraLive.baseFov = baseFov
+      debugCameraLive.fov = cam.fov
+      debugCameraLive.posX = px
+      debugCameraLive.posY = py
+      debugCameraLive.posZ = pz
+      debugCameraLive.lookX = lx
+      debugCameraLive.lookY = lay
+      debugCameraLive.lookZ = laz
+    }
   })
 
   return (

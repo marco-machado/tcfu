@@ -19,6 +19,12 @@ import {
   debugSuspendWaves,
   debugTriggerPattern,
 } from '../sim/debugActions'
+import {
+  debugCameraLive,
+  debugCameraOverride,
+  resetDebugCameraOverride,
+} from '../presentation/debugCamera'
+import { CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
 import { ALL_PATTERN_IDS } from '../sim/patterns'
 import { weaponTierForWCells } from '../sim/weapons'
 import { getWorld } from '../sim/world'
@@ -64,6 +70,41 @@ function Btn({ label, onClick, on }: { label: string; onClick: () => void; on?: 
     >
       {label}
     </button>
+  )
+}
+
+function CamRow({
+  label,
+  live,
+  ovr,
+  def,
+  step,
+  set,
+}: {
+  label: string
+  live: number
+  ovr: number | null
+  def: number
+  step: number
+  set: (v: number | null) => void
+}) {
+  const cur = ovr ?? def
+  return (
+    <div style={rowStyle}>
+      <span style={{ width: 90 }}>
+        {label} {live.toFixed(2)}
+        {ovr !== null ? '*' : ''}
+      </span>
+      <Btn label="-" onClick={() => set(Math.round((cur - step) * 100) / 100)} />
+      <Btn label="+" onClick={() => set(Math.round((cur + step) * 100) / 100)} />
+      <input
+        value={ovr === null ? '' : String(ovr)}
+        placeholder={def.toFixed(2)}
+        size={5}
+        onChange={(e) => set(e.target.value === '' ? null : Number(e.target.value) || 0)}
+        style={{ background: '#0d1826', color: '#cfeaff', width: 52 }}
+      />
+    </div>
   )
 }
 
@@ -159,6 +200,12 @@ export function DebugPanel() {
     useDebugStore()
   const [pattern, setPattern] = useState(ALL_PATTERN_IDS[0] ?? '')
   const [jumpWave, setJumpWave] = useState('10')
+  const [, bumpCam] = useState(0)
+
+  const setCamOverride = (key: keyof typeof debugCameraOverride) => (v: number | null) => {
+    debugCameraOverride[key] = v
+    bumpCam((n) => n + 1)
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -182,6 +229,14 @@ export function DebugPanel() {
       p.wCells,
       p.shield,
       p.godMode,
+      debugCameraLive.fov.toFixed(1),
+      debugCameraLive.posX.toFixed(2),
+      debugCameraLive.posY.toFixed(2),
+      debugCameraLive.posZ.toFixed(2),
+      debugCameraLive.lookX.toFixed(2),
+      debugCameraLive.lookY.toFixed(2),
+      debugCameraLive.lookZ.toFixed(2),
+      JSON.stringify(debugCameraOverride),
     ].join(',')
   })
 
@@ -291,6 +346,73 @@ export function DebugPanel() {
           onClick={() => debugSetPaused(world, !world.session.paused)}
         />
         <Btn label="Step frame" onClick={() => debugStepOneFrame(world)} />
+      </div>
+
+      <div style={headStyle}>Camera</div>
+      <CamRow
+        label="fov"
+        live={debugCameraLive.fov}
+        ovr={debugCameraOverride.fov}
+        def={debugCameraLive.baseFov}
+        step={5}
+        set={setCamOverride('fov')}
+      />
+      <CamRow
+        label="pos x"
+        live={debugCameraLive.posX}
+        ovr={debugCameraOverride.posX}
+        def={CAMERA_POS.x}
+        step={0.25}
+        set={setCamOverride('posX')}
+      />
+      <CamRow
+        label="pos y"
+        live={debugCameraLive.posY}
+        ovr={debugCameraOverride.posY}
+        def={CAMERA_POS.y}
+        step={0.25}
+        set={setCamOverride('posY')}
+      />
+      <CamRow
+        label="pos z"
+        live={debugCameraLive.posZ}
+        ovr={debugCameraOverride.posZ}
+        def={CAMERA_POS.z}
+        step={0.25}
+        set={setCamOverride('posZ')}
+      />
+      <CamRow
+        label="look x"
+        live={debugCameraLive.lookX}
+        ovr={debugCameraOverride.lookX}
+        def={CAMERA_LOOK_AT.x}
+        step={0.5}
+        set={setCamOverride('lookX')}
+      />
+      <CamRow
+        label="look y"
+        live={debugCameraLive.lookY}
+        ovr={debugCameraOverride.lookY}
+        def={CAMERA_LOOK_AT.y}
+        step={0.5}
+        set={setCamOverride('lookY')}
+      />
+      <CamRow
+        label="look z"
+        live={debugCameraLive.lookZ}
+        ovr={debugCameraOverride.lookZ}
+        def={CAMERA_LOOK_AT.z}
+        step={0.5}
+        set={setCamOverride('lookZ')}
+      />
+      <div style={rowStyle}>
+        <Btn
+          label="Reset camera"
+          onClick={() => {
+            resetDebugCameraOverride()
+            bumpCam((n) => n + 1)
+          }}
+        />
       </div>
 
       <div style={headStyle}>Overlay</div>
