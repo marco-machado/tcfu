@@ -13,7 +13,7 @@ import {
   useRoleMats,
   type RoleMats,
 } from './shipParts'
-import { VanguardFactory } from './VanguardFactory'
+import { VanguardModel } from './VanguardModel'
 
 type Props = {
   shipId: ShipId
@@ -435,7 +435,7 @@ function KitBody({
       return <PhantomKit detail={detail} mats={mats} liveThrust={liveThrust} />
     default:
       return (
-        <VanguardFactory
+        <VanguardModel
           detail={detail}
           mutableMaterials={mutableMaterials}
           liveThrust={liveThrust}
