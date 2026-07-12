@@ -18,8 +18,10 @@ import { getWorld } from '../../sim/world'
 import { useSessionStore } from '../../app/sessionStore'
 import { bakeParts, type GeoPart } from './bakeGeometry'
 import {
+  getAsteroidRockTexture,
   getMicroNoiseTexture,
   getNebulaTexture,
+  getNebulaWispTextures,
   getPanelLineTexture,
   getSoftGlowTexture,
   getStreamFlowTexture,
@@ -193,9 +195,8 @@ function StarLayer({
 
 /* ------------------------------ Nebula wisps ----------------------------- */
 
-const WISP_TINTS = ['#1c4a6e', '#274067', '#3a2a58', '#173f52', '#5a3018', '#1c4a6e'] as const
-
 function NebulaWisps({ count }: { count: number }) {
+  const wispTex = getNebulaWispTextures()
   const group = useRef<Array<{ y: number }>>([])
   const refs = useRef<Array<Object3D | null>>([])
   const placements = useMemo(
@@ -205,7 +206,7 @@ function NebulaWisps({ count }: { count: number }) {
         y0: hash01(i * 31 + 401) * 44 - 8,
         z: -2.9,
         s: 7 + hash01(i * 31 + 402) * 11,
-        tint: WISP_TINTS[i % WISP_TINTS.length]!,
+        quad: i % 4,
         opacity: 0.16 + hash01(i * 31 + 403) * 0.14,
       })),
     [count],
@@ -241,8 +242,7 @@ function NebulaWisps({ count }: { count: number }) {
         >
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial
-            map={getSoftGlowTexture()}
-            color={p.tint}
+            map={wispTex[p.quad]}
             transparent
             opacity={p.opacity}
             blending={AdditiveBlending}
@@ -277,7 +277,8 @@ function AsteroidField({ count }: { count: number }) {
   const material = useMemo(
     () =>
       new MeshStandardMaterial({
-        color: '#48586a',
+        color: '#9aa4b2',
+        map: getAsteroidRockTexture(),
         metalness: 0.25,
         roughness: 0.85,
         roughnessMap: getMicroNoiseTexture(),

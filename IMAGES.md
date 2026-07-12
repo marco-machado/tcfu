@@ -1,31 +1,24 @@
 # Image Generation Backlog
 
-Images to generate once an image-generation capability is available (the `threejs-image-generator` skill with `GEMINI_API_KEY`, probed MISSING on 2026-07-11). Every current equivalent ships procedurally (canvas textures, CSS, SVG); these assets replace or upsell those stand-ins without changing gameplay code.
-
-Generation command pattern (from the skill):
-
-```bash
-uv run <threejs-image-generator-skill-dir>/scripts/generate_image.py \
-  --prompt "<prompt>" --filename <output path> --resolution <1K|2K|4K>
-```
+Images to generate once an image-generation capability is available. Every current equivalent ships procedurally (canvas textures, CSS, SVG); these assets replace or upsell those stand-ins without changing gameplay code.
 
 Art direction constants for every prompt: deep-void navy/black space (#03070f), signal cyan (#5ee7ff) for player/UI, ember orange-red (#ff5a30) for hostiles, salvage gold (#f6ca62) for rewards, clean hard-surface sci-fi, no text unless specified.
 
-## 1. Skies and backdrops
+## 1. Skies and backdrops (integrated)
 
 | # | Asset | Path | Res | Prompt | Integration |
 |---|-------|------|-----|--------|-------------|
 | 1.1 | Nebula backdrop plate | `public/assets/textures/nebula-backdrop.png` | 4K | Create a wide game background plate of a deep-space nebula corridor: dark navy void, faint teal and indigo nebula banks, sparse warm ember accents, dense pinprick starfield, layered depth, readable horizon glow at the top, suitable behind a real-time Three.js scene, no foreground subject, no text. | Replace `getNebulaTexture()` canvas plate in `src/view/procedural/ProceduralTextures.ts`; load as `TextureLoader` map on the Backdrop plane in `WorldCorridor.tsx`. Keep offset drift code. |
 | 1.2 | Nebula wisp sprites (sheet of 4) | `public/assets/textures/nebula-wisps.png` | 2K | Create a 2x2 sprite sheet of soft volumetric nebula wisps on pure black: teal, indigo, violet, and dim ember variants, soft alpha edges, no hard silhouettes, game particle sprites, no text. | Slice into 4 UV quadrants for `NebulaWisps` in `WorldCorridor.tsx` (replace tinted `getSoftGlowTexture()` planes). Additive blending stays. |
 
-## 2. Textures and trim
+## 2. Textures and trim (2.1-2.3 integrated; 2.4 deferred)
 
 | # | Asset | Path | Res | Prompt | Integration |
 |---|-------|------|-----|--------|-------------|
-| 2.1 | Hull trim sheet | `public/assets/textures/hull-trim-sheet.png` | 2K | Create a seamless sci-fi spaceship hull trim sheet texture: orthographic, PBR-friendly albedo, brushed gunmetal panels, recessed seams, access hatches, subtle wear on edges, thin cyan light channels, no perspective, no baked shadows, no text. | Replace `getPanelLineTexture()`; assign as `map` on `bodyPrimary`/`bodySecondary` roles in `MaterialLibrary.ts` with matching roughness map. |
+| 2.1 | Hull trim sheet | `public/assets/textures/hull-trim-sheet.png` | 2K | Create a seamless sci-fi spaceship hull trim sheet texture: orthographic, PBR-friendly albedo, brushed gunmetal panels, recessed seams, access hatches, subtle wear on edges, thin cyan light channels, no perspective, no baked shadows, no text. | Integrated via new `getHullTrimTexture()`, wired as `map` on `bodyPrimary`/`bodySecondary` roles in `MaterialLibrary.ts` only. Enemies + DerelictFleet keep the procedural `getPanelLineTexture()`. Roughness stays the procedural `getMicroNoiseTexture()` (no roughness PNG generated). |
 | 2.2 | Stream flow map | `public/assets/textures/stream-flow.png` | 2K | Create a seamless vertical energy-flow texture for a hyperspace conveyor lane: near-black base, thin cyan-teal flow filaments of varied length streaming downward, faint wide channel glow bands, tileable top-to-bottom, no perspective, no text. | Replace `getStreamFlowTexture()` on the `StreamRibbon` plane in `WorldCorridor.tsx`; keep V-scroll code. |
 | 2.3 | Asteroid albedo/roughness | `public/assets/textures/asteroid-rock.png` | 2K | Create a seamless dark basalt asteroid rock texture: charcoal grey with faint blue mineral veins, fine regolith detail, PBR-friendly albedo, orthographic, no strong baked lighting, no text. | Add as `map` on the `AsteroidField` material in `WorldCorridor.tsx` (needs UV via `IcosahedronGeometry` default UVs; acceptable stretch at detail 1). |
-| 2.4 | Hazard decal strip | `public/assets/decals/hazard-stripes.png` | 1K | Create a crisp sci-fi hazard decal strip: diagonal ember-orange and black warning stripes with worn edges, transparent background, game decal, high contrast at small size, no text. | Thin offset decal meshes on Colossus turret pods and gate tower bases (polygon-offset decal recipe). |
+| 2.4 | Hazard decal strip | `public/assets/decals/hazard-stripes.png` | 1K | Create a crisp sci-fi hazard decal strip: diagonal ember-orange and black warning stripes with worn edges, transparent background, game decal, high contrast at small size, no text. | DEFERRED. Asset validated and on disk, not yet wired. Colossus pods and gate towers are baked into single merged/instanced geometries with no per-part meshes and the repo has no decal/polygonOffset pattern; needs new decal-instancing infra (separate hazard-textured meshes tracked per active instance in the frame loop). |
 
 ## 3. Ship and enemy concept sheets (for future image-to-3D)
 
@@ -53,8 +46,6 @@ Art direction constants for every prompt: deep-void navy/black space (#03070f), 
 | 5.1 | Social/OG still | `public/assets/marketing/og-card.png` | 2K | Create a 1200x630-safe promotional still of an arcade space shooter: interceptor dodging ember plasma bolts over a cyan energy stream, HUD-style frame elements at the edges, bold readable composition at thumbnail size, no text. | `<meta property="og:image">` in `index.html`. |
 | 5.2 | Favicon source | `public/assets/marketing/favicon-source.png` | 1K | Create a minimal app icon: cyan lance chevron on deep navy rounded square, readable at 16 px, no text. | Export to `favicon.svg`/PNG sizes. |
 
-## Notes
+## Note
 
-- Audio is likewise blocked (`ELEVENLABS_API_KEY=MISSING`); the game ships a procedural WebAudio synth bus (`src/audio/bus.ts`). When keys are available, generate per `threejs-audio-generator`: pickup chime, graze tick, kill crunch, bomb boom, wave-clear sting, Colossus klaxon, menu ambience loop.
-- 3D hero generation is blocked (`TRIPO_API_KEY=MISSING`); section 3 concepts are the image-to-3D chain inputs once both keys exist.
 - After integrating any texture, re-run the canvas inspector and re-check the render budget (texture memory) before shipping.

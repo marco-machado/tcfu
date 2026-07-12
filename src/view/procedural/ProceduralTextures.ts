@@ -2,21 +2,27 @@ import {
   CanvasTexture,
   ClampToEdgeWrapping,
   LinearFilter,
+  MirroredRepeatWrapping,
   NearestFilter,
   RepeatWrapping,
   SRGBColorSpace,
+  Texture,
+  TextureLoader,
 } from 'three'
 
 let panelLines: CanvasTexture | null = null
 let microNoise: CanvasTexture | null = null
-let nebula: CanvasTexture | null = null
-let streamFlow: CanvasTexture | null = null
+let nebula: Texture | null = null
+let streamFlow: Texture | null = null
 let softGlow: CanvasTexture | null = null
+let hullTrim: Texture | null = null
+let asteroidRock: Texture | null = null
+let wispQuads: Texture[] | null = null
 
-/** Deterministic pseudo-random in [0, 1) from integer seed. */
-function hash01(n: number): number {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453
-  return x - Math.floor(x)
+const loader = new TextureLoader()
+
+function assetUrl(path: string): string {
+  return `${import.meta.env.BASE_URL}assets/${path}`
 }
 
 /** Shared sci-fi panel line sheet (dark lines on transparent-ish mid gray). */
@@ -72,62 +78,18 @@ export function getPanelLineTexture(): CanvasTexture {
 }
 
 /**
- * Deep-space nebula backdrop: layered soft radial clouds over a vertical
- * gradient, with faint color variation. Rendered once, drifted slowly.
+ * Deep-space nebula backdrop plate, drifted slowly behind the scene.
  */
-export function getNebulaTexture(): CanvasTexture {
+export function getNebulaTexture(): Texture {
   if (nebula) return nebula
-  const w = 512
-  const h = 512
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-
-  const base = ctx.createLinearGradient(0, 0, 0, h)
-  base.addColorStop(0, '#101f38')
-  base.addColorStop(0.45, '#080f20')
-  base.addColorStop(1, '#03060e')
-  ctx.fillStyle = base
-  ctx.fillRect(0, 0, w, h)
-
-  const palettes = [
-    ['rgba(48, 112, 168, 0.3)', 'rgba(48, 112, 168, 0)'],
-    ['rgba(34, 80, 140, 0.34)', 'rgba(34, 80, 140, 0)'],
-    ['rgba(110, 62, 150, 0.18)', 'rgba(110, 62, 150, 0)'],
-    ['rgba(210, 120, 70, 0.1)', 'rgba(210, 120, 70, 0)'],
-    ['rgba(52, 150, 172, 0.18)', 'rgba(52, 150, 172, 0)'],
-  ] as const
-  for (let i = 0; i < 26; i++) {
-    const cx = hash01(i * 3 + 1) * w
-    const cy = hash01(i * 3 + 2) * h
-    const r = 40 + hash01(i * 3 + 3) * 190
-    const [inner, outer] = palettes[i % palettes.length]!
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-    g.addColorStop(0, inner)
-    g.addColorStop(1, outer)
-    ctx.fillStyle = g
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
-  }
-
-  // Dense faint starfield baked into the plate (big stars are instanced meshes).
-  for (let i = 0; i < 420; i++) {
-    const x = hash01(i * 5 + 11) * w
-    const y = hash01(i * 5 + 12) * h
-    const s = hash01(i * 5 + 13)
-    const a = 0.12 + s * 0.5
-    ctx.fillStyle = `rgba(${200 + Math.floor(s * 55)}, ${215 + Math.floor(s * 40)}, 255, ${a})`
-    const px = s > 0.92 ? 2 : 1
-    ctx.fillRect(x, y, px, px)
-  }
-
-  const tex = new CanvasTexture(canvas)
+  const tex = loader.load(assetUrl('textures/nebula-backdrop.png'))
   tex.colorSpace = SRGBColorSpace
   tex.wrapS = RepeatWrapping
-  tex.wrapT = RepeatWrapping
+  // Mirrored along V: the plate does not tile top-to-bottom, so a plain repeat
+  // shows a hard horizontal seam sweeping with the scroll.
+  tex.wrapT = MirroredRepeatWrapping
   tex.minFilter = LinearFilter
   tex.magFilter = LinearFilter
-  tex.needsUpdate = true
   nebula = tex
   return tex
 }
@@ -136,54 +98,69 @@ export function getNebulaTexture(): CanvasTexture {
  * Energy stream ribbon: directional flow filaments on a dark plate.
  * Scrolled along V by stream speed to sell forward motion.
  */
-export function getStreamFlowTexture(): CanvasTexture {
+export function getStreamFlowTexture(): Texture {
   if (streamFlow) return streamFlow
-  const w = 256
-  const h = 512
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-
-  ctx.fillStyle = '#040a12'
-  ctx.fillRect(0, 0, w, h)
-
-  // Wide soft channels
-  for (let i = 0; i < 9; i++) {
-    const x = (i + 0.5) * (w / 9) + (hash01(i + 50) - 0.5) * 14
-    const g = ctx.createLinearGradient(x - 13, 0, x + 13, 0)
-    g.addColorStop(0, 'rgba(20, 60, 90, 0)')
-    g.addColorStop(0.5, `rgba(34, 98, 140, ${0.2 + hash01(i + 60) * 0.14})`)
-    g.addColorStop(1, 'rgba(20, 60, 90, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(x - 13, 0, 26, h)
-  }
-
-  // Bright flow filaments with varied dash lengths (wrap-safe verticals)
-  for (let i = 0; i < 46; i++) {
-    const x = hash01(i * 7 + 3) * w
-    const y0 = hash01(i * 7 + 4) * h
-    const len = 26 + hash01(i * 7 + 5) * 110
-    const alpha = 0.16 + hash01(i * 7 + 6) * 0.36
-    const grad = ctx.createLinearGradient(0, y0, 0, y0 + len)
-    grad.addColorStop(0, 'rgba(90, 200, 240, 0)')
-    grad.addColorStop(0.35, `rgba(96, 205, 245, ${alpha})`)
-    grad.addColorStop(1, 'rgba(60, 150, 200, 0)')
-    ctx.fillStyle = grad
-    const lw = hash01(i * 7 + 8) > 0.75 ? 2 : 1
-    ctx.fillRect(x, y0, lw, len)
-    if (y0 + len > h) ctx.fillRect(x, y0 - h, lw, len)
-  }
-
-  const tex = new CanvasTexture(canvas)
+  const tex = loader.load(assetUrl('textures/stream-flow.png'))
   tex.colorSpace = SRGBColorSpace
   tex.wrapS = RepeatWrapping
   tex.wrapT = RepeatWrapping
   tex.minFilter = LinearFilter
   tex.magFilter = LinearFilter
-  tex.needsUpdate = true
   streamFlow = tex
   return tex
+}
+
+/** Sci-fi hull trim sheet for ship body materials. */
+export function getHullTrimTexture(): Texture {
+  if (hullTrim) return hullTrim
+  const tex = loader.load(assetUrl('textures/hull-trim-sheet.png'))
+  tex.colorSpace = SRGBColorSpace
+  tex.wrapS = RepeatWrapping
+  tex.wrapT = RepeatWrapping
+  tex.anisotropy = 4
+  hullTrim = tex
+  return tex
+}
+
+/** Dark basalt albedo for the asteroid field. */
+export function getAsteroidRockTexture(): Texture {
+  if (asteroidRock) return asteroidRock
+  const tex = loader.load(assetUrl('textures/asteroid-rock.png'))
+  tex.colorSpace = SRGBColorSpace
+  tex.wrapS = RepeatWrapping
+  tex.wrapT = RepeatWrapping
+  tex.anisotropy = 4
+  asteroidRock = tex
+  return tex
+}
+
+/**
+ * Four nebula wisp sprites sliced from a 2x2 sheet (teal, indigo, violet,
+ * ember). Each quadrant is a clone sharing the loaded source, so the onLoad
+ * callback must flag every clone for upload.
+ */
+export function getNebulaWispTextures(): Texture[] {
+  if (wispQuads) return wispQuads
+  const base = loader.load(assetUrl('textures/nebula-wisps.png'), () => {
+    for (const q of quads) q.needsUpdate = true
+  })
+  base.colorSpace = SRGBColorSpace
+  // UV origin is bottom-left: top row (teal, indigo) sits at oy = 0.5.
+  const corners: Array<[number, number]> = [
+    [0, 0.5],
+    [0.5, 0.5],
+    [0, 0],
+    [0.5, 0],
+  ]
+  const quads = corners.map(([ox, oy]) => {
+    const q = base.clone()
+    q.colorSpace = SRGBColorSpace
+    q.repeat.set(0.5, 0.5)
+    q.offset.set(ox, oy)
+    return q
+  })
+  wispQuads = quads
+  return wispQuads
 }
 
 /** Radial soft sprite for glows, contact discs, and nebula wisps. */

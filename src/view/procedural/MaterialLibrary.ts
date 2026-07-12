@@ -6,7 +6,7 @@ import {
   type Texture,
 } from 'three'
 import { materialToken } from './materialTokens'
-import { getMicroNoiseTexture, getPanelLineTexture } from './ProceduralTextures'
+import { getHullTrimTexture, getMicroNoiseTexture } from './ProceduralTextures'
 
 /**
  * Shared material-role kit (technical-art roles).
@@ -25,8 +25,8 @@ export type MaterialRole =
 
 const cache = new Map<string, Material>()
 
-function panelMap(): Texture {
-  return getPanelLineTexture()
+function trimMap(): Texture {
+  return getHullTrimTexture()
 }
 
 function noiseMap(): Texture {
@@ -46,7 +46,7 @@ export function getRoleMaterial(role: MaterialRole): Material {
       const lifted = new Color(t.color).multiplyScalar(1.9)
       mat = new MeshPhysicalMaterial({
         color: lifted,
-        map: panelMap(),
+        map: trimMap(),
         metalness: 0.92,
         roughness: 0.32,
         roughnessMap: noiseMap(),
@@ -63,7 +63,7 @@ export function getRoleMaterial(role: MaterialRole): Material {
       const lifted = new Color(t.color).multiplyScalar(1.8)
       mat = new MeshStandardMaterial({
         color: lifted,
-        map: panelMap(),
+        map: trimMap(),
         metalness: 0.78,
         roughness: 0.52,
         roughnessMap: noiseMap(),
