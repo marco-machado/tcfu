@@ -16,6 +16,8 @@ Common types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `build`,
 
 Use [`docs/design/VISUAL_IDENTITY.md`](docs/design/VISUAL_IDENTITY.md) as the source of truth for visual identity, including color, typography, shape, motion, voice, and asset direction.
 
+Use [`docs/design/UI_PRIMITIVES.md`](docs/design/UI_PRIMITIVES.md) as the reference for the DOM UI primitive library (`src/app/components/ui/`) and its variant APIs. Rationale is in [`docs/adr/0007-ui-primitive-library.md`](docs/adr/0007-ui-primitive-library.md).
+
 ## Game design
 
 Use [`docs/design/DESIGN.md`](docs/design/DESIGN.md) as the source of truth for gameplay design and rationale. IDs, numbers, and lists live in the catalogs instead: [`docs/design/catalogs/`](docs/design/catalogs/) (enemies, meta-upgrades, powerups, run-upgrades, screens, ships, wave-patterns, weapons).

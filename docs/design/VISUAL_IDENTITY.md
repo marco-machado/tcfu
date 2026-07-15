@@ -61,6 +61,8 @@ Color is semantic. Cyan never means danger; magenta never means a beneficial pic
 - Use one strong diagonal or bracket gesture per component; avoid nested sci-fi frames.
 - Icons should survive at 16 px and rely on silhouette before glow.
 
+These motifs are implemented as the DOM UI primitive library; see [`UI_PRIMITIVES.md`](./UI_PRIMITIVES.md) for the component set and variant APIs. The clipped corner is a notch token scale there (`--notch-sm/-/-lg`), defaulting to the 8 px above.
+
 ## Motion
 
 - Normal UI: 100–180 ms, direct ease-out, minimal overshoot.
