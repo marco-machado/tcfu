@@ -1,6 +1,6 @@
 # UI primitive library and central style layers
 
-Status: `ready-for-agent`
+Status: `resolved`
 
 ## Problem Statement
 
