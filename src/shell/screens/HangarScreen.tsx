@@ -24,7 +24,7 @@ export function HangarScreen() {
   }
 
   return (
-    <div className="screen">
+    <div className={`screen hangar-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}>
       <header className="screen-header">
         <h2>Hangar</h2>
         <p className="screen-kicker">

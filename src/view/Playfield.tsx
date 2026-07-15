@@ -103,6 +103,7 @@ export function Playfield() {
 function PlayerMesh({ detail }: { detail: DetailLevel }) {
   const group = useRef<Group>(null)
   const bank = useRef(0)
+  const pitch = useRef(0)
   // Ship is fixed for the Run; session selection matches world.player.shipId at launch.
   const shipId = useSessionStore((s) => s.selectedShip)
 
@@ -116,11 +117,14 @@ function PlayerMesh({ detail }: { detail: DetailLevel }) {
     if (!g) return
     g.visible = visible
     g.position.set(p.x, p.y, 0.2)
-    // Tip thrusters toward camera (elevated rear read) and bank with strafe.
-    // Bank is damped so it eases instead of snapping when vx changes or zeroes at the band edge.
-    const targetBank = -p.vx * 0.04
-    bank.current += (targetBank - bank.current) * (1 - Math.exp(-delta * 9))
-    g.rotation.x = -0.52
+    // Keep the authored rear read while the hull anticipates lateral travel.
+    // Separate responses give banking a quick attack and a calmer return.
+    const targetBank = Math.max(-0.3, Math.min(0.3, -p.vx * 0.052))
+    const bankResponse = Math.abs(targetBank) > Math.abs(bank.current) ? 11 : 7
+    bank.current += (targetBank - bank.current) * (1 - Math.exp(-delta * bankResponse))
+    const targetPitch = Math.max(-0.055, Math.min(0.055, p.vy * 0.009))
+    pitch.current += (targetPitch - pitch.current) * (1 - Math.exp(-delta * 6))
+    g.rotation.x = -0.52 + pitch.current
     g.rotation.z = bank.current
   })
 

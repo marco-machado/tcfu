@@ -18,12 +18,13 @@ import { SimDriver } from './SimDriver'
 
 export function CanvasRoot() {
   const quality = useSessionStore((s) => s.settings.quality)
+  const reducedMotion = useSessionStore((s) => s.settings.reducedMotion)
   const bloom = quality !== 'low'
   const fogOn = quality !== 'low'
 
   return (
     <Canvas
-      className="canvas-layer"
+      className={`canvas-layer${reducedMotion ? ' motion-reduced' : ''}`}
       dpr={quality === 'high' ? 1.5 : quality === 'medium' ? 1 : 0.85}
       camera={{
         position: [CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z],

@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ACESFilmicToneMapping, type Group, SRGBColorSpace } from 'three'
 import { useSessionStore } from '../../app/sessionStore'
 import type { ShipId } from '../../sim/types'
@@ -16,14 +16,46 @@ type Props = {
 function PreviewStage({
   shipId,
   detail,
+  reducedMotion,
 }: {
   shipId: ShipId
   detail: ReturnType<typeof detailFromQuality>
+  reducedMotion: boolean
 }) {
-  const pivot = useRef<Group>(null)
-  useFrame((state) => {
-    if (!pivot.current) return
-    pivot.current.rotation.y = 0.55 + Math.sin(state.clock.elapsedTime * 0.35) * 0.12
+  const incoming = useRef<Group>(null)
+  const outgoingGroup = useRef<Group>(null)
+  const [displayedShip, setDisplayedShip] = useState(shipId)
+  const [outgoingShip, setOutgoingShip] = useState<ShipId | null>(null)
+  const transition = useRef(1)
+
+  useEffect(() => {
+    if (shipId === displayedShip) return
+    setOutgoingShip(displayedShip)
+    setDisplayedShip(shipId)
+    transition.current = reducedMotion ? 1 : 0
+  }, [displayedShip, reducedMotion, shipId])
+
+  useFrame((state, delta) => {
+    const next = incoming.current
+    if (!next) return
+
+    transition.current = Math.min(1, transition.current + delta / 0.42)
+    const t = transition.current
+    const eased = 1 - (1 - t) * (1 - t) * (1 - t)
+    const idleYaw = reducedMotion ? 0 : Math.sin(state.clock.elapsedTime * 0.32) * 0.055
+
+    next.position.set((1 - eased) * 0.72, -0.16, 0)
+    next.scale.setScalar(0.92 + eased * 0.08)
+    next.rotation.set(0.5, 0.5 + idleYaw + (1 - eased) * 0.24, 0.045 - (1 - eased) * 0.08)
+
+    const previous = outgoingGroup.current
+    if (previous) {
+      previous.position.set(-eased * 0.68, -0.16, 0)
+      previous.scale.setScalar(1 - eased * 0.08)
+      previous.rotation.set(0.5, 0.5 + idleYaw - eased * 0.2, 0.045 + eased * 0.06)
+    }
+
+    if (t >= 1 && outgoingShip) setOutgoingShip(null)
   })
 
   return (
@@ -45,9 +77,16 @@ function PreviewStage({
         />
       </mesh>
 
-      <group ref={pivot} rotation={[0.42, 0.55, 0.06]} position={[0, -0.16, 0]}>
+      {outgoingShip ? (
+        <group ref={outgoingGroup} position={[0, -0.16, 0]}>
+          <group scale={1.05}>
+            <ShipKitVisual shipId={outgoingShip} detail={detail} />
+          </group>
+        </group>
+      ) : null}
+      <group ref={incoming} rotation={[0.5, 0.5, 0.045]} position={[0, -0.16, 0]}>
         <group scale={1.05}>
-          <ShipKitVisual key={`${shipId}-${detail}`} shipId={shipId} detail={detail} />
+          <ShipKitVisual key={`${displayedShip}-${detail}`} shipId={displayedShip} detail={detail} />
         </group>
       </group>
     </group>
@@ -57,6 +96,7 @@ function PreviewStage({
 /** Mini R3F scene using the same kit builders as the Run. */
 export function ShipKitPreview({ shipId }: Props) {
   const quality = useSessionStore((s) => s.settings.quality)
+  const reducedMotion = useSessionStore((s) => s.settings.reducedMotion)
   const detail = detailFromQuality(quality)
   const bloom = quality !== 'low'
 
@@ -83,11 +123,13 @@ export function ShipKitPreview({ shipId }: Props) {
         <ambientLight intensity={0.3} />
         <hemisphereLight args={['#9cc2de', '#0a1018', 0.75]} />
         <directionalLight position={[3.2, 3.8, 4.5]} intensity={2.3} color="#f0f7ff" />
+        <directionalLight position={[1.2, 0.4, 5]} intensity={0.9} color="#b9dcf5" />
         <directionalLight position={[-3.2, 1.2, 1.5]} intensity={0.42} color="#3a6a98" />
         <directionalLight position={[0.2, -2.5, 2.5]} intensity={0.48} color="#58c8ff" />
+        <pointLight position={[1.9, 1.35, 2.75]} intensity={4.5} color="#d8edff" distance={8} />
         <pointLight position={[0, -0.7, 0.15]} intensity={0.45} color="#40c0ff" distance={2.2} />
 
-        <PreviewStage shipId={shipId} detail={detail} />
+        <PreviewStage shipId={shipId} detail={detail} reducedMotion={reducedMotion} />
 
         {bloom && (
           <EffectComposer multisampling={0}>

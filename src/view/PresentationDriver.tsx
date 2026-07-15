@@ -18,6 +18,7 @@ import { drainPresentation, type PresentationEvent } from '../sim/presentation'
 import { getWorld } from '../sim/world'
 import { presentationFxState, triggerHitstop } from '../presentation/fxState'
 import { debugCameraLive, debugCameraOverride } from '../presentation/debugCamera'
+import { runCameraDirection, runCameraSway } from '../presentation/runCameraDirection'
 import { isDebugMode } from '../app/debugMode'
 
 const MAX_FX = 128
@@ -293,6 +294,8 @@ export function PresentationDriver() {
   const { camera } = useThree()
   const basePos = useRef({ x: CAMERA_POS.x, y: CAMERA_POS.y, z: CAMERA_POS.z })
   const lookAt = useRef({ x: CAMERA_LOOK_AT.x, y: CAMERA_LOOK_AT.y, z: CAMERA_LOOK_AT.z })
+  const directedFovOffset = useRef(0)
+  const cameraRigReady = useRef(false)
   const swayT = useRef(0)
 
   useFrame((_, delta) => {
@@ -415,33 +418,58 @@ export function PresentationDriver() {
 
     const debug = isDebugMode()
     const ov = debug ? debugCameraOverride : EMPTY_OVERRIDE
+    const setPiece = world.enemies.find((enemy) => enemy.active && enemy.class === 'set_piece')
+    const directed = runCameraDirection({
+      elapsed: world.session.elapsed,
+      wave: world.session.wave,
+      wavePhase: world.waves.phase,
+      setPieceX: setPiece?.x ?? null,
+      reducedMotion: settings.reducedMotion,
+    })
+    const directionResponse = 1 - Math.exp(-dt * (directed.setPieceWeight > 0 ? 2.6 : 4.8))
+    const bp = basePos.current
+    const la = lookAt.current
+    if (!cameraRigReady.current) {
+      Object.assign(bp, directed.position)
+      Object.assign(la, directed.lookAt)
+      directedFovOffset.current = directed.fovOffset
+      cameraRigReady.current = true
+    } else {
+      bp.x += (directed.position.x - bp.x) * directionResponse
+      bp.y += (directed.position.y - bp.y) * directionResponse
+      bp.z += (directed.position.z - bp.z) * directionResponse
+      la.x += (directed.lookAt.x - la.x) * directionResponse
+      la.y += (directed.lookAt.y - la.y) * directionResponse
+      la.z += (directed.lookAt.z - la.z) * directionResponse
+      directedFovOffset.current += (directed.fovOffset - directedFovOffset.current) * directionResponse
+    }
+
     const speedRatio = world.streamSpeed / STREAM_BASE_SPEED
     const speedFov = (speedRatio - 1) * 9
     const baseFov = baseFovForAspect(cam.aspect)
-    const targetFov = (ov.fov ?? baseFov) + speedFov + fovPunch.current
+    const targetFov = (ov.fov ?? baseFov) + speedFov + directedFovOffset.current + fovPunch.current
     if (Math.abs(cam.fov - targetFov) > 0.01) {
       cam.fov += (targetFov - cam.fov) * Math.min(1, delta * 6)
       cam.updateProjectionMatrix()
     }
 
-    const la = lookAt.current
     const lay = ov.lookY ?? la.y
     const laz = ov.lookZ ?? la.z
-    let px = ov.posX ?? basePos.current.x
-    let py = ov.posY ?? basePos.current.y
-    let pz = ov.posZ ?? basePos.current.z
+    let px = ov.posX ?? bp.x
+    let py = ov.posY ?? bp.y
+    let pz = ov.posZ ?? bp.z
     let lx = ov.lookX ?? la.x
+    let roll = 0
 
     if (swayOn && !world.session.paused) {
-      const a = 0.05
-      const t = swayT.current
-      px += Math.sin(t * 0.7) * a
-      py += Math.cos(t * 0.55) * a * 0.55
-      pz += Math.sin(t * 0.35) * a * 0.35
-      lx += Math.sin(t * 0.5) * a * 0.35
+      const sway = runCameraSway(swayT.current)
+      px += sway.position.x
+      py += sway.position.y
+      pz += sway.position.z
+      lx += sway.lookX
+      roll += sway.roll
     }
 
-    let roll = 0
     if (shakeOn && trauma.current > 0) {
       const shake = trauma.current * trauma.current
       const freq = shakeTime.current * 30
