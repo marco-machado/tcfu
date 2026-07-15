@@ -1,6 +1,6 @@
-import { useSessionStore } from '../../app/sessionStore'
+import { useSessionStore } from '../sessionStore'
 import { unlockAudio, playSfx } from '../../audio/bus'
-import { BrandMark } from '../brand/BrandMark'
+import { BrandMark, Button } from '../components/ui'
 
 export function TitleScreen() {
   const setScreen = useSessionStore((s) => s.setScreen)
@@ -27,15 +27,11 @@ export function TitleScreen() {
         <span>Hold the band.</span> Ride the stream. Die with a high score.
       </p>
       <div className="menu title-menu">
-        <button type="button" className="primary-action" onClick={goHangar}>
+        <Button variant="primary" onClick={goHangar}>
           Play
-        </button>
-        <button type="button" onClick={() => setScreen('highScores')}>
-          High Scores
-        </button>
-        <button type="button" onClick={() => setScreen('settings')}>
-          Settings
-        </button>
+        </Button>
+        <Button onClick={() => setScreen('highScores')}>High Scores</Button>
+        <Button onClick={() => setScreen('settings')}>Settings</Button>
       </div>
       <p className="muted title-controls">WASD / arrows · Space fire · Shift bomb · Esc pause</p>
     </div>

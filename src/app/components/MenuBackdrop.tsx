@@ -1,8 +1,8 @@
 import { Canvas } from '@react-three/fiber'
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
-import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
-import { applyStudioEnvironment } from '../view/procedural/setupEnvironment'
-import { WorldCorridor } from '../view/procedural/WorldCorridor'
+import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_POS } from '../../sim/constants'
+import { applyStudioEnvironment } from '../../view/procedural/setupEnvironment'
+import { WorldCorridor } from '../../view/procedural/WorldCorridor'
 
 /**
  * Shared out-of-run backdrop: the same corridor the player flies, drifting

@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react'
 
-export type SignalIconName =
+export type IconName =
   | 'aegis'
   | 'arsenal'
   | 'back'
@@ -13,6 +13,7 @@ export type SignalIconName =
   | 'lock'
   | 'options'
   | 'overclock'
+  | 'pause'
   | 'phantom'
   | 'salvage'
   | 'scrap'
@@ -25,14 +26,14 @@ export type SignalIconName =
   | 'wing'
 
 type Props = SVGProps<SVGSVGElement> & {
-  name: SignalIconName
+  name: IconName
 }
 
-export function SignalIcon({ name, className = '', ...props }: Props) {
+export function Icon({ name, className = '', ...props }: Props) {
   return (
     <svg
       aria-hidden="true"
-      className={`signal-icon ${className}`.trim()}
+      className={`icon ${className}`.trim()}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -58,6 +59,7 @@ export function SignalIcon({ name, className = '', ...props }: Props) {
       {name === 'wcell' && <><path d="m12 2 7 5v10l-7 5-7-5V7l7-5Z" /><path d="m8 8 2 8 2-5 2 5 2-8" /></>}
       {name === 'overclock' && <><path d="m9 3 6 6-3 3 3 3-6 6" /><path d="m4 3 6 6-3 3 3 3-6 6" /></>}
       {name === 'options' && <><path d="M12 21V8M12 8 4 17M12 8l8 9" /><path d="M12 3v5M4 17v3M20 17v3" /></>}
+      {name === 'pause' && <><path d="M9 4v16M15 4v16" /></>}
       {name === 'bounty' && <><path d="m12 2 8 7-3 10-5 3-5-3L4 9l8-7Z" /><path d="m8 9 4-3 4 3-4 8-4-8Z" /></>}
       {name === 'vanguard' && <><path d="m12 2 4 10 6 7-7-2-3 5-3-5-7 2 6-7 4-10Z" /><path d="M12 6v11" /></>}
       {name === 'striker' && <><path d="m12 3 3 7 7 7-8-2-2 6-2-6-8 2 7-7 3-7Z" /><path d="M6 10h12" /></>}

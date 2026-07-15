@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSessionStore } from '../../app/sessionStore'
+import { useSessionStore } from '../sessionStore'
 import { getWorld } from '../../sim/world'
+import { Button, Modal, cn } from '../components/ui'
 
 type DestructiveAction = 'restart' | 'exit'
 
@@ -111,47 +112,41 @@ export function PauseModal() {
   }
 
   return (
-    <div className="overlay pause-overlay">
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="pause-title">
-        <h2 id="pause-title">Paused</h2>
-        <div className="modal-actions">
-          <button
-            type="button"
-            ref={setButtonRef(0)}
-            className="modal-btn modal-btn-primary"
-            onClick={resume}
-          >
-            Resume
-          </button>
-          <button
-            type="button"
-            ref={setButtonRef(1)}
-            className="modal-btn modal-btn-secondary"
-            onClick={() => openSettings('run')}
-          >
-            Settings
-          </button>
-          <button
-            type="button"
-            ref={setButtonRef(2)}
-            className={`modal-btn modal-btn-danger${confirming === 'restart' ? ' is-arming' : ''}`}
-            onClick={() => requestDestructive('restart', startRun)}
-          >
-            {confirming === 'restart' ? 'Confirm restart' : 'Restart run'}
-          </button>
-          <button
-            type="button"
-            ref={setButtonRef(3)}
-            className={`modal-btn modal-btn-ghost${confirming === 'exit' ? ' is-arming' : ''}`}
-            onClick={() => requestDestructive('exit', () => setScreen('hangar'))}
-          >
-            {confirming === 'exit' ? 'Confirm exit' : 'Exit to hangar'}
-          </button>
-        </div>
-        <p className="modal-hint">
-          {confirming ? 'Activate again to confirm losing this Run' : 'Esc / P or Start resumes'}
-        </p>
+    <Modal
+      overlayTone="pause"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pause-title"
+      title="Paused"
+      titleId="pause-title"
+    >
+      <div className="modal-actions">
+        <Button ref={setButtonRef(0)} variant="primary" onClick={resume}>
+          Resume
+        </Button>
+        <Button ref={setButtonRef(1)} variant="secondary" onClick={() => openSettings('run')}>
+          Settings
+        </Button>
+        <Button
+          ref={setButtonRef(2)}
+          variant="danger"
+          className={cn(confirming === 'restart' && 'is-arming')}
+          onClick={() => requestDestructive('restart', startRun)}
+        >
+          {confirming === 'restart' ? 'Confirm restart' : 'Restart run'}
+        </Button>
+        <Button
+          ref={setButtonRef(3)}
+          variant="ghost"
+          className={cn(confirming === 'exit' && 'is-arming')}
+          onClick={() => requestDestructive('exit', () => setScreen('hangar'))}
+        >
+          {confirming === 'exit' ? 'Confirm exit' : 'Exit to hangar'}
+        </Button>
       </div>
-    </div>
+      <p className="modal-hint">
+        {confirming ? 'Activate again to confirm losing this Run' : 'Esc / P or Start resumes'}
+      </p>
+    </Modal>
   )
 }

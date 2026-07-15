@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { isDebugMode, useDebugStore } from '../app/debugMode'
+import { isDebugMode, useDebugStore } from '../debugMode'
 import {
   debugAddScore,
   debugAdjustBombs,
@@ -18,17 +18,17 @@ import {
   debugStepOneFrame,
   debugSuspendWaves,
   debugTriggerPattern,
-} from '../sim/debugActions'
+} from '../../sim/debugActions'
 import {
   debugCameraLive,
   debugCameraOverride,
   resetDebugCameraOverride,
-} from '../presentation/debugCamera'
-import { CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
-import { ALL_PATTERN_IDS } from '../sim/patterns'
-import { weaponTierForWCells } from '../sim/weapons'
-import { getWorld } from '../sim/world'
-import { ENEMY_KINDS, POWERUP_TYPES, type ScreenId } from '../sim/types'
+} from '../../presentation/debugCamera'
+import { CAMERA_LOOK_AT, CAMERA_POS } from '../../sim/constants'
+import { ALL_PATTERN_IDS } from '../../sim/patterns'
+import { weaponTierForWCells } from '../../sim/weapons'
+import { getWorld } from '../../sim/world'
+import { ENEMY_KINDS, POWERUP_TYPES, type ScreenId } from '../../sim/types'
 
 const TIME_SCALES = [0.25, 0.5, 1, 2]
 const POLL_MS = 250

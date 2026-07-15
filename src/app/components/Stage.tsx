@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useSessionStore } from '../app/sessionStore'
+import { useSessionStore } from '../sessionStore'
 import { MenuBackdrop } from './MenuBackdrop'
 
 export function Stage({ children }: { children: ReactNode }) {

@@ -1,71 +1,15 @@
-import { useSessionStore } from '../../app/sessionStore'
+import { useSessionStore } from '../sessionStore'
 import { playSfx, unlockAudio } from '../../audio/bus'
 import { saveSettings, type Quality, type Settings } from '../../persist/settings'
 import { resetMeta } from '../../persist/meta'
 import { resetHighScores } from '../../persist/highScores'
+import { Button, Panel, ScreenHeader, Segmented, Slider, Toggle } from '../components/ui'
 
 const QUALITY_OPTIONS: { value: Quality; label: string }[] = [
   { value: 'low', label: 'Low' },
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
 ]
-
-function Toggle({
-  label,
-  hint,
-  checked,
-  onChange,
-}: {
-  label: string
-  hint?: string
-  checked: boolean
-  onChange: (next: boolean) => void
-}) {
-  return (
-    <label className="setting-row">
-      <span className="setting-label">
-        {label}
-        {hint ? <small>{hint}</small> : null}
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        className={`toggle${checked ? ' is-on' : ''}`}
-        onClick={() => onChange(!checked)}
-      >
-        <span className="toggle-thumb" />
-        <span className="toggle-state">{checked ? 'On' : 'Off'}</span>
-      </button>
-    </label>
-  )
-}
-
-function Slider({
-  label,
-  value,
-  onChange,
-}: {
-  label: string
-  value: number
-  onChange: (next: number) => void
-}) {
-  return (
-    <label className="setting-row">
-      <span className="setting-label">{label}</span>
-      <span className="slider-wrap">
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-        />
-        <b className="slider-value">{value}</b>
-      </span>
-    </label>
-  )
-}
 
 export function SettingsScreen() {
   const settings = useSessionStore((s) => s.settings)
@@ -84,33 +28,22 @@ export function SettingsScreen() {
 
   return (
     <div className="screen settings-screen">
-      <header className="screen-header">
-        <h2>Settings</h2>
-        <p className="screen-kicker">Ship systems configuration</p>
-      </header>
+      <ScreenHeader title="Settings" kicker="Ship systems configuration" />
 
       <div className="settings-columns">
-        <section className="settings-panel">
+        <Panel as="section" className="settings-panel">
           <h3>Video</h3>
           <div className="setting-row">
             <span className="setting-label">
               Quality
               <small>Detail, resolution, and post-processing</small>
             </span>
-            <div className="segmented" role="radiogroup" aria-label="Quality">
-              {QUALITY_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={settings.quality === opt.value}
-                  className={settings.quality === opt.value ? 'is-active' : ''}
-                  onClick={() => update({ quality: opt.value })}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              label="Quality"
+              options={QUALITY_OPTIONS}
+              value={settings.quality}
+              onChange={(v) => update({ quality: v })}
+            />
           </div>
           <Toggle
             label="Screen shake"
@@ -124,16 +57,16 @@ export function SettingsScreen() {
             checked={settings.reducedMotion}
             onChange={(v) => update({ reducedMotion: v })}
           />
-        </section>
+        </Panel>
 
-        <section className="settings-panel">
+        <Panel as="section" className="settings-panel">
           <h3>Audio</h3>
           <Slider label="Master" value={settings.master} onChange={(v) => update({ master: v })} />
           <Slider label="Music" value={settings.music} onChange={(v) => update({ music: v })} />
           <Slider label="SFX" value={settings.sfx} onChange={(v) => update({ sfx: v })} />
-        </section>
+        </Panel>
 
-        <section className="settings-panel">
+        <Panel as="section" className="settings-panel">
           <h3>Controls</h3>
           <Toggle
             label="Autofire"
@@ -145,18 +78,17 @@ export function SettingsScreen() {
             WASD / Arrows move · Space / J fire · Shift / K bomb · Esc / P pause · Touch: drag left
             to steer, tap ✦ to bomb
           </p>
-        </section>
+        </Panel>
 
-        <section className="settings-panel is-danger">
+        <Panel as="section" tone="danger" className="settings-panel">
           <h3>Data</h3>
           <div className="setting-row">
             <span className="setting-label">
               Meta progress
               <small>Scrap and all upgrade ranks</small>
             </span>
-            <button
-              type="button"
-              className="danger-btn"
+            <Button
+              variant="danger"
               onClick={() => {
                 if (confirm('Reset all meta upgrades and Scrap?')) {
                   resetMeta()
@@ -165,16 +97,15 @@ export function SettingsScreen() {
               }}
             >
               Reset
-            </button>
+            </Button>
           </div>
           <div className="setting-row">
             <span className="setting-label">
               High scores
               <small>Local leaderboard entries</small>
             </span>
-            <button
-              type="button"
-              className="danger-btn"
+            <Button
+              variant="danger"
               onClick={() => {
                 if (confirm('Reset high scores?')) {
                   resetHighScores()
@@ -183,15 +114,15 @@ export function SettingsScreen() {
               }}
             >
               Reset
-            </button>
+            </Button>
           </div>
-        </section>
+        </Panel>
       </div>
 
       <div className="row screen-actions">
-        <button type="button" className="primary-action" onClick={closeSettings}>
+        <Button variant="primary" onClick={closeSettings}>
           Back
-        </button>
+        </Button>
       </div>
     </div>
   )

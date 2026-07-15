@@ -1,0 +1,37 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  color: #eaf8ff;
+  background: #03070b;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  /* Hues (docs/design/VISUAL_IDENTITY.md) */
+  --void-950: #03070b;
+  --void-900: #071019;
+  --hull-700: #162d3a;
+  --signal-cyan: #5ee7ff;
+  --signal-blue: #2a8cff;
+  --threat-amber: #ff9b42;
+  --threat-magenta: #ff4f87;
+  --salvage-gold: #f6ca62;
+  --repair-lime: #8df0a2;
+  --ice-white: #eaf8ff;
+  --muted-steel: #819aaa;
+
+  /* Functional tokens: one source for recurring greys, borders, and text tiers */
+  --surface-panel: rgba(7, 16, 25, 0.9);
+  --surface-raised: rgba(10, 25, 38, 0.78);
+  --border-hull: rgba(86, 160, 199, 0.34);
+  --border-hairline: rgba(94, 231, 255, 0.18);
+  --text-secondary: #94b4c5;
+  --text-faint: #6f8698;
+
+  /* Notch scale: the insignia-derived clipped corner */
+  --notch-sm: 6px;
+  --notch: 8px;
+  --notch-lg: 10px;
+}

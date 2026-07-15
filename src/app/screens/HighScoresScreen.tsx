@@ -1,4 +1,5 @@
-import { useSessionStore } from '../../app/sessionStore'
+import { useSessionStore } from '../sessionStore'
+import { Button, ScreenHeader } from '../components/ui'
 
 export function HighScoresScreen() {
   const scores = useSessionStore((s) => s.highScores)
@@ -6,10 +7,7 @@ export function HighScoresScreen() {
 
   return (
     <div className="screen">
-      <header className="screen-header">
-        <h2>High Scores</h2>
-        <p className="screen-kicker">Local flight records</p>
-      </header>
+      <ScreenHeader title="High Scores" kicker="Local flight records" />
       {scores.length === 0 ? (
         <p className="muted">No scores yet</p>
       ) : (
@@ -36,9 +34,7 @@ export function HighScoresScreen() {
           </tbody>
         </table>
       )}
-      <button type="button" onClick={() => setScreen('title')}>
-        Back
-      </button>
+      <Button onClick={() => setScreen('title')}>Back</Button>
     </div>
   )
 }

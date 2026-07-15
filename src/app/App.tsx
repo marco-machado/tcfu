@@ -1,18 +1,18 @@
 import { useSessionStore } from './sessionStore'
-import { Stage } from '../shell/Stage'
-import { TitleScreen } from '../shell/screens/TitleScreen'
-import { HangarScreen } from '../shell/screens/HangarScreen'
-import { UpgradeBayScreen } from '../shell/screens/UpgradeBayScreen'
-import { RunScreen } from '../shell/screens/RunScreen'
-import { ResultsScreen } from '../shell/screens/ResultsScreen'
-import { HighScoresScreen } from '../shell/screens/HighScoresScreen'
-import { SettingsScreen } from '../shell/screens/SettingsScreen'
+import { Stage } from './components/Stage'
+import { TitleScreen } from './screens/TitleScreen'
+import { HangarScreen } from './screens/HangarScreen'
+import { UpgradeBayScreen } from './screens/UpgradeBayScreen'
+import { RunScreen } from './screens/RunScreen'
+import { ResultsScreen } from './screens/ResultsScreen'
+import { HighScoresScreen } from './screens/HighScoresScreen'
+import { SettingsScreen } from './screens/SettingsScreen'
 import { isDebugMode } from './debugMode'
 import { setMusicGamePaused, syncMusic } from '../audio/bus'
 import { Suspense, lazy, useEffect } from 'react'
 
 // Dynamic import under a DEV constant so production builds drop the debug UI chunk.
-const DebugUi = import.meta.env.DEV ? lazy(() => import('../shell/DebugPanel')) : null
+const DebugUi = import.meta.env.DEV ? lazy(() => import('./components/DebugPanel')) : null
 
 export function App() {
   const screen = useSessionStore((s) => s.screen)

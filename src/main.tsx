@@ -6,7 +6,7 @@ import './app/debugMode'
 import { App } from './app/App'
 import { installAcceptanceSeam } from './app/acceptanceSeam'
 import { installTestHooks } from './app/testHooks'
-import './app/styles.css'
+import './app/styles/index.css'
 
 installAcceptanceSeam()
 installTestHooks()

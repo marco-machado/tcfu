@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSessionStore } from '../../app/sessionStore'
+import { useSessionStore } from '../sessionStore'
 import { COMBO_WINDOW, comboMultiplier, DEATH_HOLD, scrapForRun } from '../../sim/constants'
 import { scrapEarnMultFromRanks } from '../../sim/metaModifiers'
 import { isSetPieceWave } from '../../sim/patterns'
@@ -15,11 +15,11 @@ import { presentationFxState } from '../../presentation/fxState'
 import { PauseModal } from './PauseModal'
 import { TouchControls } from './TouchControls'
 import { queueTouchPause } from '../../input/sample'
-import { SignalIcon, type SignalIconName } from '../SignalIcon'
+import { Chip, Icon, IconButton, Label, Meter, Modal, Panel, PipRow, cn, type IconName } from '../components/ui'
 
 const POWERUP_EXPIRING_SEC = 2.5
 
-type TimedPowerup = { key: string; name: string; icon: SignalIconName; remaining: number }
+type TimedPowerup = { key: string; name: string; icon: IconName; remaining: number }
 
 function timedPowerups(rateUp: number, spreadUp: number, scoreMult: number): TimedPowerup[] {
   const list: TimedPowerup[] = []
@@ -100,46 +100,51 @@ export function RunHud() {
   return (
     <div className="hud">
       <div className="hud-top">
-        <div className={`score-cluster hud-module${grazeCue ? ' is-grazing' : ''}`} aria-label="Score">
+        <Panel
+          size="sm"
+          className={cn('score-cluster', 'hud-module', grazeCue && 'is-grazing')}
+          aria-label="Score"
+        >
           <div className="score-main">
-            <span className="hud-label">Score</span>
+            <Label>Score</Label>
             <strong className="hud-number score-value">{Math.floor(s.score)}</strong>
           </div>
           <div className="score-side">
             <span className="score-kills">Kills <b className="hud-number">{s.kills}</b></span>
-            <span className={`score-graze${grazeCue ? ' is-hot' : ''}`}>Graze <b className="hud-number">{s.grazes}</b></span>
+            <span className={cn('score-graze', grazeCue && 'is-hot')}>Graze <b className="hud-number">{s.grazes}</b></span>
           </div>
-          <div className={`combo-badge${comboActive ? ' is-live' : ''}${fx.hudComboBreak > 0 ? ' is-broken' : ''}`} aria-label="Kill chain">
+          <div
+            className={cn('combo-badge', comboActive && 'is-live', fx.hudComboBreak > 0 && 'is-broken')}
+            aria-label="Kill chain"
+          >
             {comboActive ? (
               <>
                 <span className="combo-mult hud-number">×{comboMultiplier(s.combo).toFixed(2)}</span>
                 <span className="combo-count">chain {s.combo}</span>
-                <span className="combo-track"><span className="combo-fill" style={{ width: `${comboPct * 100}%` }} /></span>
+                <Meter tone="salvage" value={comboPct} aria-label="Kill chain timer" />
               </>
             ) : (
               <span className="combo-idle">{fx.hudComboBreak > 0 ? 'Chain lost' : 'No chain'}</span>
             )}
           </div>
-        </div>
+        </Panel>
 
         <div className="hud-top-right">
-          <div className="wave-cluster hud-module" aria-label="Wave progress">
+          <Panel size="sm" className="wave-cluster hud-module" aria-label="Wave progress">
             <div className="wave-heading">
-              <span className="hud-label">Wave</span>
+              <Label>Wave</Label>
               <strong className="hud-number wave-value">{s.wave}</strong>
             </div>
-            <div className="wave-track" role="meter" aria-label="Wave hostiles down" aria-valuemin={0} aria-valuemax={1} aria-valuenow={waveProgress}>
-              <span className="wave-fill" style={{ width: `${waveProgress * 100}%` }} />
-            </div>
-          </div>
-          <button
-            type="button"
-            className="hud-icon-btn"
-            aria-label="Pause"
-            onClick={pauseGame}
-          >
-            <span className="pause-glyph" aria-hidden="true" />
-          </button>
+            <Meter
+              tone="signal"
+              value={waveProgress}
+              aria-label="Wave hostiles down"
+              aria-valuemin={0}
+              aria-valuemax={1}
+              aria-valuenow={waveProgress}
+            />
+          </Panel>
+          <IconButton icon="pause" label="Pause" onClick={pauseGame} />
         </div>
       </div>
 
@@ -156,16 +161,15 @@ export function RunHud() {
               <span className="boss-name">Colossus</span>
               <span className="boss-hp hud-number">{Math.ceil(boss.hp)}/{boss.maxHp}</span>
             </div>
-            <div
-              className="boss-track"
-              role="meter"
+            <Meter
+              tone="threat"
+              segments
+              value={bossPct}
               aria-label="Colossus hull integrity"
               aria-valuemin={0}
               aria-valuemax={boss.maxHp}
               aria-valuenow={Math.ceil(boss.hp)}
-            >
-              <div className="boss-fill" style={{ width: `${bossPct * 100}%` }} />
-            </div>
+            />
           </div>
         ) : null}
       </div>
@@ -175,84 +179,103 @@ export function RunHud() {
           {powerups.map((pu) => {
             const expiring = pu.remaining <= POWERUP_EXPIRING_SEC
             return (
-              <div key={pu.key} className={`powerup-badge${expiring ? ' is-expiring' : ''}`}>
-                <span className="powerup-glyph"><SignalIcon name={pu.icon} /></span>
+              <Chip key={pu.key} tone={expiring ? 'expiring' : 'default'} className="powerup-badge">
+                <span className="powerup-glyph"><Icon name={pu.icon} /></span>
                 <span className="powerup-name">{pu.name}</span>
                 <span className="powerup-timer hud-number">{pu.remaining.toFixed(1)}s</span>
-              </div>
+              </Chip>
             )
           })}
         </aside>
       ) : null}
 
       <div className="hud-bottom">
-        <section
-          className={`survival-cluster hud-module${damageCue ? ' is-damaged' : ''}${shieldBreakCue ? ' is-shield-hit' : ''}${lifeLossCue ? ' is-life-lost' : ''}`}
+        <Panel
+          as="section"
+          size="sm"
+          className={cn(
+            'survival-cluster',
+            'hud-module',
+            damageCue && 'is-damaged',
+            shieldBreakCue && 'is-shield-hit',
+            lifeLossCue && 'is-life-lost',
+          )}
           aria-label="Survival status"
         >
           <div className="hull-row">
-            <span className="hud-label icon-label"><SignalIcon name="hull" /> Hull</span>
-            <div className="hull-segments" role="meter" aria-label="Hull integrity" aria-valuemin={0} aria-valuemax={p.maxHp} aria-valuenow={Math.max(0, p.hp)}>
-              {Array.from({ length: p.maxHp }, (_, i) => (
-                <span key={i} className={`hull-seg${i < p.hp ? ' on' : ''}`} />
-              ))}
-            </div>
-            <span className={`shield-chip${p.shield ? ' is-active' : ''}`} aria-label={p.shield ? 'Shield ready' : 'Shield offline'}>
-              <SignalIcon name="shield" />
+            <Label className="icon-label"><Icon name="hull" /> Hull</Label>
+            <PipRow
+              shape="segment"
+              tone="signal"
+              count={p.maxHp}
+              filled={Math.max(0, p.hp)}
+              role="meter"
+              aria-label="Hull integrity"
+              aria-valuemin={0}
+              aria-valuemax={p.maxHp}
+              aria-valuenow={Math.max(0, p.hp)}
+            />
+            <span
+              className={cn('shield-chip', p.shield && 'is-active')}
+              aria-label={p.shield ? 'Shield ready' : 'Shield offline'}
+            >
+              <Icon name="shield" />
             </span>
           </div>
           <div className="lives-row" aria-label={`${p.lives} lives`}>
-            <span className="hud-label icon-label"><SignalIcon name="wing" /> Wings</span>
-            <span className="life-pips">
-              {Array.from({ length: 3 }, (_, i) => (
-                <SignalIcon key={i} name="wing" className={`life-pip${i < p.lives ? ' on' : ''}`} />
-              ))}
-            </span>
-            <span className="scrap-est"><SignalIcon name="scrap" /> Scrap <b className="hud-number">~{scrapEst}</b></span>
+            <Label className="icon-label"><Icon name="wing" /> Wings</Label>
+            <PipRow icon="wing" tone="signal" count={3} filled={p.lives} aria-label={`${p.lives} lives`} />
+            <span className="scrap-est"><Icon name="scrap" /> Scrap <b className="hud-number">~{scrapEst}</b></span>
           </div>
-        </section>
+        </Panel>
 
-        <section className="weapons-cluster hud-module" aria-label="Weapons status">
+        <Panel as="section" size="sm" className="weapons-cluster hud-module" aria-label="Weapons status">
           <div className="tier-row">
-            <span className="hud-label icon-label"><SignalIcon name="lance" /> Lance</span>
-            <span className="tier-pips" aria-label={`Weapon tier ${weaponTier} of ${WEAPON_TIER_MAX}`}>
-              {Array.from({ length: WEAPON_TIER_MAX }, (_, i) => (
-                <span key={i} className={i < weaponTier ? 'on' : ''} />
-              ))}
-            </span>
-            <span className="bomb-pips" aria-label={`${p.bombs} of ${p.maxBombs} bombs`}>
-              {Array.from({ length: p.maxBombs }, (_, i) => (
-                <SignalIcon key={i} name="bomb" className={`bomb-pip${i < p.bombs ? ' on' : ''}`} />
-              ))}
-            </span>
+            <Label className="icon-label"><Icon name="lance" /> Lance</Label>
+            <PipRow
+              shape="diamond"
+              tone="signal"
+              count={WEAPON_TIER_MAX}
+              filled={weaponTier}
+              aria-label={`Weapon tier ${weaponTier} of ${WEAPON_TIER_MAX}`}
+            />
+            <PipRow
+              className="bomb-pips"
+              icon="bomb"
+              tone="salvage"
+              count={p.maxBombs}
+              filled={p.bombs}
+              aria-label={`${p.bombs} of ${p.maxBombs} bombs`}
+            />
           </div>
           <div className="wcell-row">
-            <SignalIcon name="wcell" className="wcell-icon" />
-            <div
-              className={`wcell-track${maxTier ? ' is-max' : ''}`}
-              role="meter"
+            <Icon name="wcell" className="wcell-icon" />
+            <Meter
+              tone={maxTier ? 'repair' : 'signal'}
+              value={wCellPct}
               aria-label="W-cell progress to next tier"
               aria-valuemin={maxTier ? 0 : tierFloor}
               aria-valuemax={maxTier ? p.wCells : nextTier}
               aria-valuenow={p.wCells}
-            >
-              <div className="wcell-fill" style={{ width: `${wCellPct * 100}%` }} />
-            </div>
+            />
             <span className="wcell-frac hud-number">{maxTier ? 'MAX' : `${p.wCells}/${nextTier}`}</span>
           </div>
-        </section>
+        </Panel>
       </div>
 
       <TouchControls />
 
       {s.paused && !dying && <PauseModal />}
       {showDeathModal && (
-        <div className="overlay death-overlay">
-          <div className="modal death-modal" role="alertdialog" aria-labelledby="destroyed-title">
-            <h2 id="destroyed-title">Destroyed</h2>
-            <p className="modal-sub">Run over · salvaging wreckage…</p>
-          </div>
-        </div>
+        <Modal
+          overlayTone="death"
+          tone="danger"
+          role="alertdialog"
+          aria-labelledby="destroyed-title"
+          title="Destroyed"
+          titleId="destroyed-title"
+          sub="Run over · salvaging wreckage…"
+        />
       )}
     </div>
   )
