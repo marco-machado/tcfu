@@ -186,6 +186,8 @@ export type World = {
   player: PlayerState
   session: RunSession
   streamSpeed: number
+  /** Deterministic distance travelled by the visual world stream. */
+  streamDistance: number
   playerBullets: PlayerBullet[]
   enemyBullets: EnemyBullet[]
   enemies: Enemy[]

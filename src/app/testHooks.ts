@@ -15,6 +15,7 @@ type TestHooks = {
   hideDebugUi(hidden: boolean): void
   reviewSnapshot(): {
     elapsed: number
+    streamDistance: number
     enemies: Array<{ kind: string; x: number; y: number }>
   }
 }
@@ -229,6 +230,7 @@ export function installTestHooks(): void {
       const world = getWorld()
       return {
         elapsed: world.session.elapsed,
+        streamDistance: world.streamDistance,
         enemies: world.enemies
           .filter((enemy) => enemy.active)
           .map(({ kind, x, y }) => ({ kind, x, y })),

@@ -101,6 +101,7 @@ export function createWorld(
       grazes: 0,
     },
     streamSpeed: streamSpeedForWave(1),
+    streamDistance: 0,
     playerBullets: Array.from({ length: MAX_PLAYER_BULLETS }, emptyPlayerBullet),
     enemyBullets: Array.from({ length: MAX_ENEMY_BULLETS }, emptyEnemyBullet),
     enemies: Array.from({ length: MAX_ENEMIES }, emptyEnemy),

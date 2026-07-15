@@ -26,14 +26,26 @@ export function isDebugMode(): boolean {
   return active
 }
 
-export type VisualDebugMode = 'final' | 'no-post'
+export type VisualDebugMode =
+  | 'final'
+  | 'no-post'
+  | 'stars'
+  | 'silhouettes'
+  | 'depth'
 
 /** Deterministic visual-validation switch; production always renders final. */
 export function visualDebugMode(): VisualDebugMode {
   if (!import.meta.env.DEV || typeof window === 'undefined') return 'final'
-  return new URLSearchParams(window.location.search).get('visual') === 'no-post'
-    ? 'no-post'
-    : 'final'
+  const requested = new URLSearchParams(window.location.search).get('visual')
+  switch (requested) {
+    case 'no-post':
+    case 'stars':
+    case 'silhouettes':
+    case 'depth':
+      return requested
+    default:
+      return 'final'
+  }
 }
 
 type DebugUiState = {

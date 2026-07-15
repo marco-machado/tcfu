@@ -938,6 +938,7 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   if (world.session.paused) return
 
   if (world.session.runOver) {
+    world.streamDistance += world.streamSpeed * dt
     stepDeathHold(world, dt)
     return
   }
@@ -957,6 +958,7 @@ export function stepWorld(world: World, dt: number, commands: Commands): void {
   stepGraze(world)
   stepPlayerHazards(world)
 
+  world.streamDistance += world.streamSpeed * dt
   world.session.elapsed += dt
 }
 
