@@ -1,6 +1,6 @@
 # Menu focus for non-combat UI
 
-Status: `ready-for-agent`
+Status: `resolved`
 
 ## Problem Statement
 
@@ -108,6 +108,13 @@ This matches the accepted decision in ADR 0008 (shared menu-focus owner for non-
 - Parent map for Results is Hangar (not Title), matching the career continue path.
 - Initial focus is primary action everywhere, including Hangar Launch (not the selected ship card) and Settings Back, per product decision during grilling.
 - Issue tracker home: this file under `.scratch/menu-focus/`. Split into implementation issues only if an agent or human wants thinner slices; the PRD alone is `ready-for-agent` as a single coherent feature.
+
+## Known deviations (accepted at resolution)
+
+Implemented in commit `216ac9e`. Two spec gaps were reviewed and accepted rather than blocking resolution:
+
+1. **Pause + keyboard Esc while a destructive action is armed** (story 33): Esc resumes via the existing run-input path instead of clearing arming only. It is safe (never fires the destructive action; matches prior behavior), and gamepad B does implement two-phase clear. Fully closing the keyboard case requires SimDriver to suppress its pause-toggle while armed, which would couple sim state to UI arming; deferred deliberately.
+2. **Pointer-clicking a Segmented option** focuses the inner radio (outside the ring); the next keyboard/gamepad move re-enters the ring at an end. Keyboard and gamepad selection are unaffected. Minor polish.
 
 ## Comments
 
