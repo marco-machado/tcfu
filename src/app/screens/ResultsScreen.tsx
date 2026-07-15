@@ -1,13 +1,18 @@
+import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
+import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import { Button, Chip, Label, Panel, ScreenHeader } from '../components/ui'
 
 export function ResultsScreen() {
   const lastRun = useSessionStore((s) => s.lastRun)
   const setScreen = useSessionStore((s) => s.setScreen)
   const startRun = useSessionStore((s) => s.startRun)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useMenuFocus({ rootRef, onBack: () => setScreen('hangar') })
 
   return (
-    <div className="screen">
+    <div className="screen" ref={rootRef}>
       <ScreenHeader title="Debrief" kicker="Run telemetry and salvage" />
       {lastRun ? (
         <Panel size="lg" className="results-body">
@@ -42,7 +47,7 @@ export function ResultsScreen() {
         <p className="muted">No run data</p>
       )}
       <div className="menu">
-        <Button variant="primary" onClick={startRun}>
+        <Button data-menu-primary variant="primary" onClick={startRun}>
           Quick retry
         </Button>
         <Button onClick={() => setScreen('hangar')}>Hangar</Button>

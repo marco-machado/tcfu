@@ -1,5 +1,7 @@
+import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
 import { playSfx, unlockAudio } from '../../audio/bus'
+import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import { saveSettings, type Quality, type Settings } from '../../persist/settings'
 import { resetMeta } from '../../persist/meta'
 import { resetHighScores } from '../../persist/highScores'
@@ -17,6 +19,9 @@ export function SettingsScreen() {
   const closeSettings = useSessionStore((s) => s.closeSettings)
   const refreshMeta = useSessionStore((s) => s.refreshMeta)
   const refreshHighScores = useSessionStore((s) => s.refreshHighScores)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useMenuFocus({ rootRef, onBack: closeSettings })
 
   const update = (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch }
@@ -27,7 +32,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <div className="screen settings-screen">
+    <div className="screen settings-screen" ref={rootRef}>
       <ScreenHeader title="Settings" kicker="Ship systems configuration" />
 
       <div className="settings-columns">
@@ -120,7 +125,7 @@ export function SettingsScreen() {
       </div>
 
       <div className="row screen-actions">
-        <Button variant="primary" onClick={closeSettings}>
+        <Button data-menu-primary variant="primary" onClick={closeSettings}>
           Back
         </Button>
       </div>

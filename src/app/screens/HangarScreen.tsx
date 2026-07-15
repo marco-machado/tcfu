@@ -1,5 +1,7 @@
+import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
 import { unlockAudio, playSfx } from '../../audio/bus'
+import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import { isShipUnlocked, SHIP_KIT_IDS, shipKit } from '../../sim/shipKits'
 import { kitRecipe } from '../../view/procedural/registry'
 import { materialToken } from '../../view/procedural/materialTokens'
@@ -18,6 +20,9 @@ export function HangarScreen() {
   const meta = useSessionStore((s) => s.meta)
   const careerBest = useSessionStore((s) => s.careerBest)
   const settings = useSessionStore((s) => s.settings)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useMenuFocus({ rootRef, onBack: () => setScreen('title') })
 
   const kit = shipKit(selectedShip)
   const accent = materialToken(kitRecipe(selectedShip).thrusterToken).emissive
@@ -29,7 +34,10 @@ export function HangarScreen() {
   }
 
   return (
-    <div className={`screen hangar-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}>
+    <div
+      className={`screen hangar-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}
+      ref={rootRef}
+    >
       <ScreenHeader title="Hangar">
         <div className="hangar-resources" aria-label="Career resources">
           <Chip icon="career" className="resource-chip">
@@ -103,7 +111,7 @@ export function HangarScreen() {
                 key={id}
                 type="button"
                 className={cn('ship-card', selected && 'selected', !open && 'locked')}
-                disabled={!open}
+                aria-disabled={!open || undefined}
                 onClick={() => open && selectShip(id)}
               >
                 <span className="ship-card-mark">
@@ -131,7 +139,7 @@ export function HangarScreen() {
         </div>
       </div>
       <div className="hangar-actions">
-        <Button variant="primary" icon="launch" onClick={launch}>
+        <Button data-menu-primary variant="primary" icon="launch" onClick={launch}>
           <span>
             Launch <small>{kit.name}</small>
           </span>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSessionStore } from '../sessionStore'
 import { playSfx, unlockAudio } from '../../audio/bus'
+import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import {
   META_BRANCHES,
   META_BRANCH_LABELS,
@@ -17,6 +18,9 @@ export function UpgradeBayScreen() {
   const settings = useSessionStore((s) => s.settings)
   const [installed, setInstalled] = useState<MetaBranch | null>(null)
   const installTimer = useRef<number | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useMenuFocus({ rootRef, onBack: () => setScreen('hangar') })
 
   useEffect(() => () => {
     if (installTimer.current !== null) window.clearTimeout(installTimer.current)
@@ -32,7 +36,10 @@ export function UpgradeBayScreen() {
   }
 
   return (
-    <div className={`screen upgrade-bay-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}>
+    <div
+      className={`screen upgrade-bay-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}
+      ref={rootRef}
+    >
       <ScreenHeader title="Upgrade bay">
         <div className="bay-header-meta">
           <Chip tone="scrap" icon="scrap" className="resource-chip">
@@ -45,7 +52,7 @@ export function UpgradeBayScreen() {
         </div>
       </ScreenHeader>
       <div className="bay-grid">
-        {META_BRANCHES.map((branch) => {
+        {META_BRANCHES.map((branch, branchIndex) => {
           const rank = meta.ranks[branch]
           const cost = nextMetaRankCost(rank)
           const maxed = cost === null
@@ -87,10 +94,11 @@ export function UpgradeBayScreen() {
                 <strong>{next}</strong>
               </div>
               <Button
+                data-menu-primary={branchIndex === 0 || undefined}
                 className={cn(canBuy && 'buy-ready')}
                 icon={maxed ? 'upgrade' : 'scrap'}
-                disabled={!canBuy}
-                onClick={() => buy(branch)}
+                aria-disabled={!canBuy || undefined}
+                onClick={() => canBuy && buy(branch)}
               >
                 <span>
                   {maxed

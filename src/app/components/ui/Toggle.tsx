@@ -21,6 +21,16 @@ export function Toggle({ label, hint, checked, onChange }: Props) {
         aria-checked={checked}
         className={cn('toggle', checked && 'is-on')}
         onClick={() => onChange(!checked)}
+        onKeyDown={(e) => {
+          // Menu focus drives value edits with Left/Right; Right turns on, Left off.
+          if (e.code === 'ArrowRight') {
+            e.preventDefault()
+            onChange(true)
+          } else if (e.code === 'ArrowLeft') {
+            e.preventDefault()
+            onChange(false)
+          }
+        }}
       >
         <span className="toggle-thumb" />
         <span className="toggle-state">{checked ? 'On' : 'Off'}</span>

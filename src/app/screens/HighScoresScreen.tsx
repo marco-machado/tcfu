@@ -1,12 +1,17 @@
+import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
+import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import { Button, ScreenHeader } from '../components/ui'
 
 export function HighScoresScreen() {
   const scores = useSessionStore((s) => s.highScores)
   const setScreen = useSessionStore((s) => s.setScreen)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useMenuFocus({ rootRef, onBack: () => setScreen('title') })
 
   return (
-    <div className="screen">
+    <div className="screen" ref={rootRef}>
       <ScreenHeader title="High Scores" kicker="Local flight records" />
       {scores.length === 0 ? (
         <p className="muted">No scores yet</p>
@@ -34,7 +39,9 @@ export function HighScoresScreen() {
           </tbody>
         </table>
       )}
-      <Button onClick={() => setScreen('title')}>Back</Button>
+      <Button data-menu-primary onClick={() => setScreen('title')}>
+        Back
+      </Button>
     </div>
   )
 }
