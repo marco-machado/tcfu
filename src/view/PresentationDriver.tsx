@@ -20,8 +20,11 @@ import { presentationFxState, triggerHitstop } from '../presentation/fxState'
 import { debugCameraLive, debugCameraOverride } from '../presentation/debugCamera'
 import { runCameraDirection, runCameraSway } from '../presentation/runCameraDirection'
 import { isDebugMode } from '../app/debugMode'
+import { POWERUP_TOKENS } from './procedural/registry'
+import { materialToken } from './procedural/materialTokens'
 
-const MAX_FX = 128
+// Sized for a high-quality bomb plus four simultaneous grunt kills and their impacts.
+const MAX_FX = 320
 const MAX_RINGS = 24
 const _proxy = new Object3D()
 const _color = new Color()
@@ -37,6 +40,7 @@ type FxParticle = {
   scale: number
   stretch: number
   color: string
+  delay: number
 }
 
 type FxRing = {
@@ -48,6 +52,12 @@ type FxRing = {
   fromScale: number
   toScale: number
   color: string
+  delay: number
+}
+
+function seededUnit(x: number, y: number, index: number, salt: number): number {
+  const value = Math.sin(x * 91.7 + y * 47.3 + index * 19.19 + salt * 131.1) * 43758.5453
+  return value - Math.floor(value)
 }
 
 function spawnBurst(
@@ -60,22 +70,27 @@ function spawnBurst(
   life: number,
   scale: number,
   stretch = 1,
+  delay = 0,
+  biasY = 0,
+  seedSalt = 0,
 ): void {
   let spawned = 0
-  for (const p of pool) {
+  for (let i = 0; i < pool.length; i++) {
+    const p = pool[i]!
     if (p.active) continue
-    const a = Math.random() * Math.PI * 2
-    const s = speed * (0.45 + Math.random() * 0.7)
+    const a = seededUnit(x, y, i, seedSalt) * Math.PI * 2
+    const s = speed * (0.45 + seededUnit(x, y, i, seedSalt + 1) * 0.7)
     p.active = true
     p.x = x
     p.y = y
     p.vx = Math.cos(a) * s
-    p.vy = Math.sin(a) * s
+    p.vy = Math.sin(a) * s + biasY
     p.life = life
     p.maxLife = life
-    p.scale = scale * (0.7 + Math.random() * 0.6)
+    p.scale = scale * (0.7 + seededUnit(x, y, i, seedSalt + 2) * 0.6)
     p.stretch = stretch
     p.color = color
+    p.delay = delay
     spawned += 1
     if (spawned >= count) break
   }
@@ -89,6 +104,7 @@ function spawnRing(
   life: number,
   fromScale: number,
   toScale: number,
+  delay = 0,
 ): void {
   for (const r of rings) {
     if (r.active) continue
@@ -100,6 +116,7 @@ function spawnRing(
     r.fromScale = fromScale
     r.toScale = toScale
     r.color = color
+    r.delay = delay
     return
   }
 }
@@ -123,22 +140,41 @@ function handleEvent(
     refs.trauma.current = Math.min(1, refs.trauma.current + amount)
   }
   switch (event.type) {
-    case 'kill':
-      spawnBurst(pool, event.x, event.y, n(10), '#ff8844', 4.5, 0.4, 0.16, 2.2)
-      spawnBurst(pool, event.x, event.y, n(4), '#5a3a2c', 3, 0.55, 0.14)
-      spawnRing(rings, event.x, event.y, '#ff9a55', 0.32, 0.12, 1.05)
-      addTrauma(0.08)
+    case 'impact': {
+      const magnitude = event.magnitude ?? 1
+      spawnBurst(pool, event.x, event.y, n(5), '#eaf8ff', 3.6 * magnitude, 0.18, 0.09, 3.2, 0, -0.5, 11)
+      spawnBurst(pool, event.x, event.y, n(3), '#5ee7ff', 2.5 * magnitude, 0.24, 0.08, 1.8, 0.025, 0, 12)
+      spawnRing(rings, event.x, event.y, '#b8f4ff', 0.16, 0.06, 0.48 * magnitude)
       break
-    case 'pickup':
-      spawnBurst(pool, event.x, event.y, n(7), '#a8ffc0', 3.2, 0.3, 0.12, 1.6)
-      spawnRing(rings, event.x, event.y, '#7dffb0', 0.3, 0.7, 0.05)
+    }
+    case 'kill':
+      {
+        const magnitude = event.magnitude ?? 1
+        spawnBurst(pool, event.x, event.y, n(12 * magnitude), '#fff0cf', 5.2 * magnitude, 0.3, 0.13, 3.2, 0, 0, 21)
+        spawnBurst(pool, event.x, event.y, n(9 * magnitude), '#ff8242', 4.2 * magnitude, 0.48, 0.18, 2.3, 0.02, 0, 22)
+        spawnBurst(pool, event.x, event.y, n(5 * magnitude), '#5b2418', 2.7 * magnitude, 0.72, 0.2, 1.2, 0.06, -0.5, 23)
+        spawnRing(rings, event.x, event.y, '#fff2cf', 0.18, 0.08, 0.78 * magnitude)
+        spawnRing(rings, event.x, event.y, '#ff8a42', 0.42, 0.16, 1.35 * magnitude, 0.04)
+        addTrauma(Math.min(0.35, 0.07 * magnitude))
+      }
+      break
+    case 'pickup': {
+      const color = event.variant
+        ? materialToken(POWERUP_TOKENS[event.variant]).emissive
+        : '#eaf8ff'
+      spawnBurst(pool, event.x, event.y, n(9), color, 2.7, 0.38, 0.11, 2, 0, 2.2, 31)
+      spawnRing(rings, event.x, event.y, color, 0.3, 0.82, 0.04)
+      spawnRing(rings, event.x, event.y, '#eaf8ff', 0.22, 0.14, 0.55, 0.05)
       addTrauma(0.05)
       break
+    }
     case 'bomb':
-      refs.bombPulse.current = 0.35
-      spawnBurst(pool, event.x, event.y, n(18), '#ffeeaa', 7.5, 0.45, 0.22, 2)
-      spawnRing(rings, event.x, event.y, '#ffe9a0', 0.55, 0.2, 6.5)
-      spawnRing(rings, event.x, event.y, '#8adfff', 0.4, 0.1, 4)
+      refs.bombPulse.current = 0.6
+      spawnBurst(pool, event.x, event.y, n(24), '#fff4c4', 8.5, 0.5, 0.2, 3, 0, 0, 41)
+      spawnBurst(pool, event.x, event.y, n(12), '#f6ca62', 5.5, 0.72, 0.18, 1.8, 0.05, 0, 42)
+      spawnRing(rings, event.x, event.y, '#fff6d6', 0.34, 0.12, 4.2)
+      spawnRing(rings, event.x, event.y, '#f6ca62', 0.62, 0.18, 8.5, 0.045)
+      spawnRing(rings, event.x, event.y, '#5ee7ff', 0.48, 0.12, 6.2, 0.12)
       addTrauma(0.42)
       refs.fovPunch.current = Math.min(10, refs.fovPunch.current + 5)
       triggerHitstop(0.045, 0.12)
@@ -153,8 +189,11 @@ function handleEvent(
     case 'shield_break':
       refs.playerFlash.current = 0.22
       presentationFxState.hudShieldBreak = 0.55
-      spawnBurst(pool, event.x, event.y, n(9), '#78e8ff', 3.4, 0.3, 0.14, 1.8)
-      spawnRing(rings, event.x, event.y, '#66e0ff', 0.4, 0.3, 2.2)
+      spawnBurst(pool, event.x, event.y, n(16), '#d9faff', 4.6, 0.4, 0.11, 3, 0, 0, 51)
+      spawnBurst(pool, event.x, event.y, n(8), '#2a8cff', 3.2, 0.58, 0.15, 1.5, 0.04, -0.3, 52)
+      spawnRing(rings, event.x, event.y, '#eaf8ff', 0.18, 0.45, 1.35)
+      spawnRing(rings, event.x, event.y, '#5ee7ff', 0.46, 0.72, 2.8, 0.035)
+      spawnRing(rings, event.x, event.y, '#2a8cff', 0.4, 0.55, 2.2, 0.11)
       addTrauma(0.25)
       break
     case 'life_loss':
@@ -167,9 +206,12 @@ function handleEvent(
       triggerHitstop(0.07, 0.08)
       break
     case 'death':
-      spawnBurst(pool, event.x, event.y, n(20), '#ff9977', 6, 0.6, 0.2, 2)
-      spawnBurst(pool, event.x, event.y, n(8), '#ffe4b8', 4, 0.5, 0.14, 1.5)
-      spawnRing(rings, event.x, event.y, '#ff7755', 0.7, 0.2, 5)
+      spawnBurst(pool, event.x, event.y, n(26), '#eaf8ff', 6.8, 0.55, 0.17, 3.2, 0, 0, 61)
+      spawnBurst(pool, event.x, event.y, n(22), '#ff8a42', 5.8, 0.85, 0.23, 2.2, 0.06, 0, 62)
+      spawnBurst(pool, event.x, event.y, n(12), '#391b1b', 3.6, 1.15, 0.26, 1.1, 0.14, -0.8, 63)
+      spawnRing(rings, event.x, event.y, '#ffffff', 0.2, 0.15, 1.8)
+      spawnRing(rings, event.x, event.y, '#ff9b42', 0.72, 0.25, 5.6, 0.07)
+      spawnRing(rings, event.x, event.y, '#5ee7ff', 0.8, 0.3, 7.2, 0.18)
       addTrauma(0.7)
       refs.fovPunch.current = Math.min(12, refs.fovPunch.current + 6)
       break
@@ -243,6 +285,7 @@ export function PresentationDriver() {
         scale: 0.1,
         stretch: 1,
         color: '#fff',
+        delay: 0,
       })),
     [],
   )
@@ -257,6 +300,7 @@ export function PresentationDriver() {
         fromScale: 0.1,
         toScale: 1,
         color: '#fff',
+        delay: 0,
       })),
     [],
   )
@@ -269,6 +313,8 @@ export function PresentationDriver() {
         transparent: true,
         opacity: 0.92,
         toneMapped: false,
+        blending: AdditiveBlending,
+        depthWrite: false,
         vertexColors: true,
       }),
     [],
@@ -310,6 +356,17 @@ export function PresentationDriver() {
     const events = drainPresentation(world.presentation)
     for (const event of events) {
       handleEvent(pool, rings, event, particleMult, refs)
+      if (settings.reducedMotion) {
+        for (const particle of pool) {
+          if (!particle.active) continue
+          particle.vx = 0
+          particle.vy = 0
+          particle.delay = 0
+        }
+        for (const ring of rings) {
+          if (ring.active) ring.delay = 0
+        }
+      }
       playSfx(event.type, settings)
       rumbleForEvent(event.type)
     }
@@ -332,18 +389,28 @@ export function PresentationDriver() {
     const dt = Math.min(delta, 0.05)
     for (const p of pool) {
       if (!p.active) continue
+      if (p.delay > 0) {
+        p.delay = Math.max(0, p.delay - dt)
+        continue
+      }
       p.life -= dt
       if (p.life <= 0) {
         p.active = false
         continue
       }
-      p.x += p.vx * dt
-      p.y += p.vy * dt
+      if (!settings.reducedMotion) {
+        p.x += p.vx * dt
+        p.y += p.vy * dt
+      }
       p.vx *= 0.92
       p.vy *= 0.92
     }
     for (const r of rings) {
       if (!r.active) continue
+      if (r.delay > 0) {
+        r.delay = Math.max(0, r.delay - dt)
+        continue
+      }
       r.life -= dt
       if (r.life <= 0) r.active = false
     }
@@ -352,9 +419,9 @@ export function PresentationDriver() {
     if (inst) {
       let i = 0
       for (const p of pool) {
-        if (!p.active) continue
+        if (!p.active || p.delay > 0) continue
         const t = p.life / p.maxLife
-        const s = p.scale * (0.4 + t * 0.8)
+        const s = settings.reducedMotion ? p.scale : p.scale * (0.4 + t * 0.8)
         const speed = Math.hypot(p.vx, p.vy)
         const rotZ = speed > 0.01 ? Math.atan2(-p.vx, p.vy) : 0
         _proxy.position.set(p.x, p.y, 0.4)
@@ -381,10 +448,12 @@ export function PresentationDriver() {
     if (ringsInst) {
       let i = 0
       for (const r of rings) {
-        if (!r.active) continue
+        if (!r.active || r.delay > 0) continue
         const t = 1 - r.life / r.maxLife
         const eased = 1 - (1 - t) * (1 - t)
-        const s = r.fromScale + (r.toScale - r.fromScale) * eased
+        const s = settings.reducedMotion
+          ? r.toScale
+          : r.fromScale + (r.toScale - r.fromScale) * eased
         _proxy.position.set(r.x, r.y, 0.38)
         _proxy.scale.set(s, s, 1)
         _proxy.rotation.set(0, 0, 0)

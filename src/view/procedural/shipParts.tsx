@@ -6,12 +6,17 @@ import {
   Shape,
   Vector2,
 } from 'three'
-import { cloneRoleMaterial, getRoleMaterial, type MaterialRole } from './MaterialLibrary'
+import type { ShipId } from '../../sim/types'
+import {
+  cloneKitRoleMaterial,
+  getKitRoleMaterial,
+  type MaterialRole,
+} from './MaterialLibrary'
 import { materialToken } from './materialTokens'
 import { ThrusterPlume } from './ThrusterPlume'
 
-export function roleMat(role: MaterialRole, mutable: boolean): Material {
-  return mutable ? cloneRoleMaterial(role) : getRoleMaterial(role)
+export function roleMat(shipId: ShipId, role: MaterialRole, mutable: boolean): Material {
+  return mutable ? cloneKitRoleMaterial(shipId, role) : getKitRoleMaterial(shipId, role)
 }
 
 export type RoleMats = {
@@ -24,18 +29,18 @@ export type RoleMats = {
   decal: Material
 }
 
-export function useRoleMats(mutable: boolean): RoleMats {
+export function useRoleMats(shipId: ShipId, mutable: boolean): RoleMats {
   return useMemo(
     () => ({
-      body: roleMat('bodyPrimary', mutable),
-      panel: roleMat('bodySecondary', mutable),
-      trim: roleMat('trim', mutable),
-      glass: roleMat('glass', mutable),
-      glow: roleMat('emissiveSignal', mutable),
-      nozzle: roleMat('nozzle', mutable),
-      decal: roleMat('decalDark', mutable),
+      body: roleMat(shipId, 'bodyPrimary', mutable),
+      panel: roleMat(shipId, 'bodySecondary', mutable),
+      trim: roleMat(shipId, 'trim', mutable),
+      glass: roleMat(shipId, 'glass', mutable),
+      glow: roleMat(shipId, 'emissiveSignal', mutable),
+      nozzle: roleMat(shipId, 'nozzle', mutable),
+      decal: roleMat(shipId, 'decalDark', mutable),
     }),
-    [mutable],
+    [shipId, mutable],
   )
 }
 

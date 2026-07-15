@@ -26,6 +26,16 @@ export function isDebugMode(): boolean {
   return active
 }
 
+export type VisualDebugMode = 'final' | 'no-post'
+
+/** Deterministic visual-validation switch; production always renders final. */
+export function visualDebugMode(): VisualDebugMode {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return 'final'
+  return new URLSearchParams(window.location.search).get('visual') === 'no-post'
+    ? 'no-post'
+    : 'final'
+}
+
 type DebugUiState = {
   panelOpen: boolean
   timeScale: number
@@ -49,5 +59,7 @@ export const useDebugStore = create<DebugUiState>((set) => ({
 }))
 
 export function debugTimeScale(): number {
-  return active ? useDebugStore.getState().timeScale : 1
+  // DEV test hooks also use this store without requiring the interactive
+  // ?debug panel, so deterministic captures can freeze the fixed-step loop.
+  return import.meta.env.DEV ? useDebugStore.getState().timeScale : 1
 }

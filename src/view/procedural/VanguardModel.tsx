@@ -1,24 +1,36 @@
 import { useGLTF } from '@react-three/drei'
-import { useMemo } from 'react'
+import { useLayoutEffect, useMemo } from 'react'
 import type { Group, Mesh, MeshStandardMaterial } from 'three'
+import type { ShipId } from '../../sim/types'
 import type { DetailLevel } from './registry'
 import { hasKitPart, kitRecipe } from './registry'
 import { cloneRoleMaterial, getRoleMaterial } from './MaterialLibrary'
 import { materialToken } from './materialTokens'
+import {
+  classifyModelRole,
+  glbShipAsset,
+  modelAsset,
+  validateModelObject,
+} from './modelAssets'
 import { ThrusterPlume } from './ThrusterPlume'
 
-const MODEL_URL = `${import.meta.env.BASE_URL}assets/models/vanguard.glb`
-
 type Props = {
+  shipId: ShipId
   detail: DetailLevel
   /** When true, materials are clones so hit-flash can mutate safely. */
   mutableMaterials?: boolean
   liveThrust?: boolean
 }
 
-/** Authored Vanguard GLB hull; plumes stay procedural so live thrust keeps working. */
-export function VanguardModel({ detail, mutableMaterials = false, liveThrust = false }: Props) {
-  const { scene } = useGLTF(MODEL_URL)
+/** Catalog-driven GLB hull; gameplay-facing signals and plumes remain procedural. */
+export function GlbShipModel({
+  shipId,
+  detail,
+  mutableMaterials = false,
+  liveThrust = false,
+}: Props) {
+  const model = glbShipAsset(shipId)
+  const { scene } = useGLTF(model.url)
 
   const hull = useMemo(() => {
     const clone = scene.clone(true) as Group
@@ -26,20 +38,45 @@ export function VanguardModel({ detail, mutableMaterials = false, liveThrust = f
       const mesh = obj as Mesh
       if (!mesh.isMesh) return
       mesh.castShadow = true
-      if (mutableMaterials) {
-        mesh.material = (mesh.material as MeshStandardMaterial).clone()
-      }
-      const mat = mesh.material as MeshStandardMaterial
-      if (mat?.isMeshStandardMaterial) {
-        // Textured PBR hull reads too dark under the dim run lighting rig.
-        mat.envMapIntensity = 2.2
+      const source = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      const materials = mutableMaterials ? source.map((mat) => mat.clone()) : source
+      mesh.material = Array.isArray(mesh.material) ? materials : materials[0]!
+
+      for (const material of materials) {
+        const mat = material as MeshStandardMaterial
+        if (!mat.isMeshStandardMaterial) continue
+        const role = classifyModelRole(`${mesh.name} ${mat.name}`)
+        if (role === 'emissive') {
+          const signal = materialToken(kitRecipe(shipId).accentToken)
+          mat.emissive.set(signal.emissive)
+          mat.emissiveIntensity = signal.emissiveIntensity
+          mat.toneMapped = false
+        }
+        mat.envMapIntensity = role === 'glass' ? 2.6 : role === 'panel' ? 1.5 : 2.2
       }
     })
+    const validationWarnings = validateModelObject('ship', shipId, clone, model)
+    clone.userData.modelValidationWarnings = validationWarnings
+    if (import.meta.env.DEV && validationWarnings.length > 0) {
+      console.warn(`[model:${shipId}] ${validationWarnings.join(', ')}`)
+    }
     return clone
-  }, [scene, mutableMaterials])
+  }, [scene, mutableMaterials, shipId, model])
+
+  useLayoutEffect(() => {
+    if (!mutableMaterials) return
+    return () => {
+      hull.traverse((obj) => {
+        const mesh = obj as Mesh
+        if (!mesh.isMesh) return
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        for (const material of materials) material.dispose()
+      })
+    }
+  }, [hull, mutableMaterials])
 
   const plumeMat = useMemo(() => {
-    const t = materialToken(kitRecipe('vanguard').thrusterToken)
+    const t = materialToken(kitRecipe(shipId).thrusterToken)
     return {
       color: t.color,
       emissive: t.emissive,
@@ -48,46 +85,50 @@ export function VanguardModel({ detail, mutableMaterials = false, liveThrust = f
       roughness: t.roughness,
       toneMapped: t.toneMapped,
     }
-  }, [])
+  }, [shipId])
 
-  const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('vanguard', detail, p)
+  const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart(shipId, detail, p)
   const signalMat = useMemo(
     () => (mutableMaterials ? cloneRoleMaterial('emissiveSignal') : getRoleMaterial('emissiveSignal')),
     [mutableMaterials],
   )
-  const trimMat = useMemo(
-    () => (mutableMaterials ? cloneRoleMaterial('trim') : getRoleMaterial('trim')),
-    [mutableMaterials],
-  )
+
+  useLayoutEffect(() => {
+    if (!mutableMaterials) return
+    return () => signalMat.dispose()
+  }, [mutableMaterials, signalMat])
 
   return (
-    <group name="vanguardRoot">
-      {/* GLB is Y-up with its length along X; game ships fly nose toward +Y. */}
-      <group rotation={[Math.PI / 2, Math.PI / 2, 0]} scale={1.95} position={[0, 0.15, 0]}>
+    <group name={`${shipId}Root`}>
+      <group rotation={model.rotation} scale={model.scale} position={model.position}>
         <primitive object={hull} />
       </group>
-      {show('edgeGlow') && (
+      {show('signal') && (
         <group name="signalLights">
-          <mesh name="wingGlowL" position={[-0.6, -0.28, 0.08]}>
-            <boxGeometry args={[0.14, 0.02, 0.02]} />
-            <primitive object={signalMat} attach="material" />
-          </mesh>
-          <mesh name="wingGlowR" position={[0.6, -0.28, 0.08]}>
-            <boxGeometry args={[0.14, 0.02, 0.02]} />
-            <primitive object={signalMat} attach="material" />
-          </mesh>
-          <mesh name="spineGlow" position={[0, 0.28, 0.12]}>
-            <boxGeometry args={[0.025, 0.5, 0.015]} />
-            <primitive object={trimMat} attach="material" />
-          </mesh>
+          {model.signals.filter((marker) => !marker.highOnly).map((marker, index) => (
+            <mesh key={index} name={`signal${index}`} position={marker.position}>
+              <boxGeometry args={marker.size} />
+              <primitive object={signalMat} attach="material" />
+            </mesh>
+          ))}
+        </group>
+      )}
+      {show('edgeGlow') && (
+        <group name="highOnlySignals">
+          {model.signals.filter((marker) => marker.highOnly).map((marker, index) => (
+            <mesh key={index} name={`highSignal${index}`} position={marker.position}>
+              <boxGeometry args={marker.size} />
+              <primitive object={signalMat} attach="material" />
+            </mesh>
+          ))}
         </group>
       )}
       {show('thruster') && show('thrusterPlume') && (
-        <group name="engines" position={[0, -0.42, 0]}>
-          {([-0.15, 0.15] as const).map((x) => (
-            <group key={x} name={x < 0 ? 'leftEngine' : 'rightEngine'} position={[x, 0, 0]}>
+        <group name="engines">
+          {model.thrusters.map((thruster, index) => (
+            <group key={index} name={`engine${index}`} position={thruster.position}>
               <ThrusterPlume
-                scale={1.1}
+                scale={thruster.scale}
                 dense={detail === 'high'}
                 thruster={plumeMat}
                 live={liveThrust}
@@ -100,4 +141,5 @@ export function VanguardModel({ detail, mutableMaterials = false, liveThrust = f
   )
 }
 
-useGLTF.preload(MODEL_URL)
+const VANGUARD_MODEL = modelAsset('ship', 'vanguard')
+if (VANGUARD_MODEL.source === 'glb') useGLTF.preload(VANGUARD_MODEL.url)

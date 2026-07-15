@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSessionStore } from '../../app/sessionStore'
-import { COMBO_WINDOW, comboMultiplier, scrapForRun } from '../../sim/constants'
+import { COMBO_WINDOW, comboMultiplier, DEATH_HOLD, scrapForRun } from '../../sim/constants'
 import { scrapEarnMultFromRanks } from '../../sim/metaModifiers'
 import { isSetPieceWave } from '../../sim/patterns'
 import { bossBarFromWorld } from '../../sim/step'
@@ -52,6 +52,8 @@ export function RunHud() {
   const wavesCompleted = Math.max(0, s.wave - 1)
   const scrapEst = scrapForRun(s.score, wavesCompleted, scrapEarnMultFromRanks(metaRanks))
   const dying = s.runOver && s.endHold > 0
+  // Let the authored crash beat own the frame before the fail-state modal arrives.
+  const showDeathModal = dying && s.deathFlash <= DEATH_HOLD - 0.6
 
   const weaponTier = weaponTierForWCells(p.wCells)
   const nextTier = nextWeaponTierThreshold(p.wCells)
@@ -246,7 +248,7 @@ export function RunHud() {
       <TouchControls />
 
       {s.paused && !dying && <PauseModal />}
-      {dying && (
+      {showDeathModal && (
         <div className="overlay death-overlay">
           <div className="modal death-modal" role="alertdialog" aria-labelledby="destroyed-title">
             <h2 id="destroyed-title">Destroyed</h2>

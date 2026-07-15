@@ -16,7 +16,9 @@ import {
   PROJECTILE_TOKENS,
   sceneryExtras,
   sceneryLayers,
+  SHIP_SILHOUETTE_PROFILES,
   SHIP_KIT_VISUAL_IDS,
+  ENEMY_SILHOUETTE_PROFILES,
 } from './registry'
 import { MATERIAL_TOKENS } from './materialTokens'
 
@@ -87,7 +89,12 @@ describe('visual registry', () => {
   it('detail ladder strips optional enemy detail on Low', () => {
     expect(hasEnemyPart('gunner', 'low', 'optionalDetail')).toBe(false)
     expect(hasEnemyPart('gunner', 'medium', 'optionalDetail')).toBe(true)
-    expect(partsForEnemy('dart', 'medium')).toEqual([...ENEMY_RECIPES.dart.baseParts])
+    expect(hasEnemyPart('dart', 'low', 'panel')).toBe(false)
+    expect(hasEnemyPart('dart', 'medium', 'panel')).toBe(true)
+    expect(partsForEnemy('dart', 'medium')).toEqual([
+      ...ENEMY_RECIPES.dart.baseParts,
+      ...ENEMY_RECIPES.dart.optionalParts,
+    ])
   })
 
   it('scenery drops mid layer on Low', () => {
@@ -130,5 +137,27 @@ describe('visual registry', () => {
     expect(enemyRecipe('gunner').enemyClass).toBe('grunt')
     expect(enemyRecipe('razor').enemyClass).toBe('elite')
     expect(enemyRecipe('colossus').enemyClass).toBe('set_piece')
+  })
+
+  it('keeps signature signals and hull identity available without post or optional detail', () => {
+    for (const id of SHIP_KIT_VISUAL_IDS) {
+      expect(partsForKit(id, 'low'), id).toContain('signal')
+      expect(partsForKit(id, 'medium'), id).toContain('hullPanels')
+    }
+  })
+
+  it('defines distinct silhouette contracts for every ship and enemy family', () => {
+    expect(Object.keys(SHIP_SILHOUETTE_PROFILES)).toEqual([...SHIP_KIT_VISUAL_IDS])
+    expect(Object.keys(ENEMY_SILHOUETTE_PROFILES)).toEqual([...ENEMY_KIND_VISUAL_IDS])
+
+    expect(SHIP_SILHOUETTE_PROFILES.aegis.widthToLength).toBeGreaterThan(
+      SHIP_SILHOUETTE_PROFILES.phantom.widthToLength,
+    )
+    expect(ENEMY_SILHOUETTE_PROFILES.gunner.family).not.toBe(
+      ENEMY_SILHOUETTE_PROFILES.sidecar.family,
+    )
+    expect(ENEMY_SILHOUETTE_PROFILES.razor.widthToLength).toBeGreaterThan(
+      ENEMY_SILHOUETTE_PROFILES.prism.widthToLength,
+    )
   })
 })

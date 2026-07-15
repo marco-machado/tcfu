@@ -164,7 +164,12 @@ function applyPowerup(world: World, powerup: Powerup): void {
   if (powerup.type === 'score_mult') player.scoreMult = SCORE_MULT_DURATION
   world.session.score += POWERUP_SCORE
   world.powerupDryElapsed = 0
-  pushPresentation(world.presentation, { type: 'pickup', x: powerup.x, y: powerup.y })
+  pushPresentation(world.presentation, {
+    type: 'pickup',
+    x: powerup.x,
+    y: powerup.y,
+    variant: powerup.type,
+  })
 }
 
 function stepPowerups(world: World, dt: number): void {
@@ -224,7 +229,15 @@ function awardKill(world: World, enemy: Pick<Enemy, 'class' | 'points' | 'waveId
   if (enemy.waveId === session.wave) {
     world.waves.waveKilled += 1
   }
-  pushPresentation(world.presentation, { type: 'kill', x: enemy.x, y: enemy.y })
+  const magnitude =
+    enemy.class === 'set_piece'
+      ? 2.4
+      : enemy.class === 'elite'
+        ? 1.65
+        : enemy.class === 'grunt'
+          ? 1.25
+          : 1
+  pushPresentation(world.presentation, { type: 'kill', x: enemy.x, y: enemy.y, magnitude })
   tryDropOnKill(world, enemy)
 }
 
@@ -860,6 +873,12 @@ function stepPlayerBulletHits(world: World): void {
 
       e.hp -= b.damage
       e.hitFlash = 0.09
+      pushPresentation(world.presentation, {
+        type: 'impact',
+        x: b.x,
+        y: b.y,
+        magnitude: Math.min(1.6, 0.75 + b.damage * 0.2),
+      })
       b.hitEnemyIds.push(e.id)
       if (b.pierce > 0) b.pierce -= 1
       else b.active = false

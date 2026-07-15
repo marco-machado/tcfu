@@ -148,6 +148,42 @@ function accentParts(kind: EnemyKind): GeoPart[] {
   }
 }
 
+/** Dark armor facets remain legible when the main hull flashes white on damage. */
+function panelParts(kind: EnemyKind): GeoPart[] {
+  switch (kind) {
+    case 'drone':
+      return [{ kind: 'box', sx: 0.3, sy: 0.1, sz: 0.045, y: 0.08, z: 0.18 }]
+    case 'dart':
+      return [{ kind: 'box', sx: 0.12, sy: 0.46, sz: 0.04, y: 0.08, z: 0.105 }]
+    case 'gunner':
+      return [
+        { kind: 'box', sx: 0.28, sy: 0.26, sz: 0.04, x: -0.25, y: 0.1, z: 0.2 },
+        { kind: 'box', sx: 0.28, sy: 0.26, sz: 0.04, x: 0.25, y: 0.1, z: 0.2 },
+      ]
+    case 'sidecar':
+      return [
+        { kind: 'box', sx: 0.16, sy: 0.4, sz: 0.04, x: -0.42, z: 0.16 },
+        { kind: 'box', sx: 0.16, sy: 0.4, sz: 0.04, x: 0.42, z: 0.16 },
+      ]
+    case 'razor':
+      return [
+        { kind: 'box', sx: 0.58, sy: 0.09, sz: 0.04, x: -0.48, y: 0.22, z: 0.11, rotZ: 0.35 },
+        { kind: 'box', sx: 0.58, sy: 0.09, sz: 0.04, x: 0.48, y: 0.22, z: 0.11, rotZ: -0.35 },
+      ]
+    case 'prism':
+      return [
+        { kind: 'box', sx: 0.32, sy: 0.07, sz: 0.04, y: 0.62, z: 0.1 },
+        { kind: 'box', sx: 0.32, sy: 0.07, sz: 0.04, y: -0.62, z: 0.1 },
+      ]
+    case 'colossus':
+      return [
+        { kind: 'box', sx: 0.72, sy: 0.38, sz: 0.05, x: -0.55, y: 0.05, z: 0.28 },
+        { kind: 'box', sx: 0.72, sy: 0.38, sz: 0.05, x: 0.55, y: 0.05, z: 0.28 },
+        { kind: 'box', sx: 0.48, sy: 0.24, sz: 0.05, y: 0.55, z: 0.31 },
+      ]
+  }
+}
+
 /** Extra greeble at Medium/High. */
 function optionalParts(kind: EnemyKind): GeoPart[] {
   switch (kind) {
@@ -202,6 +238,10 @@ export function bakeEnemyAccentGeometry(kind: EnemyKind): BufferGeometry {
   return bakeParts(accentParts(kind))
 }
 
+export function bakeEnemyPanelGeometry(kind: EnemyKind): BufferGeometry {
+  return bakeParts(panelParts(kind))
+}
+
 /** Hostile hull: rust base lifted for lane separation, with panel detail. */
 export function createEnemyMaterial(kind: EnemyKind): MeshStandardMaterial {
   const recipe = ENEMY_RECIPES[kind]
@@ -222,5 +262,15 @@ export function createEnemyAccentMaterial(kind: EnemyKind): MeshStandardMaterial
   const mat = createTokenMaterial(recipe.accentToken)
   mat.emissiveIntensity = Math.max(1.5, mat.emissiveIntensity)
   mat.toneMapped = false
+  return mat
+}
+
+export function createEnemyPanelMaterial(): MeshStandardMaterial {
+  const mat = createTokenMaterial('hullPanel')
+  mat.color.set('#3b2020')
+  mat.emissive.set('#1d0805')
+  mat.emissiveIntensity = 0.24
+  mat.metalness = 0.82
+  mat.roughness = 0.5
   return mat
 }

@@ -1,6 +1,8 @@
 import { emptyCommands } from '../input/commands'
 import { resetPresentationFx } from '../presentation/fxState'
+import { debugSpawnEnemy } from '../sim/debugActions'
 import { stepWorld } from '../sim/step'
+import { ENEMY_KINDS } from '../sim/types'
 import { getWorld } from '../sim/world'
 import { useDebugStore } from './debugMode'
 import { useSessionStore } from './sessionStore'
@@ -11,6 +13,10 @@ type TestHooks = {
   setPausedForScreenshot(paused: boolean): void
   setReducedMotion(enabled: boolean): void
   hideDebugUi(hidden: boolean): void
+  reviewSnapshot(): {
+    elapsed: number
+    enemies: Array<{ kind: string; x: number; y: number }>
+  }
 }
 
 declare global {
@@ -50,6 +56,7 @@ function fastForward(seconds: number, invulnerable: boolean): void {
 
 function startSeededRun(): void {
   const store = useSessionStore.getState()
+  useDebugStore.getState().setTimeScale(1)
   // Autofire keeps the live loop producing kills/FX during delayed captures.
   store.setSettings({ ...store.settings, autoFire: true })
   store.startRun()
@@ -118,6 +125,26 @@ export function installTestHooks(): void {
           }
           break
         }
+        case 'family-review': {
+          startSeededRun()
+          const world = getWorld()
+          world.waves.suspended = true
+          for (const enemy of world.enemies) enemy.active = false
+          ENEMY_KINDS.forEach((kind, index) => {
+            const enemy = debugSpawnEnemy(world, kind)
+            if (!enemy) return
+            enemy.x = -4.5 + (index % 4) * 3
+            enemy.y = index < 4 ? 8.2 : 6.2
+            enemy.vy = 0
+            enemy.path = 'hold_and_shot'
+            enemy.laneX = enemy.x
+            enemy.fireInterval = 0
+            enemy.fireCooldown = 999
+            enemy.shotStyle = 'none'
+          })
+          useDebugStore.getState().setTimeScale(0)
+          break
+        }
         case 'impact': {
           // Column of fodder feeding continuous kills so bursts/rings are
           // live in any delayed capture frame.
@@ -179,9 +206,9 @@ export function installTestHooks(): void {
           }
           stepWorld(world, 1 / 60, emptyCommands())
           for (let i = 0; i < 20; i++) stepWorld(world, 1 / 60, emptyCommands())
-          // Freeze the crash beat so captures show the explosion + fail modal.
+          // Freeze the unobscured crash beat; the fail modal follows later in the hold.
           world.session.endHold = 999
-          world.session.deathFlash = 1.1
+          world.session.deathFlash = 1.35
           break
         }
         default:
@@ -197,6 +224,15 @@ export function installTestHooks(): void {
     },
     hideDebugUi(hidden: boolean) {
       useDebugStore.getState().setHidden(hidden)
+    },
+    reviewSnapshot() {
+      const world = getWorld()
+      return {
+        elapsed: world.session.elapsed,
+        enemies: world.enemies
+          .filter((enemy) => enemy.active)
+          .map(({ kind, x, y }) => ({ kind, x, y })),
+      }
     },
   }
 }

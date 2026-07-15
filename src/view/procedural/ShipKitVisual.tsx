@@ -5,6 +5,7 @@ import type { ShipId } from '../../sim/types'
 import { presentationFxState } from '../../presentation/fxState'
 import type { DetailLevel } from './registry'
 import { hasKitPart } from './registry'
+import { modelAsset } from './modelAssets'
 import {
   EngineAssembly,
   makeWingGeometry,
@@ -13,7 +14,8 @@ import {
   useRoleMats,
   type RoleMats,
 } from './shipParts'
-import { VanguardModel } from './VanguardModel'
+import { VanguardFactory } from './VanguardFactory'
+import { GlbShipModel } from './VanguardModel'
 
 type Props = {
   shipId: ShipId
@@ -154,6 +156,14 @@ function StrikerKit({ detail, mats, liveThrust }: KitProps) {
       <Box name="bellyPlate" pos={[0, 0.1, -0.12]} scale={[0.22, 0.8, 0.06]} mat={mats.panel} />
       <Box name="spineRail" pos={[0, 0.2, 0.135]} scale={[0.06, 0.85, 0.03]} mat={mats.decal} />
 
+      {show('hullPanels') && (
+        <group name="hullPanels">
+          <Box name="shoulderPanelL" pos={[-0.13, 0.18, 0.14]} scale={[0.09, 0.34, 0.018]} rot={[0, 0, 0.05]} mat={mats.panel} />
+          <Box name="shoulderPanelR" pos={[0.13, 0.18, 0.14]} scale={[0.09, 0.34, 0.018]} rot={[0, 0, -0.05]} mat={mats.panel} />
+          <Box name="nosePanel" pos={[0, 0.66, 0.11]} scale={[0.13, 0.16, 0.018]} mat={mats.panel} />
+        </group>
+      )}
+
       {show('gunPods') && (
         <group name="gunBooms">
           {([-0.3, 0.3] as const).map((x) => (
@@ -217,6 +227,13 @@ function StrikerKit({ detail, mats, liveThrust }: KitProps) {
         </group>
       )}
 
+      {show('signal') && (
+        <group name="signatureSignal">
+          <Box name="boomSignalL" pos={[-0.3, 0.54, 0.09]} scale={[0.035, 0.18, 0.018]} mat={mats.glow} />
+          <Box name="boomSignalR" pos={[0.3, 0.54, 0.09]} scale={[0.035, 0.18, 0.018]} mat={mats.glow} />
+        </group>
+      )}
+
       {show('edgeGlow') && (
         <group name="highOnly">
           <Box name="muzzleGlowL" pos={[-0.3, 1.24, 0]} scale={[0.05, 0.05, 0.05]} mat={mats.glow} />
@@ -262,6 +279,13 @@ function AegisKit({ detail, mats, liveThrust }: KitProps) {
       <Box name="armorChevR" pos={[0.2, 0.72, 0.03]} scale={[0.34, 0.14, 0.2]} rot={[0, 0, -0.5]} mat={mats.panel} />
       <Box name="armorNose" pos={[0, 0.82, 0]} scale={[0.16, 0.18, 0.16]} mat={mats.panel} />
       <Box name="bellyPlate" pos={[0, 0, -0.2]} scale={[0.6, 0.5, 0.06]} mat={mats.panel} />
+      {show('hullPanels') && (
+        <group name="hullPanels">
+          <Box name="armorDeckL" pos={[-0.23, 0.22, 0.185]} scale={[0.22, 0.32, 0.025]} rot={[0, 0, 0.08]} mat={mats.panel} />
+          <Box name="armorDeckR" pos={[0.23, 0.22, 0.185]} scale={[0.22, 0.32, 0.025]} rot={[0, 0, -0.08]} mat={mats.panel} />
+          <Box name="keelPanel" pos={[0, -0.22, 0.18]} scale={[0.3, 0.16, 0.025]} mat={mats.decal} />
+        </group>
+      )}
       {/* Side sponsons with dark intakes */}
       {([-1, 1] as const).map((s) => (
         <group key={s} name={s < 0 ? 'sponsonL' : 'sponsonR'} position={[s * 0.52, 0.06, 0]}>
@@ -329,6 +353,14 @@ function AegisKit({ detail, mats, liveThrust }: KitProps) {
         </group>
       )}
 
+      {show('signal') && (
+        <group name="signatureSignal">
+          <Box name="shoulderSignalL" pos={[-0.66, 0.2, 0.14]} scale={[0.1, 0.045, 0.025]} mat={mats.glow} />
+          <Box name="shoulderSignalR" pos={[0.66, 0.2, 0.14]} scale={[0.1, 0.045, 0.025]} mat={mats.glow} />
+          <Box name="prowSignal" pos={[0, 0.76, 0.13]} scale={[0.08, 0.045, 0.025]} mat={mats.glow} />
+        </group>
+      )}
+
       {show('edgeGlow') && (
         <Box name="prowGlow" pos={[0, 0.94, 0.02]} scale={[0.1, 0.02, 0.02]} mat={mats.glow} />
       )}
@@ -370,6 +402,13 @@ function PhantomKit({ detail, mats, liveThrust }: KitProps) {
         <primitive object={mats.body} attach="material" />
       </mesh>
       <Box name="bellyPlate" pos={[0, 0.08, -0.08]} scale={[0.13, 0.72, 0.05]} mat={mats.panel} />
+      {show('hullPanels') && (
+        <group name="hullPanels">
+          <Box name="spinePanel" pos={[0, 0.16, 0.088]} scale={[0.09, 0.5, 0.016]} mat={mats.panel} />
+          <Box name="noseFacetL" pos={[-0.055, 0.55, 0.075]} scale={[0.045, 0.22, 0.016]} rot={[0, 0, 0.06]} mat={mats.decal} />
+          <Box name="noseFacetR" pos={[0.055, 0.55, 0.075]} scale={[0.045, 0.22, 0.016]} rot={[0, 0, -0.06]} mat={mats.decal} />
+        </group>
+      )}
 
       {show('wings') && (
         <group name="wings">
@@ -403,6 +442,14 @@ function PhantomKit({ detail, mats, liveThrust }: KitProps) {
       <Box name="tailFinL" pos={[-0.1, -0.38, 0.1]} scale={[0.03, 0.3, 0.16]} rot={[0.35, 0, 0.2]} mat={mats.panel} />
       <Box name="tailFinR" pos={[0.1, -0.38, 0.1]} scale={[0.03, 0.3, 0.16]} rot={[0.35, 0, -0.2]} mat={mats.panel} />
 
+      {show('signal') && (
+        <group name="signatureSignal">
+          <Box name="needleSignal" pos={[0, 0.63, 0.1]} scale={[0.025, 0.22, 0.018]} mat={mats.glow} />
+          <Box name="tailSignalL" pos={[-0.11, -0.42, 0.16]} scale={[0.025, 0.11, 0.018]} mat={mats.trim} />
+          <Box name="tailSignalR" pos={[0.11, -0.42, 0.16]} scale={[0.025, 0.11, 0.018]} mat={mats.trim} />
+        </group>
+      )}
+
       {show('edgeGlow') && (
         <group name="highOnly">
           <Box name="dorsalGlow" pos={[0, 0.1, 0.09]} scale={[0.025, 0.75, 0.015]} mat={mats.glow} />
@@ -414,18 +461,20 @@ function PhantomKit({ detail, mats, liveThrust }: KitProps) {
   )
 }
 
-function KitBody({
-  shipId,
-  detail,
-  mutableMaterials,
-  liveThrust,
-}: {
+type KitBodyProps = {
   shipId: ShipId
   detail: DetailLevel
   mutableMaterials: boolean
   liveThrust: boolean
-}) {
-  const mats = useRoleMats(mutableMaterials)
+}
+
+function ProceduralKitBody({
+  shipId,
+  detail,
+  mutableMaterials,
+  liveThrust,
+}: KitBodyProps) {
+  const mats = useRoleMats(shipId, mutableMaterials)
   switch (shipId) {
     case 'striker':
       return <StrikerKit detail={detail} mats={mats} liveThrust={liveThrust} />
@@ -435,13 +484,19 @@ function KitBody({
       return <PhantomKit detail={detail} mats={mats} liveThrust={liveThrust} />
     default:
       return (
-        <VanguardModel
+        <VanguardFactory
           detail={detail}
           mutableMaterials={mutableMaterials}
           liveThrust={liveThrust}
         />
       )
   }
+}
+
+function KitBody(props: KitBodyProps) {
+  const asset = modelAsset('ship', props.shipId)
+  if (asset.source === 'glb') return <GlbShipModel {...props} />
+  return <ProceduralKitBody {...props} />
 }
 
 /** Catalog id → bespoke procedural kit graph (Hangar + Run). */

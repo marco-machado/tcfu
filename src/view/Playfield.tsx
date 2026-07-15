@@ -27,8 +27,10 @@ import { createTokenMaterial } from './procedural/createMaterial'
 import {
   bakeEnemyAccentGeometry,
   bakeEnemyGeometry,
+  bakeEnemyPanelGeometry,
   createEnemyAccentMaterial,
   createEnemyMaterial,
+  createEnemyPanelMaterial,
 } from './procedural/enemyGeometry'
 import { getSoftGlowTexture } from './procedural/ProceduralTextures'
 import { materialToken } from './procedural/materialTokens'
@@ -146,7 +148,12 @@ function PlayerMesh({ detail }: { detail: DetailLevel }) {
 const DEATH_PARTICLES = 14
 
 function DeathBurst() {
+  const reducedMotion = useSessionStore((s) => s.settings.reducedMotion)
   const group = useRef<Group>(null)
+  const debris = useRef<Group>(null)
+  const core = useRef<Group>(null)
+  const ringA = useRef<Group>(null)
+  const ringB = useRef<Group>(null)
   const seeded = useRef(false)
   const origin = useRef({ x: 0, y: 0 })
   const dirs = useMemo(() => {
@@ -175,15 +182,22 @@ function DeathBurst() {
       seeded.current = true
     }
 
-    const t = 1 - flash / DEATH_HOLD
-    const expand = t * 1.15
+    const t = reducedMotion ? 0.35 : 1 - flash / DEATH_HOLD
+    const expand = (1 - Math.exp(-t * 4.5)) * 1.3
     g.visible = true
     g.position.set(origin.current.x, origin.current.y, 0.35)
+    const coreScale = Math.max(0.01, (1 - t) * (1.4 + Math.sin(t * 22) * 0.12))
+    core.current?.scale.setScalar(coreScale)
+    const firstRing = 0.18 + Math.min(1, t / 0.42) * 4.8
+    ringA.current?.scale.setScalar(firstRing)
+    const delayed = Math.max(0, (t - 0.12) / 0.88)
+    ringB.current?.scale.setScalar(0.1 + delayed * 6.2)
     let i = 0
-    for (const child of g.children) {
+    for (const child of debris.current?.children ?? []) {
       const d = dirs[i++]
       if (!d) break
       child.position.set(d.x * expand, d.y * expand, 0)
+      child.rotation.set(t * (i % 2 === 0 ? 6 : -5), t * 4, t * (i % 3 - 1) * 5)
       const scale = d.s * (1.15 - t * 0.85)
       child.scale.setScalar(Math.max(0.01, scale))
     }
@@ -191,17 +205,38 @@ function DeathBurst() {
 
   return (
     <group ref={group} visible={false}>
-      {dirs.map((_, i) => (
-        <mesh key={i}>
-          <boxGeometry args={[1, 1, 0.2]} />
-          <meshStandardMaterial
-            color={i % 2 === 0 ? '#7fd4ff' : '#ffaa66'}
-            emissive={i % 2 === 0 ? '#44aadd' : '#ff6622'}
-            emissiveIntensity={2}
-            toneMapped={false}
-          />
+      <group ref={core}>
+        <mesh>
+          <sphereGeometry args={[0.62, 16, 12]} />
+          <meshBasicMaterial color="#eaf8ff" blending={AdditiveBlending} transparent opacity={0.92} depthWrite={false} toneMapped={false} />
         </mesh>
-      ))}
+        <pointLight intensity={7} distance={5} color="#ff9b42" />
+      </group>
+      <group ref={ringA}>
+        <mesh>
+          <ringGeometry args={[0.42, 0.52, 32]} />
+          <meshBasicMaterial color="#ff9b42" blending={AdditiveBlending} transparent opacity={0.72} depthWrite={false} toneMapped={false} />
+        </mesh>
+      </group>
+      <group ref={ringB}>
+        <mesh>
+          <ringGeometry args={[0.42, 0.48, 32]} />
+          <meshBasicMaterial color="#5ee7ff" blending={AdditiveBlending} transparent opacity={0.48} depthWrite={false} toneMapped={false} />
+        </mesh>
+      </group>
+      <group ref={debris}>
+        {dirs.map((_, i) => (
+          <mesh key={i}>
+            <boxGeometry args={[1, 1, 0.2]} />
+            <meshStandardMaterial
+              color={i % 3 === 0 ? '#819aaa' : i % 2 === 0 ? '#7fd4ff' : '#ffaa66'}
+              emissive={i % 2 === 0 ? '#44aadd' : '#ff6622'}
+              emissiveIntensity={i % 3 === 0 ? 0.4 : 2}
+              toneMapped={false}
+            />
+          </mesh>
+        ))}
+      </group>
     </group>
   )
 }
@@ -239,40 +274,60 @@ function useGlowMaterial(color: string, opacity: number) {
 }
 
 function PlayerBulletInstances() {
-  const geometry = useMemo(() => new BoxGeometry(0.08, 0.66, 0.08), [])
-  const glowGeo = useMemo(() => new PlaneGeometry(0.26, 0.9), [])
+  const geometry = useMemo(() => new BoxGeometry(0.075, 0.78, 0.08), [])
+  const glowGeo = useMemo(() => new PlaneGeometry(0.28, 1.05), [])
+  const trailGeo = useMemo(() => new PlaneGeometry(0.34, 1.75), [])
   const material = useMemo(() => createTokenMaterial('projectilePlayer'), [])
-  const glowMaterial = useGlowMaterial('#2a90e8', 0.4)
+  const glowMaterial = useGlowMaterial('#5ee7ff', 0.58)
+  const trailMaterial = useGlowMaterial('#2a8cff', 0.32)
   const mesh = useInstancedPool(MAX_PLAYER_BULLETS)
   const glow = useInstancedPool(MAX_PLAYER_BULLETS)
+  const trail = useInstancedPool(MAX_PLAYER_BULLETS)
 
   useFrame(() => {
     const inst = mesh.current
     const glowInst = glow.current
-    if (!inst || !glowInst) return
+    const trailInst = trail.current
+    if (!inst || !glowInst || !trailInst) return
     const bullets = getWorld().playerBullets
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
       const rotZ = Math.atan2(-b.vx, b.vy)
+      const speed = Math.max(0.001, Math.hypot(b.vx, b.vy))
       writeInstance(inst, i, b.x, b.y, 0.28, 1, 1, 1, rotZ)
       writeInstance(glowInst, i, b.x, b.y, 0.26, 1, 1, 1, rotZ)
+      writeInstance(
+        trailInst,
+        i,
+        b.x - (b.vx / speed) * 0.48,
+        b.y - (b.vy / speed) * 0.48,
+        0.245,
+        1,
+        1,
+        1,
+        rotZ,
+      )
       i++
     }
     for (let j = i; j < MAX_PLAYER_BULLETS; j++) {
       hideInstance(inst, j)
       hideInstance(glowInst, j)
+      hideInstance(trailInst, j)
     }
     inst.count = i
     glowInst.count = i
+    trailInst.count = i
     inst.instanceMatrix.needsUpdate = true
     glowInst.instanceMatrix.needsUpdate = true
+    trailInst.instanceMatrix.needsUpdate = true
   })
 
   return (
     <>
-      <instancedMesh ref={mesh} args={[geometry, material, MAX_PLAYER_BULLETS]} frustumCulled={false} />
+      <instancedMesh ref={trail} args={[trailGeo, trailMaterial, MAX_PLAYER_BULLETS]} frustumCulled={false} />
       <instancedMesh ref={glow} args={[glowGeo, glowMaterial, MAX_PLAYER_BULLETS]} frustumCulled={false} />
+      <instancedMesh ref={mesh} args={[geometry, material, MAX_PLAYER_BULLETS]} frustumCulled={false} />
     </>
   )
 }
@@ -286,42 +341,62 @@ function EnemyBulletInstances() {
     return g
   }, [])
   const glowGeo = useMemo(() => new PlaneGeometry(0.62, 0.62), [])
+  const trailGeo = useMemo(() => new PlaneGeometry(0.48, 1.35), [])
   const material = useMemo(() => {
     const m = createTokenMaterial('projectileEnemy')
     m.emissiveIntensity = 2
     return m
   }, [])
-  const glowMaterial = useGlowMaterial('#ff5a30', 0.7)
+  const glowMaterial = useGlowMaterial('#ff7842', 0.72)
+  const trailMaterial = useGlowMaterial('#ff3f24', 0.3)
   const mesh = useInstancedPool(MAX_ENEMY_BULLETS)
   const glow = useInstancedPool(MAX_ENEMY_BULLETS)
+  const trail = useInstancedPool(MAX_ENEMY_BULLETS)
 
   useFrame(() => {
     const inst = mesh.current
     const glowInst = glow.current
-    if (!inst || !glowInst) return
+    const trailInst = trail.current
+    if (!inst || !glowInst || !trailInst) return
     const bullets = getWorld().enemyBullets
     let i = 0
     for (const b of bullets) {
       if (!b.active) continue
       const rotZ = Math.atan2(-b.vx, b.vy)
+      const speed = Math.max(0.001, Math.hypot(b.vx, b.vy))
       writeInstance(inst, i, b.x, b.y, 0.26, 1, 1, 1, rotZ)
       writeInstance(glowInst, i, b.x, b.y, 0.24, 1, 1, 1, 0)
+      writeInstance(
+        trailInst,
+        i,
+        b.x - (b.vx / speed) * 0.34,
+        b.y - (b.vy / speed) * 0.34,
+        0.23,
+        1,
+        1,
+        1,
+        rotZ,
+      )
       i++
     }
     for (let j = i; j < MAX_ENEMY_BULLETS; j++) {
       hideInstance(inst, j)
       hideInstance(glowInst, j)
+      hideInstance(trailInst, j)
     }
     inst.count = i
     glowInst.count = i
+    trailInst.count = i
     inst.instanceMatrix.needsUpdate = true
     glowInst.instanceMatrix.needsUpdate = true
+    trailInst.instanceMatrix.needsUpdate = true
   })
 
   return (
     <>
-      <instancedMesh ref={mesh} args={[geometry, material, MAX_ENEMY_BULLETS]} frustumCulled={false} />
+      <instancedMesh ref={trail} args={[trailGeo, trailMaterial, MAX_ENEMY_BULLETS]} frustumCulled={false} />
       <instancedMesh ref={glow} args={[glowGeo, glowMaterial, MAX_ENEMY_BULLETS]} frustumCulled={false} />
+      <instancedMesh ref={mesh} args={[geometry, material, MAX_ENEMY_BULLETS]} frustumCulled={false} />
     </>
   )
 }
@@ -350,33 +425,44 @@ function enemyIdleRotation(kind: EnemyKind, id: number, t: number): number {
 }
 
 function EnemyKindInstances({ kind, detail }: { kind: EnemyKind; detail: DetailLevel }) {
+  const showPanels = detail !== 'low'
   const geometry = useMemo(() => bakeEnemyGeometry(kind, detail), [kind, detail])
+  const panelGeometry = useMemo(() => bakeEnemyPanelGeometry(kind), [kind])
   const accentGeometry = useMemo(() => bakeEnemyAccentGeometry(kind), [kind])
   const material = useMemo(() => createEnemyMaterial(kind), [kind])
+  const panelMaterial = useMemo(() => createEnemyPanelMaterial(), [])
   const accentMaterial = useMemo(() => createEnemyAccentMaterial(kind), [kind])
   const mesh = useInstancedPool(MAX_ENEMIES)
+  const panels = useInstancedPool(MAX_ENEMIES)
   const accent = useInstancedPool(MAX_ENEMIES)
 
   useLayoutEffect(() => {
     return () => {
       geometry.dispose()
+      panelGeometry.dispose()
       accentGeometry.dispose()
       material.dispose()
+      panelMaterial.dispose()
       accentMaterial.dispose()
     }
-  }, [geometry, accentGeometry, material, accentMaterial])
+  }, [geometry, panelGeometry, accentGeometry, material, panelMaterial, accentMaterial])
 
-  useFrame((state) => {
+  useFrame(() => {
     const inst = mesh.current
+    const panelInst = panels.current
     const accInst = accent.current
-    if (!inst || !accInst) return
-    const t = state.clock.elapsedTime
-    const enemies = getWorld().enemies
+    if (!inst || !accInst || (showPanels && !panelInst)) return
+    const world = getWorld()
+    const t = world.session.elapsed
+    const enemies = world.enemies
     let i = 0
     for (const e of enemies) {
       if (!e.active || e.kind !== kind) continue
       const rotZ = enemyIdleRotation(kind, e.id, t)
       writeInstance(inst, i, e.x, e.y, 0.22, 1, 1, 1, rotZ)
+      if (showPanels && panelInst) {
+        writeInstance(panelInst, i, e.x, e.y, 0.225, 1, 1, 1, rotZ)
+      }
       writeInstance(accInst, i, e.x, e.y, 0.23, 1, 1, 1, rotZ)
       const tint = CLASS_TINT[e.class]
       const flash = e.hitFlash > 0 ? e.hitFlash / 0.09 : 0
@@ -390,11 +476,14 @@ function EnemyKindInstances({ kind, detail }: { kind: EnemyKind; detail: DetailL
     }
     for (let j = i; j < MAX_ENEMIES; j++) {
       hideInstance(inst, j)
+      if (showPanels && panelInst) hideInstance(panelInst, j)
       hideInstance(accInst, j)
     }
     inst.count = i
+    if (panelInst) panelInst.count = showPanels ? i : 0
     accInst.count = i
     inst.instanceMatrix.needsUpdate = true
+    if (showPanels && panelInst) panelInst.instanceMatrix.needsUpdate = true
     accInst.instanceMatrix.needsUpdate = true
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true
   })
@@ -406,6 +495,13 @@ function EnemyKindInstances({ kind, detail }: { kind: EnemyKind; detail: DetailL
         args={[geometry, material, MAX_ENEMIES]}
         frustumCulled={false}
       />
+      {showPanels && (
+        <instancedMesh
+          ref={panels}
+          args={[panelGeometry, panelMaterial, MAX_ENEMIES]}
+          frustumCulled={false}
+        />
+      )}
       <instancedMesh
         ref={accent}
         args={[accentGeometry, accentMaterial, MAX_ENEMIES]}

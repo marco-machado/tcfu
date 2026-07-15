@@ -65,6 +65,20 @@ function placeBullet(world: World, x: number, y: number) {
   return slot
 }
 
+function placePlayerBullet(world: World, x: number, y: number) {
+  const slot = world.playerBullets.find((b) => !b.active) ?? world.playerBullets[0]!
+  slot.active = true
+  slot.x = x
+  slot.y = y
+  slot.vx = 0
+  slot.vy = 0
+  slot.r = 0.12
+  slot.damage = 1
+  slot.pierce = 0
+  slot.hitEnemyIds = []
+  return slot
+}
+
 describe('presentation buffer', () => {
   it('drains and clears events in order', () => {
     const buf = createPresentationBuffer()
@@ -121,6 +135,19 @@ describe('presentation events from combat', () => {
     expect(events.some((e) => e.type === 'kill')).toBe(true)
   })
 
+  it('emits an impact before a weapon kill with authored magnitude', () => {
+    const world = createWorld('vanguard')
+    world.waves.suspended = true
+    placeDrone(world, 0, 8)
+    placePlayerBullet(world, 0, 8)
+
+    stepWorld(world, FIXED_DT, idle())
+
+    const events = drainPresentation(world.presentation)
+    expect(events.find((e) => e.type === 'impact')?.magnitude).toBeGreaterThan(0)
+    expect(events.find((e) => e.type === 'kill')?.magnitude).toBe(1)
+  })
+
   it('emits shield_break then player_hit paths', () => {
     const world = createWorld('vanguard')
     world.waves.suspended = true
@@ -148,7 +175,7 @@ describe('presentation events from combat', () => {
     const score0 = world.session.score
     stepWorld(world, FIXED_DT, idle())
     expect(world.session.score).toBe(score0 + POWERUP_SCORE)
-    expect(drainPresentation(world.presentation).some((e) => e.type === 'pickup')).toBe(true)
+    expect(drainPresentation(world.presentation).find((e) => e.type === 'pickup')?.variant).toBe('repair')
   })
 
   it('emits life_loss and death on final life', () => {

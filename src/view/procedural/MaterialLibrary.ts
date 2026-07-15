@@ -5,8 +5,10 @@ import {
   type Material,
   type Texture,
 } from 'three'
+import type { ShipId } from '../../sim/types'
 import { materialToken } from './materialTokens'
 import { getHullTrimTexture, getMicroNoiseTexture } from './ProceduralTextures'
+import { kitRecipe } from './registry'
 
 /**
  * Shared material-role kit (technical-art roles).
@@ -170,4 +172,41 @@ export function getRoleMaterial(role: MaterialRole): Material {
 /** Clone for per-mesh flash mutation without poisoning the shared kit. */
 export function cloneRoleMaterial(role: MaterialRole): Material {
   return getRoleMaterial(role).clone()
+}
+
+const KIT_SURFACE: Record<ShipId, { roughness: number; metalness: number; lift: number }> = {
+  vanguard: { roughness: 0.32, metalness: 0.92, lift: 1.9 },
+  striker: { roughness: 0.26, metalness: 0.94, lift: 1.95 },
+  aegis: { roughness: 0.44, metalness: 0.82, lift: 1.82 },
+  phantom: { roughness: 0.22, metalness: 0.95, lift: 1.7 },
+}
+
+/** Kit-aware hull identity while non-hull roles remain shared and semantic. */
+export function getKitRoleMaterial(shipId: ShipId, role: MaterialRole): Material {
+  if (role !== 'bodyPrimary') return getRoleMaterial(role)
+  const key = `${shipId}:${role}`
+  const hit = cache.get(key)
+  if (hit) return hit
+
+  const token = materialToken(kitRecipe(shipId).hullToken)
+  const surface = KIT_SURFACE[shipId]
+  const mat = new MeshPhysicalMaterial({
+    color: new Color(token.color).multiplyScalar(surface.lift),
+    map: trimMap(),
+    metalness: surface.metalness,
+    roughness: surface.roughness,
+    roughnessMap: noiseMap(),
+    clearcoat: shipId === 'striker' ? 0.5 : shipId === 'phantom' ? 0.18 : 0.3,
+    clearcoatRoughness: surface.roughness,
+    envMapIntensity: shipId === 'phantom' ? 1.35 : 1.1,
+    emissive: token.emissive,
+    emissiveIntensity: token.emissiveIntensity,
+  })
+  mat.name = `kit:${shipId}:${role}`
+  cache.set(key, mat)
+  return mat
+}
+
+export function cloneKitRoleMaterial(shipId: ShipId, role: MaterialRole): Material {
+  return getKitRoleMaterial(shipId, role).clone()
 }

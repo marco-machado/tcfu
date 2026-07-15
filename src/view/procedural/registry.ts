@@ -10,6 +10,7 @@ export type ProjectileRole = 'playerBullet' | 'enemyBullet'
 
 export type KitPartId =
   | 'hull'
+  | 'hullPanels'
   | 'wings'
   | 'thruster'
   | 'thrusterPlume'
@@ -17,6 +18,7 @@ export type KitPartId =
   | 'finDetail'
   | 'shieldRing'
   | 'gunPods'
+  | 'signal'
   | 'edgeGlow'
 
 export type SceneryExtras = {
@@ -33,7 +35,7 @@ export type SceneryExtras = {
   chevronCount: number
 }
 
-export type EnemyPartId = 'body' | 'accent' | 'optionalDetail'
+export type EnemyPartId = 'body' | 'panel' | 'accent' | 'optionalDetail'
 
 export type KitRecipeMeta = {
   id: ShipId
@@ -57,6 +59,14 @@ export type EnemyRecipeMeta = {
   optionalParts: readonly EnemyPartId[]
 }
 
+export type SilhouetteProfile<Family extends string> = {
+  family: Family
+  /** Design-view width divided by nose-to-tail length. */
+  widthToLength: number
+  /** Primary outline cue that must survive flat lighting and no post. */
+  cue: string
+}
+
 export const SHIP_KIT_VISUAL_IDS: readonly ShipId[] = [
   'vanguard',
   'striker',
@@ -73,6 +83,31 @@ export const ENEMY_KIND_VISUAL_IDS: readonly EnemyKind[] = [
   'prism',
   'colossus',
 ]
+
+export const SHIP_SILHOUETTE_PROFILES: Record<
+  ShipId,
+  SilhouetteProfile<'kite' | 'fork' | 'shield' | 'needle'>
+> = {
+  vanguard: { family: 'kite', widthToLength: 0.78, cue: 'balanced delta wings and twin tail' },
+  striker: { family: 'fork', widthToLength: 0.64, cue: 'twin forward gun booms' },
+  aegis: { family: 'shield', widthToLength: 1.28, cue: 'broad armored shoulders' },
+  phantom: { family: 'needle', widthToLength: 0.46, cue: 'long spine and swept blade tips' },
+}
+
+export const ENEMY_SILHOUETTE_PROFILES: Record<
+  EnemyKind,
+  SilhouetteProfile<
+    'swarm' | 'interceptor' | 'artillery' | 'flanker' | 'hunter' | 'anomaly' | 'capital'
+  >
+> = {
+  drone: { family: 'swarm', widthToLength: 1.08, cue: 'hex pod with insect winglets' },
+  dart: { family: 'interceptor', widthToLength: 0.62, cue: 'narrow arrowhead' },
+  gunner: { family: 'artillery', widthToLength: 1.34, cue: 'wide barge with paired barrels' },
+  sidecar: { family: 'flanker', widthToLength: 1.7, cue: 'separated catamaran pods' },
+  razor: { family: 'hunter', widthToLength: 1.82, cue: 'scythe wing and claw tips' },
+  prism: { family: 'anomaly', widthToLength: 1.02, cue: 'open cage around crystal core' },
+  colossus: { family: 'capital', widthToLength: 2, cue: 'layered capital slab and flank pods' },
+}
 
 export const PROJECTILE_ROLES: readonly ProjectileRole[] = ['playerBullet', 'enemyBullet']
 
@@ -91,8 +126,8 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     hullToken: 'hullCold',
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
-    baseParts: ['hull', 'wings', 'thruster'],
-    optionalParts: ['canopy', 'finDetail', 'thrusterPlume'],
+    baseParts: ['hull', 'wings', 'thruster', 'signal'],
+    optionalParts: ['hullPanels', 'canopy', 'finDetail', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
   striker: {
@@ -100,8 +135,8 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     hullToken: 'hullCold',
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
-    baseParts: ['hull', 'wings', 'thruster', 'gunPods'],
-    optionalParts: ['canopy', 'finDetail', 'thrusterPlume'],
+    baseParts: ['hull', 'wings', 'thruster', 'gunPods', 'signal'],
+    optionalParts: ['hullPanels', 'canopy', 'finDetail', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
   aegis: {
@@ -109,8 +144,8 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     hullToken: 'hullArmored',
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
-    baseParts: ['hull', 'wings', 'thruster', 'shieldRing'],
-    optionalParts: ['canopy', 'finDetail', 'thrusterPlume'],
+    baseParts: ['hull', 'wings', 'thruster', 'shieldRing', 'signal'],
+    optionalParts: ['hullPanels', 'canopy', 'finDetail', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
   phantom: {
@@ -118,8 +153,8 @@ export const KIT_RECIPES: Record<ShipId, KitRecipeMeta> = {
     hullToken: 'hullStealth',
     thrusterToken: 'thrusterPlayer',
     accentToken: 'accentPlayer',
-    baseParts: ['hull', 'wings', 'thruster'],
-    optionalParts: ['canopy', 'thrusterPlume'],
+    baseParts: ['hull', 'wings', 'thruster', 'signal'],
+    optionalParts: ['hullPanels', 'canopy', 'thrusterPlume'],
     highOnlyParts: ['edgeGlow'],
   },
 }
@@ -131,7 +166,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentEnemy',
     baseParts: ['body', 'accent'],
-    optionalParts: ['optionalDetail'],
+    optionalParts: ['panel', 'optionalDetail'],
   },
   dart: {
     kind: 'dart',
@@ -139,7 +174,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentEnemy',
     baseParts: ['body', 'accent'],
-    optionalParts: [],
+    optionalParts: ['panel'],
   },
   gunner: {
     kind: 'gunner',
@@ -147,7 +182,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentEnemy',
     baseParts: ['body', 'accent'],
-    optionalParts: ['optionalDetail'],
+    optionalParts: ['panel', 'optionalDetail'],
   },
   sidecar: {
     kind: 'sidecar',
@@ -155,7 +190,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentEnemy',
     baseParts: ['body', 'accent'],
-    optionalParts: ['optionalDetail'],
+    optionalParts: ['panel', 'optionalDetail'],
   },
   razor: {
     kind: 'razor',
@@ -163,7 +198,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentEnemy',
     baseParts: ['body', 'accent'],
-    optionalParts: ['optionalDetail'],
+    optionalParts: ['panel', 'optionalDetail'],
   },
   prism: {
     kind: 'prism',
@@ -171,7 +206,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentCrystal',
     baseParts: ['body', 'accent'],
-    optionalParts: ['optionalDetail'],
+    optionalParts: ['panel', 'optionalDetail'],
   },
   colossus: {
     kind: 'colossus',
@@ -179,7 +214,7 @@ export const ENEMY_RECIPES: Record<EnemyKind, EnemyRecipeMeta> = {
     hullToken: 'hullHostile',
     accentToken: 'accentEnemy',
     baseParts: ['body', 'accent'],
-    optionalParts: ['optionalDetail'],
+    optionalParts: ['panel', 'optionalDetail'],
   },
 }
 

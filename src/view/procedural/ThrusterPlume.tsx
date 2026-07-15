@@ -1,8 +1,9 @@
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import type { Group, Mesh, MeshStandardMaterial } from 'three'
+import { AdditiveBlending, type Group, type MeshBasicMaterial } from 'three'
 import { getWorld } from '../../sim/world'
 import { PLAYER_MAX_SPEED } from '../../sim/constants'
+import { useSessionStore } from '../../app/sessionStore'
 import { PREVIEW_THRUST, thrustIntensity } from './thrustIntensity'
 
 type MatProps = {
@@ -35,56 +36,78 @@ export function ThrusterPlume({
   live = false,
   length = 1,
 }: Props) {
+  const reducedMotion = useSessionStore((s) => s.settings.reducedMotion)
   const root = useRef<Group>(null)
-  const baseLen = (dense ? 0.95 : 0.68) * length
-  const mat = useMemo(
-    () =>
-      ({
-        ...thruster,
-        transparent: true,
-        opacity: 0.92,
-        depthWrite: false,
-      }) as MatProps & { transparent: boolean; opacity: number; depthWrite: boolean },
+  const core = useRef<MeshBasicMaterial>(null)
+  const envelope = useRef<MeshBasicMaterial>(null)
+  const baseLen = (dense ? 0.41 : 0.31) * length
+  const colors = useMemo(
+    () => ({ core: '#eaf8ff', envelope: thruster.emissive || thruster.color }),
     [thruster],
   )
 
-  useFrame(() => {
+  useFrame((state) => {
     const g = root.current
     if (!g) return
     let t = PREVIEW_THRUST
+    const world = getWorld()
     if (live) {
-      const p = getWorld().player
+      const p = world.player
       t = thrustIntensity(p.vx, p.vy, PLAYER_MAX_SPEED)
     }
-    // Length along -Y; width blooms slightly with thrust
-    const len = 0.55 + t * 0.9
-    const width = 0.85 + t * 0.35
+    // Layered hot core + wider ion envelope. Flicker is bounded so silhouette
+    // stays stable while still carrying thrust energy.
+    const phase = live ? world.session.elapsed : state.clock.elapsedTime
+    const flicker = reducedMotion ? 1 : 1 + Math.sin(phase * 31 + scale * 7) * 0.045
+    const len = (0.62 + t * 1.05) * flicker
+    const width = 0.92 + t * 0.28
     g.scale.set(width, len, width)
-    g.traverse((obj) => {
-      const mesh = obj as Mesh
-      if (!mesh.isMesh) return
-      const m = mesh.material as MeshStandardMaterial
-      if (!m?.isMeshStandardMaterial) return
-      m.emissiveIntensity = thruster.emissiveIntensity * (0.75 + t * 0.55)
-    })
+    if (core.current) core.current.opacity = Math.min(1, 0.78 + t * 0.14)
+    if (envelope.current) envelope.current.opacity = Math.min(0.62, 0.24 + t * 0.2)
   })
 
   const s = scale
   return (
     <group ref={root} name="thrusterPlume" position={[0, -0.16 * s, 0]}>
-      <mesh position={[0, -baseLen * 0.38 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.012 * s, 0.062 * s, baseLen * s, dense ? 10 : 8]} />
-        <meshStandardMaterial {...mat} />
+      <mesh position={[0, -baseLen * 0.44 * s, 0]}>
+        <cylinderGeometry args={[0.008 * s, 0.052 * s, baseLen * 1.08 * s, dense ? 10 : 8]} />
+        <meshBasicMaterial
+          ref={core}
+          color={colors.core}
+          transparent
+          opacity={0.9}
+          blending={AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh position={[0, -baseLen * 0.5 * s, 0]}>
+        <cylinderGeometry args={[0.018 * s, 0.09 * s, baseLen * 1.22 * s, dense ? 12 : 8]} />
+        <meshBasicMaterial
+          ref={envelope}
+          color={colors.envelope}
+          transparent
+          opacity={0.42}
+          blending={AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
       {dense && (
-        <mesh position={[0, -baseLen * 0.28 * s, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.006 * s, 0.035 * s, baseLen * 0.85 * s, 6]} />
-          <meshStandardMaterial {...mat} />
-        </mesh>
+        <>
+          <mesh position={[-0.025 * s, -baseLen * 0.76 * s, 0]} rotation={[0, 0, -0.035]}>
+            <cylinderGeometry args={[0.003 * s, 0.018 * s, baseLen * 0.7 * s, 5]} />
+            <meshBasicMaterial color="#5ee7ff" transparent opacity={0.38} blending={AdditiveBlending} depthWrite={false} toneMapped={false} />
+          </mesh>
+          <mesh position={[0.025 * s, -baseLen * 0.72 * s, 0]} rotation={[0, 0, 0.035]}>
+            <cylinderGeometry args={[0.003 * s, 0.016 * s, baseLen * 0.62 * s, 5]} />
+            <meshBasicMaterial color="#2a8cff" transparent opacity={0.32} blending={AdditiveBlending} depthWrite={false} toneMapped={false} />
+          </mesh>
+        </>
       )}
-      <mesh position={[0, -baseLen * 0.78 * s, 0]}>
-        <sphereGeometry args={[(dense ? 0.05 : 0.038) * s, 8, 6]} />
-        <meshStandardMaterial {...mat} />
+      <mesh position={[0, -baseLen * 1.08 * s, 0]}>
+        <sphereGeometry args={[(dense ? 0.045 : 0.034) * s, 8, 6]} />
+        <meshBasicMaterial color="#5ee7ff" transparent opacity={0.58} blending={AdditiveBlending} depthWrite={false} toneMapped={false} />
       </mesh>
     </group>
   )

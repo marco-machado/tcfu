@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { seedSandboxedSave } from './debugMode'
+import { debugTimeScale, seedSandboxedSave, useDebugStore } from './debugMode'
 import { loadCareerBest } from '../persist/careerBest'
 import { loadMeta } from '../persist/meta'
 import { disableStorageSandbox } from '../persist/storage'
@@ -8,6 +8,7 @@ import { SHIP_KIT_IDS, isShipUnlocked } from '../sim/shipKits'
 
 afterEach(() => {
   disableStorageSandbox()
+  useDebugStore.getState().setTimeScale(1)
 })
 
 describe('sandboxed save seeding', () => {
@@ -31,5 +32,12 @@ describe('sandboxed save seeding', () => {
       }
     }
     expect(meta.scrap).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe('visual harness timing', () => {
+  it('allows DEV test hooks to freeze simulation without the debug panel query', () => {
+    useDebugStore.getState().setTimeScale(0)
+    expect(debugTimeScale()).toBe(0)
   })
 })

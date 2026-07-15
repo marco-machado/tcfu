@@ -1,5 +1,6 @@
 export type PresentationEventType =
   | 'fire'
+  | 'impact'
   | 'player_hit'
   | 'shield_break'
   | 'life_loss'
@@ -16,6 +17,10 @@ export type PresentationEvent = {
   type: PresentationEventType
   x: number
   y: number
+  /** Optional semantic family used by view-only effect styling. */
+  variant?: 'shield' | 'bomb_stock' | 'repair' | 'rate_up' | 'spread_up' | 'score_mult'
+  /** Relative effect scale. Gameplay remains authoritative elsewhere. */
+  magnitude?: number
 }
 
 export const PRESENTATION_BUFFER_CAPACITY = 64

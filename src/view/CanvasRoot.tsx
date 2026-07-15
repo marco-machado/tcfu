@@ -4,7 +4,7 @@ import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
 import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_POS } from '../sim/constants'
 import { Suspense, lazy } from 'react'
 import { useSessionStore } from '../app/sessionStore'
-import { isDebugMode } from '../app/debugMode'
+import { isDebugMode, visualDebugMode } from '../app/debugMode'
 import { Playfield } from './Playfield'
 
 // Dynamic import under a DEV constant so production builds drop the overlay chunk.
@@ -19,7 +19,7 @@ import { SimDriver } from './SimDriver'
 export function CanvasRoot() {
   const quality = useSessionStore((s) => s.settings.quality)
   const reducedMotion = useSessionStore((s) => s.settings.reducedMotion)
-  const bloom = quality !== 'low'
+  const bloom = quality !== 'low' && visualDebugMode() === 'final'
   const fogOn = quality !== 'low'
 
   return (
