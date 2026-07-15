@@ -15,16 +15,17 @@ import { presentationFxState } from '../../presentation/fxState'
 import { PauseModal } from './PauseModal'
 import { TouchControls } from './TouchControls'
 import { queueTouchPause } from '../../input/sample'
+import { SignalIcon, type SignalIconName } from '../SignalIcon'
 
 const POWERUP_EXPIRING_SEC = 2.5
 
-type TimedPowerup = { key: string; name: string; glyph: string; remaining: number }
+type TimedPowerup = { key: string; name: string; icon: SignalIconName; remaining: number }
 
 function timedPowerups(rateUp: number, spreadUp: number, scoreMult: number): TimedPowerup[] {
   const list: TimedPowerup[] = []
-  if (rateUp > 0) list.push({ key: 'overclock', name: 'Overclock', glyph: 'O', remaining: rateUp })
-  if (spreadUp > 0) list.push({ key: 'options', name: 'Options', glyph: 'V', remaining: spreadUp })
-  if (scoreMult > 0) list.push({ key: 'bounty', name: 'Bounty', glyph: 'B', remaining: scoreMult })
+  if (rateUp > 0) list.push({ key: 'overclock', name: 'Overclock', icon: 'overclock', remaining: rateUp })
+  if (spreadUp > 0) list.push({ key: 'options', name: 'Options', icon: 'options', remaining: spreadUp })
+  if (scoreMult > 0) list.push({ key: 'bounty', name: 'Bounty', icon: 'bounty', remaining: scoreMult })
   return list
 }
 
@@ -36,13 +37,8 @@ export function RunHud() {
   const waveFlashRef = useRef({ wave: 0, until: 0 })
 
   useEffect(() => {
-    let id = 0
-    const loop = () => {
-      tick((n) => n + 1)
-      id = requestAnimationFrame(loop)
-    }
-    id = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(id)
+    const id = window.setInterval(() => tick((n) => n + 1), 50)
+    return () => window.clearInterval(id)
   }, [])
 
   const w = getWorld()
@@ -172,21 +168,22 @@ export function RunHud() {
             </div>
           </div>
         ) : null}
-        {powerups.length > 0 ? (
-          <div className="powerup-row" aria-label="Timed powerups">
-            {powerups.map((pu) => {
-              const expiring = pu.remaining <= POWERUP_EXPIRING_SEC
-              return (
-                <div key={pu.key} className={`powerup-badge${expiring ? ' is-expiring' : ''}`}>
-                  <span className="powerup-glyph" aria-hidden="true">{pu.glyph}</span>
-                  <span className="powerup-name">{pu.name}</span>
-                  <span className="powerup-timer hud-number">{pu.remaining.toFixed(1)}s</span>
-                </div>
-              )
-            })}
-          </div>
-        ) : null}
       </div>
+
+      {powerups.length > 0 ? (
+        <aside className="hud-status-rail" aria-label="Timed powerups">
+          {powerups.map((pu) => {
+            const expiring = pu.remaining <= POWERUP_EXPIRING_SEC
+            return (
+              <div key={pu.key} className={`powerup-badge${expiring ? ' is-expiring' : ''}`}>
+                <span className="powerup-glyph"><SignalIcon name={pu.icon} /></span>
+                <span className="powerup-name">{pu.name}</span>
+                <span className="powerup-timer hud-number">{pu.remaining.toFixed(1)}s</span>
+              </div>
+            )
+          })}
+        </aside>
+      ) : null}
 
       <div className="hud-bottom">
         <section
@@ -194,30 +191,30 @@ export function RunHud() {
           aria-label="Survival status"
         >
           <div className="hull-row">
-            <span className="hud-label">Hull</span>
+            <span className="hud-label icon-label"><SignalIcon name="hull" /> Hull</span>
             <div className="hull-segments" role="meter" aria-label="Hull integrity" aria-valuemin={0} aria-valuemax={p.maxHp} aria-valuenow={Math.max(0, p.hp)}>
               {Array.from({ length: p.maxHp }, (_, i) => (
                 <span key={i} className={`hull-seg${i < p.hp ? ' on' : ''}`} />
               ))}
             </div>
             <span className={`shield-chip${p.shield ? ' is-active' : ''}`} aria-label={p.shield ? 'Shield ready' : 'Shield offline'}>
-              <span className="shield-icon" aria-hidden="true" />
+              <SignalIcon name="shield" />
             </span>
           </div>
           <div className="lives-row" aria-label={`${p.lives} lives`}>
-            <span className="hud-label">Wings</span>
-            <span className="life-pips" aria-hidden="true">
+            <span className="hud-label icon-label"><SignalIcon name="wing" /> Wings</span>
+            <span className="life-pips">
               {Array.from({ length: 3 }, (_, i) => (
-                <span key={i} className={`life-pip${i < p.lives ? ' on' : ''}`} />
+                <SignalIcon key={i} name="wing" className={`life-pip${i < p.lives ? ' on' : ''}`} />
               ))}
             </span>
-            <span className="scrap-est">Scrap <b className="hud-number">~{scrapEst}</b></span>
+            <span className="scrap-est"><SignalIcon name="scrap" /> Scrap <b className="hud-number">~{scrapEst}</b></span>
           </div>
         </section>
 
         <section className="weapons-cluster hud-module" aria-label="Weapons status">
           <div className="tier-row">
-            <span className="hud-label">Lance</span>
+            <span className="hud-label icon-label"><SignalIcon name="lance" /> Lance</span>
             <span className="tier-pips" aria-label={`Weapon tier ${weaponTier} of ${WEAPON_TIER_MAX}`}>
               {Array.from({ length: WEAPON_TIER_MAX }, (_, i) => (
                 <span key={i} className={i < weaponTier ? 'on' : ''} />
@@ -225,11 +222,12 @@ export function RunHud() {
             </span>
             <span className="bomb-pips" aria-label={`${p.bombs} of ${p.maxBombs} bombs`}>
               {Array.from({ length: p.maxBombs }, (_, i) => (
-                <span key={i} className={`bomb-pip${i < p.bombs ? ' on' : ''}`}>✦</span>
+                <SignalIcon key={i} name="bomb" className={`bomb-pip${i < p.bombs ? ' on' : ''}`} />
               ))}
             </span>
           </div>
           <div className="wcell-row">
+            <SignalIcon name="wcell" className="wcell-icon" />
             <div
               className={`wcell-track${maxTier ? ' is-max' : ''}`}
               role="meter"

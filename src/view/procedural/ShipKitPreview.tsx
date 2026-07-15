@@ -1,7 +1,7 @@
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { useEffect, useRef, useState } from 'react'
-import { ACESFilmicToneMapping, type Group, SRGBColorSpace } from 'three'
+import { ACESFilmicToneMapping, type Group, PerspectiveCamera, SRGBColorSpace } from 'three'
 import { useSessionStore } from '../../app/sessionStore'
 import type { ShipId } from '../../sim/types'
 import { getRoleMaterial } from './MaterialLibrary'
@@ -11,6 +11,22 @@ import { ShipKitVisual } from './ShipKitVisual'
 
 type Props = {
   shipId: ShipId
+}
+
+function PreviewCamera() {
+  const { camera, size } = useThree()
+
+  useEffect(() => {
+    if (!(camera instanceof PerspectiveCamera)) return
+    const compact = size.width / size.height < 1.15
+    const position = compact ? [2.08, 1.46, 3.08] : [1.72, 1.22, 2.5]
+    camera.position.set(position[0]!, position[1]!, position[2]!)
+    camera.fov = compact ? 31 : 29
+    camera.lookAt(0, -0.1, 0)
+    camera.updateProjectionMatrix()
+  }, [camera, size.height, size.width])
+
+  return null
 }
 
 function PreviewStage({
@@ -60,6 +76,28 @@ function PreviewStage({
 
   return (
     <group>
+      <group position={[0, -0.76, 0]}>
+        <mesh position={[-1.12, 0.04, 0]}>
+          <boxGeometry args={[0.08, 0.08, 1.65]} />
+          <meshStandardMaterial color="#102838" emissive="#184a64" emissiveIntensity={0.35} metalness={0.8} roughness={0.38} />
+        </mesh>
+        <mesh position={[1.12, 0.04, 0]}>
+          <boxGeometry args={[0.08, 0.08, 1.65]} />
+          <meshStandardMaterial color="#102838" emissive="#184a64" emissiveIntensity={0.35} metalness={0.8} roughness={0.38} />
+        </mesh>
+        {[-0.72, -0.36, 0, 0.36, 0.72].map((z) => (
+          <group key={z}>
+            <mesh position={[-1.12, 0.09, z]} rotation={[0, Math.PI / 4, 0]}>
+              <boxGeometry args={[0.14, 0.025, 0.035]} />
+              <meshBasicMaterial color="#5ee7ff" toneMapped={false} />
+            </mesh>
+            <mesh position={[1.12, 0.09, z]} rotation={[0, -Math.PI / 4, 0]}>
+              <boxGeometry args={[0.14, 0.025, 0.035]} />
+              <meshBasicMaterial color="#5ee7ff" toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
+      </group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.72, 0]}>
         <circleGeometry args={[0.9, 32]} />
         <primitive object={getRoleMaterial('groundContact')} attach="material" />
@@ -79,13 +117,13 @@ function PreviewStage({
 
       {outgoingShip ? (
         <group ref={outgoingGroup} position={[0, -0.16, 0]}>
-          <group scale={1.05}>
+          <group scale={1.14}>
             <ShipKitVisual shipId={outgoingShip} detail={detail} />
           </group>
         </group>
       ) : null}
       <group ref={incoming} rotation={[0.5, 0.5, 0.045]} position={[0, -0.16, 0]}>
-        <group scale={1.05}>
+        <group scale={1.14}>
           <ShipKitVisual key={`${displayedShip}-${detail}`} shipId={displayedShip} detail={detail} />
         </group>
       </group>
@@ -105,7 +143,7 @@ export function ShipKitPreview({ shipId }: Props) {
       <Canvas
         className="kit-preview-r3f"
         dpr={quality === 'high' ? 1.75 : quality === 'medium' ? 1.35 : 1}
-        camera={{ position: [1.9, 1.35, 2.75], fov: 30, near: 0.1, far: 40 }}
+        camera={{ position: [1.72, 1.22, 2.5], fov: 29, near: 0.1, far: 40 }}
         gl={{
           antialias: quality !== 'low',
           alpha: false,
@@ -117,6 +155,7 @@ export function ShipKitPreview({ shipId }: Props) {
           applyStudioEnvironment(gl, scene)
         }}
       >
+        <PreviewCamera />
         <color attach="background" args={['#071120']} />
         <fog attach="fog" args={['#071120', 5.5, 11]} />
 
