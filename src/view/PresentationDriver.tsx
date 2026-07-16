@@ -13,7 +13,8 @@ import {
 import { useSessionStore } from '../app/sessionStore'
 import { playSfx } from '../audio/bus'
 import { rumbleForEvent } from '../input/rumble'
-import { CAMERA_FOV, CAMERA_FOV_MAX, CAMERA_LOOK_AT, CAMERA_POS, STREAM_BASE_SPEED } from '../sim/constants'
+import { CAMERA_LOOK_AT, CAMERA_POS, STREAM_BASE_SPEED } from '../sim/constants'
+import { baseFovForAspect } from './corridorFraming'
 import { drainPresentation, type PresentationEvent } from '../sim/presentation'
 import { getWorld } from '../sim/world'
 import { presentationFxState, triggerHitstop } from '../presentation/fxState'
@@ -236,17 +237,6 @@ function handleEvent(
     default:
       break
   }
-}
-
-/**
- * Widen the vertical FOV on narrow viewports so the full band (designed for
- * a 4:3 frame) stays horizontally visible on portrait phones.
- */
-function baseFovForAspect(aspect: number): number {
-  const designAspect = 4 / 3
-  if (aspect >= designAspect) return CAMERA_FOV
-  const t = (Math.tan((CAMERA_FOV * Math.PI) / 360) * designAspect) / aspect
-  return Math.min((Math.atan(t) * 360) / Math.PI, CAMERA_FOV_MAX)
 }
 
 /** Deterministic value noise in [-1, 1]; per-axis seed keeps axes independent. */

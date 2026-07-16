@@ -16,6 +16,7 @@ import { PauseModal } from './PauseModal'
 import { TouchControls } from './TouchControls'
 import { queueTouchPause } from '../../input/sample'
 import { Chip, Icon, IconButton, Label, Meter, Modal, Panel, PipRow, cn, type IconName } from '../components/ui'
+import { corridorBottomWidthPx } from '../../view/corridorFraming'
 
 const POWERUP_EXPIRING_SEC = 2.5
 
@@ -35,10 +36,24 @@ export function RunHud() {
   const [, tick] = useState(0)
   const metaRanks = useSessionStore((s) => s.meta.ranks)
   const waveFlashRef = useRef({ wave: 0, until: 0 })
+  const hudRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const id = window.setInterval(() => tick((n) => n + 1), 50)
     return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    const el = hudRef.current
+    if (!el) return
+    const apply = () => {
+      const width = corridorBottomWidthPx(el.clientWidth, el.clientHeight)
+      el.style.setProperty('--corridor-bottom-w', `${width}px`)
+    }
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [])
 
   const w = getWorld()
@@ -98,7 +113,7 @@ export function RunHud() {
   }
 
   return (
-    <div className="hud">
+    <div className="hud" ref={hudRef}>
       <div className="hud-top">
         <Panel
           size="sm"
