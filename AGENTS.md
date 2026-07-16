@@ -30,7 +30,7 @@ Before checking for `GEMINI_API_KEY`, inspect the image-generation capabilities 
 
 ### Issue tracker
 
-Issues live as local markdown under `.scratch/<feature>/`. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+Issues live in this repo's GitHub Issues, via the `gh` CLI. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
