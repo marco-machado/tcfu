@@ -84,6 +84,8 @@
   font-size: 0.85rem;
 }
 
+.screen--narrow:has(> .screen-actions),
+.screen--wide:has(> .screen-actions) { padding-bottom: 0; }
 .screen-actions {
   display: flex;
   align-items: center;
@@ -93,7 +95,6 @@
   bottom: 0;
   z-index: 3;
   margin-top: auto;
-  margin-bottom: calc(-1 * (var(--screen-pad) + env(safe-area-inset-bottom, 0px)));
   padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(180deg, rgba(3, 7, 11, 0), rgba(3, 7, 11, 0.94) 46%);
 }
