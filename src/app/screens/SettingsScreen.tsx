@@ -5,7 +5,7 @@ import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import { saveSettings, type Quality, type Settings } from '../../persist/settings'
 import { resetMeta } from '../../persist/meta'
 import { resetHighScores } from '../../persist/highScores'
-import { Button, Panel, ScreenHeader, Segmented, Slider, Toggle } from '../components/ui'
+import { Button, Heading, Panel, ScreenHeader, Segmented, Slider, Toggle } from '../components/ui'
 
 const QUALITY_OPTIONS: { value: Quality; label: string }[] = [
   { value: 'low', label: 'Low' },
@@ -32,12 +32,12 @@ export function SettingsScreen() {
   }
 
   return (
-    <div className="screen settings-screen" ref={rootRef}>
+    <div className="screen screen--wide settings-screen" ref={rootRef}>
       <ScreenHeader title="Settings" kicker="Ship systems configuration" />
 
       <div className="settings-columns">
         <Panel as="section" className="settings-panel">
-          <h3>Video</h3>
+          <Heading size="sm" as="h3">Video</Heading>
           <div className="setting-row">
             <span className="setting-label">
               Quality
@@ -65,14 +65,14 @@ export function SettingsScreen() {
         </Panel>
 
         <Panel as="section" className="settings-panel">
-          <h3>Audio</h3>
+          <Heading size="sm" as="h3">Audio</Heading>
           <Slider label="Master" value={settings.master} onChange={(v) => update({ master: v })} />
           <Slider label="Music" value={settings.music} onChange={(v) => update({ music: v })} />
           <Slider label="SFX" value={settings.sfx} onChange={(v) => update({ sfx: v })} />
         </Panel>
 
         <Panel as="section" className="settings-panel">
-          <h3>Controls</h3>
+          <Heading size="sm" as="h3">Controls</Heading>
           <Toggle
             label="Autofire"
             hint="Hold is implied; lance fires itself"
@@ -86,7 +86,7 @@ export function SettingsScreen() {
         </Panel>
 
         <Panel as="section" tone="danger" className="settings-panel">
-          <h3>Data</h3>
+          <Heading size="sm" as="h3">Data</Heading>
           <div className="setting-row">
             <span className="setting-label">
               Meta progress
@@ -124,8 +124,8 @@ export function SettingsScreen() {
         </Panel>
       </div>
 
-      <div className="row screen-actions">
-        <Button data-menu-primary variant="primary" onClick={closeSettings}>
+      <div className="screen-actions">
+        <Button data-menu-primary variant="tertiary" icon="back" onClick={closeSettings}>
           Back
         </Button>
       </div>

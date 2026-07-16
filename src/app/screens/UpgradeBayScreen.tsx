@@ -37,7 +37,7 @@ export function UpgradeBayScreen() {
 
   return (
     <div
-      className={`screen upgrade-bay-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}
+      className={`screen screen--wide upgrade-bay-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}
       ref={rootRef}
     >
       <ScreenHeader title="Upgrade bay">
@@ -117,7 +117,7 @@ export function UpgradeBayScreen() {
           )
         })}
       </div>
-      <div className="bay-actions">
+      <div className="screen-actions">
         <Button variant="tertiary" icon="back" onClick={() => setScreen('hangar')}>
           Back to hangar
         </Button>

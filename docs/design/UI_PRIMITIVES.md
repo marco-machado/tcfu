@@ -159,3 +159,6 @@ stay in their screens, not in `ui/`:
 - HUD clusters: `score-cluster`, `survival-cluster`, `weapons-cluster`, `wave-cluster`,
   `boss-bar`, `powerup-row`
 - Cards: `bay-card`, `ship-card`, `kit-preview`
+- Screen scaffold classes in `screens.css`: `screen--narrow` / `screen--wide` (centered
+  content column with a width cap) and `screen-actions` (bottom action row, sticky on
+  stages narrower than 650px)

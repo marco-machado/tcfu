@@ -12,7 +12,7 @@ export function ResultsScreen() {
   useMenuFocus({ rootRef, onBack: () => setScreen('hangar') })
 
   return (
-    <div className="screen" ref={rootRef}>
+    <div className="screen screen--narrow results-screen" ref={rootRef}>
       <ScreenHeader title="Debrief" kicker="Run telemetry and salvage" />
       {lastRun ? (
         <Panel size="lg" className="results-body">

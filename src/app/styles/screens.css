@@ -37,11 +37,24 @@
   color: #9bb4c8;
 }
 
+.screen--narrow { --screen-max: 30rem; }
+.screen--wide { --screen-max: 72rem; }
+.screen--narrow > *,
+.screen--wide > * {
+  width: 100%;
+  max-width: min(var(--screen-max), 100%);
+  margin-inline: auto;
+}
+.screen--narrow > p,
+.screen--wide > p { margin-inline: auto; }
+
 .menu {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  width: 100%;
   max-width: 16rem;
+  margin-inline: auto;
 }
 
 .row {
@@ -57,8 +70,14 @@
 }
 
 .screen-actions {
-  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: auto;
 }
+.screen-actions .btn { display: flex; align-items: center; gap: 0.42rem; }
+.screen-actions .btn--tertiary { padding-inline: 0.35rem 0.8rem; }
+.screen-actions .icon { width: 0.85rem; height: 0.85rem; }
 
 /* Title */
 .title-screen {
@@ -848,16 +867,11 @@
 @keyframes install-confirm { 0% { opacity: 0; transform: scale(0.98); } 24%, 64% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 .motion-reduced .bay-card.is-installed { border-color: var(--repair-lime); }
 .motion-reduced .bay-card.is-installed .install-confirm { animation: none; opacity: 0; }
-.bay-actions { display: flex; }
-.bay-actions .btn { display: flex; align-items: center; gap: 0.42rem; padding-inline: 0.35rem 0.8rem; }
-.bay-actions .icon { width: 0.85rem; height: 0.85rem; }
-
 /* Results */
 .results-body {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  max-width: 26rem;
   padding: 0.9rem 1rem;
   background: linear-gradient(150deg, rgba(7, 18, 29, 0.9), rgba(8, 22, 34, 0.75));
 }
@@ -890,7 +904,6 @@
   padding: 0.65rem 0.75rem;
   border-color: rgba(141, 240, 162, 0.3);
   background: rgba(10, 22, 18, 0.75);
-  max-width: 22rem;
 }
 .scrap-total {
   margin: 0;
@@ -908,15 +921,14 @@
 }
 
 /* High scores */
+.scores-panel { padding: 0.35rem 0.55rem; }
 table.scores {
   width: 100%;
-  max-width: 30rem;
   border-collapse: collapse;
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
-  background: rgba(7, 16, 25, 0.72);
-  border: 1px solid rgba(86, 160, 199, 0.28);
 }
+table.scores tbody tr:last-child td { border-bottom: 0; }
 table.scores th,
 table.scores td {
   text-align: left;
@@ -951,15 +963,17 @@ table.scores tbody tr:nth-child(3) td { color: #b8ccd8; }
   padding: 0.8rem 0.9rem;
   background: linear-gradient(150deg, rgba(7, 18, 29, 0.88), rgba(8, 22, 34, 0.7));
 }
-.settings-panel h3 {
+.settings-panel .heading {
   margin: 0 0 0.1rem;
   color: var(--signal-cyan);
+  font-family: inherit;
+  font-style: normal;
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
-.settings-panel.panel--danger h3 { color: var(--threat-magenta); }
+.settings-panel.panel--danger .heading { color: var(--threat-magenta); }
 .setting-row {
   display: flex;
   align-items: center;
@@ -1009,7 +1023,10 @@ table.scores tbody tr:nth-child(3) td { color: #b8ccd8; }
 
 @container stage (max-width: 650px) {
   .hangar-screen,
-  .upgrade-bay-screen { overflow-y: auto; padding: calc(0.85rem + env(safe-area-inset-top, 0px)) calc(0.85rem + env(safe-area-inset-right, 0px)) calc(0.85rem + env(safe-area-inset-bottom, 0px)) calc(0.85rem + env(safe-area-inset-left, 0px)); }
+  .upgrade-bay-screen,
+  .results-screen,
+  .high-scores-screen,
+  .settings-screen { overflow-y: auto; padding: calc(0.85rem + env(safe-area-inset-top, 0px)) calc(0.85rem + env(safe-area-inset-right, 0px)) calc(0.85rem + env(safe-area-inset-bottom, 0px)) calc(0.85rem + env(safe-area-inset-left, 0px)); }
   .hangar-screen .screen-header,
   .upgrade-bay-screen .screen-header { grid-template-columns: 1fr; align-items: start; }
   .hangar-resources,
@@ -1030,7 +1047,7 @@ table.scores tbody tr:nth-child(3) td { color: #b8ccd8; }
 
   /* Pin the primary path to the fold so Launch / Back never need discovery scroll. */
   .hangar-actions,
-  .bay-actions {
+  .screen-actions {
     position: sticky;
     bottom: 0;
     z-index: 3;
