@@ -5,11 +5,22 @@ import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import {
   META_BRANCHES,
   META_BRANCH_LABELS,
+  META_RANK_COSTS,
   META_RANK_EFFECTS,
   nextMetaRankCost,
   type MetaBranch,
 } from '../../sim/metaModifiers'
-import { Button, Chip, Icon, Label, Panel, PipRow, ScreenHeader, cn } from '../components/ui'
+import {
+  Button,
+  Chip,
+  Icon,
+  Label,
+  Panel,
+  PipRow,
+  ScreenHeader,
+  ScreenRails,
+  cn,
+} from '../components/ui'
 
 export function UpgradeBayScreen() {
   const meta = useSessionStore((s) => s.meta)
@@ -26,6 +37,13 @@ export function UpgradeBayScreen() {
     if (installTimer.current !== null) window.clearTimeout(installTimer.current)
   }, [])
 
+  const ranksInstalled = META_BRANCHES.reduce((sum, branch) => sum + meta.ranks[branch], 0)
+  const scrapInvested = META_BRANCHES.reduce(
+    (sum, branch) =>
+      sum + META_RANK_COSTS.slice(0, meta.ranks[branch]).reduce((acc, cost) => acc + cost, 0),
+    0,
+  )
+
   const buy = (branch: MetaBranch) => {
     unlockAudio()
     if (!purchaseMetaRank(branch)) return
@@ -40,6 +58,7 @@ export function UpgradeBayScreen() {
       className={`screen screen--wide upgrade-bay-screen${settings.reducedMotion ? ' motion-reduced' : ''}`}
       ref={rootRef}
     >
+      <ScreenRails code="BAY-03 // Refit console" />
       <ScreenHeader title="Upgrade bay">
         <div className="bay-header-meta">
           <Chip tone="scrap" icon="scrap" className="resource-chip">
@@ -68,6 +87,7 @@ export function UpgradeBayScreen() {
               key={branch}
               className={cn('bay-card', `is-${branch}`, installed === branch && 'is-installed')}
             >
+              <Icon name={branch} className="bay-watermark" />
               <header className="bay-card-head">
                 <span className="bay-branch-icon">
                   <Icon name={branch} />
@@ -118,6 +138,16 @@ export function UpgradeBayScreen() {
         })}
       </div>
       <div className="screen-actions">
+        <div className="bay-totals">
+          <span>
+            <small>Ranks installed</small>
+            <b>{ranksInstalled} / {META_BRANCHES.length * META_RANK_COSTS.length}</b>
+          </span>
+          <span>
+            <small>Scrap invested</small>
+            <b>{scrapInvested.toLocaleString()}</b>
+          </span>
+        </div>
         <Button variant="tertiary" icon="back" onClick={() => setScreen('hangar')}>
           Back
         </Button>

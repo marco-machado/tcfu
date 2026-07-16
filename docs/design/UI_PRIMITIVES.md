@@ -142,6 +142,14 @@ The header block reused on every screen: display heading + kicker + gradient rul
 - `title`, `kicker`
 - Replaces `.screen-header` + `.screen-header h2` + `.screen-kicker` + `.screen-header::after`.
 
+### ScreenRails
+
+Decorative console rail labels pinned to the stage edges of non-combat screens.
+
+- `code`: the left rail text (a console designation such as `REC-07 // Flight records`);
+  the right rail is the fixed flight-OS stamp
+- Aria-hidden, pointer-transparent, hidden on stages narrower than 900px
+
 ### Icon
 
 The authored `SignalIcon` family (renamed `Icon` on move). See `SignalIcon` source for the
@@ -160,5 +168,7 @@ stay in their screens, not in `ui/`:
   `boss-bar`, `powerup-row`
 - Cards: `bay-card`, `ship-card`, `kit-preview`
 - Screen scaffold classes in `screens.css`: `screen--narrow` / `screen--wide` (centered
-  scrolling content column with a width cap and a sticky `screen-header`) and
-  `screen-actions` (sticky right-aligned bottom action row)
+  scrolling content column with a width cap, console backdrop dressing, and a sticky
+  `screen-header`) and `screen-actions` (sticky right-aligned bottom action row)
+- Console compositions: `scores-console` (record board plus telemetry panel) and
+  `bay-totals` live in their screens, composed from `Panel`, `Heading`, and `Label`

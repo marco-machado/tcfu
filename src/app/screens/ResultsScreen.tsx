@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
 import { useMenuFocus } from '../menuFocus/useMenuFocus'
-import { Button, Chip, Label, Panel, ScreenHeader } from '../components/ui'
+import { Button, Chip, Label, Panel, ScreenHeader, ScreenRails } from '../components/ui'
 
 export function ResultsScreen() {
   const lastRun = useSessionStore((s) => s.lastRun)
@@ -13,6 +13,7 @@ export function ResultsScreen() {
 
   return (
     <div className="screen screen--narrow results-screen" ref={rootRef}>
+      <ScreenRails code="DBR-04 // Run telemetry" />
       <ScreenHeader title="Debrief" kicker="Run telemetry and salvage" />
       {lastRun ? (
         <Panel size="lg" className="results-body">

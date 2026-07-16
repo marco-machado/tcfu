@@ -5,7 +5,17 @@ import { useMenuFocus } from '../menuFocus/useMenuFocus'
 import { saveSettings, type Quality, type Settings } from '../../persist/settings'
 import { resetMeta } from '../../persist/meta'
 import { resetHighScores } from '../../persist/highScores'
-import { Button, Heading, Panel, ScreenHeader, Segmented, Slider, Toggle } from '../components/ui'
+import {
+  Button,
+  Heading,
+  Icon,
+  Panel,
+  ScreenHeader,
+  ScreenRails,
+  Segmented,
+  Slider,
+  Toggle,
+} from '../components/ui'
 
 const QUALITY_OPTIONS: { value: Quality; label: string }[] = [
   { value: 'low', label: 'Low' },
@@ -33,11 +43,12 @@ export function SettingsScreen() {
 
   return (
     <div className="screen screen--wide settings-screen" ref={rootRef}>
+      <ScreenRails code="CFG-02 // Ship systems" />
       <ScreenHeader title="Settings" kicker="Ship systems configuration" />
 
       <div className="settings-columns">
         <Panel as="section" className="settings-panel">
-          <Heading size="sm" as="h3">Video</Heading>
+          <Heading size="sm" as="h3"><Icon name="display" />Video</Heading>
           <div className="setting-row">
             <span className="setting-label">
               Quality
@@ -65,14 +76,14 @@ export function SettingsScreen() {
         </Panel>
 
         <Panel as="section" className="settings-panel">
-          <Heading size="sm" as="h3">Audio</Heading>
+          <Heading size="sm" as="h3"><Icon name="audio" />Audio</Heading>
           <Slider label="Master" value={settings.master} onChange={(v) => update({ master: v })} />
           <Slider label="Music" value={settings.music} onChange={(v) => update({ music: v })} />
           <Slider label="SFX" value={settings.sfx} onChange={(v) => update({ sfx: v })} />
         </Panel>
 
         <Panel as="section" className="settings-panel">
-          <Heading size="sm" as="h3">Controls</Heading>
+          <Heading size="sm" as="h3"><Icon name="controls" />Controls</Heading>
           <Toggle
             label="Autofire"
             hint="Hold is implied; lance fires itself"
@@ -86,7 +97,7 @@ export function SettingsScreen() {
         </Panel>
 
         <Panel as="section" tone="danger" className="settings-panel">
-          <Heading size="sm" as="h3">Data</Heading>
+          <Heading size="sm" as="h3"><Icon name="career" />Data</Heading>
           <div className="setting-row">
             <span className="setting-label">
               Meta progress
