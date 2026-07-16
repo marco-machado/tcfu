@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
 import { unlockAudio, playSfx } from '../../audio/bus'
 import { useMenuFocus } from '../menuFocus/useMenuFocus'
-import { BrandMark, Button } from '../components/ui'
+import { Button } from '../components/ui'
 
 export function TitleScreen() {
   const setScreen = useSessionStore((s) => s.setScreen)
@@ -21,17 +21,15 @@ export function TitleScreen() {
   return (
     <div className="screen title-screen" ref={rootRef}>
       <div className="title-lockup">
-        <BrandMark className="title-insignia" decorative />
-        <div className="title-wordmark" aria-label="TCFU">
-          <span>TC</span>
-          <i aria-hidden="true" />
-          <span>FU</span>
-        </div>
+        <img
+          className="title-logo"
+          src="/branding/they-came-from-uranus-logo.webp"
+          alt="They Came From Uranus"
+          width="900"
+          height="900"
+        />
         <p className="title-kicker">Endless corridor survival</p>
       </div>
-      <p className="title-tagline">
-        <span>Hold the band.</span> Ride the stream. Die with a high score.
-      </p>
       <div className="menu title-menu">
         <Button data-menu-primary variant="primary" onClick={goHangar}>
           Play
@@ -39,12 +37,6 @@ export function TitleScreen() {
         <Button onClick={() => setScreen('highScores')}>High Scores</Button>
         <Button onClick={() => setScreen('settings')}>Settings</Button>
       </div>
-      <p className="muted title-controls title-controls--pointer">
-        WASD / arrows · Space fire · Shift bomb · Esc pause
-      </p>
-      <p className="muted title-controls title-controls--touch">
-        Drag to fly · tap bomb · tap pause
-      </p>
     </div>
   )
 }
