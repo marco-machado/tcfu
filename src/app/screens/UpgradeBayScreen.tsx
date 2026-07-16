@@ -119,7 +119,7 @@ export function UpgradeBayScreen() {
       </div>
       <div className="screen-actions">
         <Button variant="tertiary" icon="back" onClick={() => setScreen('hangar')}>
-          Back to hangar
+          Back
         </Button>
       </div>
     </div>

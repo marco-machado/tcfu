@@ -160,5 +160,5 @@ stay in their screens, not in `ui/`:
   `boss-bar`, `powerup-row`
 - Cards: `bay-card`, `ship-card`, `kit-preview`
 - Screen scaffold classes in `screens.css`: `screen--narrow` / `screen--wide` (centered
-  content column with a width cap) and `screen-actions` (bottom action row, sticky on
-  stages narrower than 650px)
+  scrolling content column with a width cap and a sticky `screen-header`) and
+  `screen-actions` (sticky right-aligned bottom action row)

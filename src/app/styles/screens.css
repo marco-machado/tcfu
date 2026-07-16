@@ -21,12 +21,15 @@
 }
 
 .screen {
+  --screen-pad: 1.5rem;
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  padding: calc(1.5rem + env(safe-area-inset-top, 0px)) calc(1.5rem + env(safe-area-inset-right, 0px))
-    calc(1.5rem + env(safe-area-inset-bottom, 0px)) calc(1.5rem + env(safe-area-inset-left, 0px));
+  padding: calc(var(--screen-pad) + env(safe-area-inset-top, 0px))
+    calc(var(--screen-pad) + env(safe-area-inset-right, 0px))
+    calc(var(--screen-pad) + env(safe-area-inset-bottom, 0px))
+    calc(var(--screen-pad) + env(safe-area-inset-left, 0px));
   gap: 1rem;
   z-index: 2;
   pointer-events: auto;
@@ -39,6 +42,8 @@
 
 .screen--narrow { --screen-max: 30rem; }
 .screen--wide { --screen-max: 72rem; }
+.screen--narrow,
+.screen--wide { overflow-y: auto; }
 .screen--narrow > *,
 .screen--wide > * {
   width: 100%;
@@ -47,6 +52,16 @@
 }
 .screen--narrow > p,
 .screen--wide > p { margin-inline: auto; }
+.screen--narrow > .screen-header,
+.screen--wide > .screen-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin-top: calc(-1 * (var(--screen-pad) + env(safe-area-inset-top, 0px)));
+  padding-top: calc(var(--screen-pad) + env(safe-area-inset-top, 0px));
+  padding-bottom: 0.5rem;
+  background: linear-gradient(180deg, rgba(3, 7, 11, 0.96) calc(100% - 0.9rem), rgba(3, 7, 11, 0));
+}
 
 .menu {
   display: flex;
@@ -72,8 +87,15 @@
 .screen-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.45rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
   margin-top: auto;
+  margin-bottom: calc(-1 * (var(--screen-pad) + env(safe-area-inset-bottom, 0px)));
+  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(3, 7, 11, 0), rgba(3, 7, 11, 0.94) 46%);
 }
 .screen-actions .btn { display: flex; align-items: center; gap: 0.42rem; }
 .screen-actions .btn--tertiary { padding-inline: 0.35rem 0.8rem; }
@@ -947,7 +969,6 @@ table.scores tbody tr:nth-child(2) td { color: #cfe2ee; font-weight: 600; }
 table.scores tbody tr:nth-child(3) td { color: #b8ccd8; }
 
 /* Settings */
-.settings-screen { overflow: auto; }
 .settings-columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
@@ -1026,7 +1047,7 @@ table.scores tbody tr:nth-child(3) td { color: #b8ccd8; }
   .upgrade-bay-screen,
   .results-screen,
   .high-scores-screen,
-  .settings-screen { overflow-y: auto; padding: calc(0.85rem + env(safe-area-inset-top, 0px)) calc(0.85rem + env(safe-area-inset-right, 0px)) calc(0.85rem + env(safe-area-inset-bottom, 0px)) calc(0.85rem + env(safe-area-inset-left, 0px)); }
+  .settings-screen { --screen-pad: 0.85rem; overflow-y: auto; }
   .hangar-screen .screen-header,
   .upgrade-bay-screen .screen-header { grid-template-columns: 1fr; align-items: start; }
   .hangar-resources,
@@ -1046,8 +1067,7 @@ table.scores tbody tr:nth-child(3) td { color: #b8ccd8; }
   .bay-effect { min-height: 1.6rem; }
 
   /* Pin the primary path to the fold so Launch / Back never need discovery scroll. */
-  .hangar-actions,
-  .screen-actions {
+  .hangar-actions {
     position: sticky;
     bottom: 0;
     z-index: 3;

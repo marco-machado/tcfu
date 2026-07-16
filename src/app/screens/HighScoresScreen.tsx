@@ -44,7 +44,7 @@ export function HighScoresScreen() {
       )}
       <div className="screen-actions">
         <Button data-menu-primary variant="tertiary" icon="back" onClick={() => setScreen('title')}>
-          Back to title
+          Back
         </Button>
       </div>
     </div>
