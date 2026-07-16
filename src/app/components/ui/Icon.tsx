@@ -3,10 +3,13 @@ import type { SVGProps } from 'react'
 export type IconName =
   | 'aegis'
   | 'arsenal'
+  | 'audio'
   | 'back'
   | 'bomb'
   | 'bounty'
   | 'career'
+  | 'controls'
+  | 'display'
   | 'hull'
   | 'lance'
   | 'launch'
@@ -59,6 +62,9 @@ export function Icon({ name, className = '', ...props }: Props) {
       {name === 'wcell' && <><path d="m12 2 7 5v10l-7 5-7-5V7l7-5Z" /><path d="m8 8 2 8 2-5 2 5 2-8" /></>}
       {name === 'overclock' && <><path d="m9 3 6 6-3 3 3 3-6 6" /><path d="m4 3 6 6-3 3 3 3-6 6" /></>}
       {name === 'options' && <><path d="M12 21V8M12 8 4 17M12 8l8 9" /><path d="M12 3v5M4 17v3M20 17v3" /></>}
+      {name === 'display' && <><path d="M3 5h18v12H3V5Z" /><path d="M12 17v4M7 21h10" /></>}
+      {name === 'audio' && <><path d="M4 9h4l5-5v16l-5-5H4V9Z" /><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" /></>}
+      {name === 'controls' && <><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" /><path d="M12 8v8M8 12h8" /></>}
       {name === 'pause' && <><path d="M9 4v16M15 4v16" /></>}
       {name === 'bounty' && <><path d="m12 2 8 7-3 10-5 3-5-3L4 9l8-7Z" /><path d="m8 9 4-3 4 3-4 8-4-8Z" /></>}
       {name === 'vanguard' && <><path d="m12 2 4 10 6 7-7-2-3 5-3-5-7 2 6-7 4-10Z" /><path d="M12 6v11" /></>}
