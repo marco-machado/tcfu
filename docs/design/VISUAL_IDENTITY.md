@@ -1,4 +1,4 @@
-# TCFU visual identity — Corridor Signal
+# They Came From Uranus visual identity — Corridor Signal
 
 ## Brand idea
 
@@ -6,7 +6,10 @@
 
 **Corridor** is brand language for the movement band and world stream fantasy. It is **not** a requirement for colossal trench walls or shaft architecture on the playfield. In-world presentation is **deep space**: void field, stars, sparse distant silhouettes, stream-synced parallax—not industrial corridor cages.
 
-The name remains **TCFU**. Do not invent or publish an expansion until the game has a narrative reason for one.
+The player-facing product name is **They Came From Uranus**. Use the full name in the
+Title lockup, browser title, store art, and other first-contact surfaces. **TCFU** remains
+the compact shorthand for the repository, internal references, and space-constrained UI;
+do not present it as a different product or invent another expansion.
 
 ### Player promise
 
@@ -21,13 +24,20 @@ The name remains **TCFU**. Do not invent or publish an expansion until the game 
 
 ## Signature motif
 
-The insignia combines three game truths:
+The refreshed mark combines three game truths:
 
-1. **Corridor brackets** — the fixed movement band.
-2. **Forward vector** — the player ship pressing into the world stream.
-3. **Split signal ticks** — cyan player telemetry meeting amber hostile pressure.
+1. **Corridor loop** — the bounded movement band and continuous world stream.
+2. **Forward bolt** — the player ship pressing into the stream.
+3. **Split signal arc** — cyan player telemetry meeting one restrained amber threat segment.
 
-Use the full lockup on title, store art, and major results moments. Use the insignia alone for the favicon, loading indicator, compact badges, and physical decals. Preserve clear space equal to one signal-tick width around it. Do not rotate, outline with rainbow gradients, or place it over detailed combat without a dark field.
+Use the full-name logo on Title, store art, and other major identity moments. Use the
+compact loop-and-bolt mark without the name for the favicon, loading indicator, compact
+badges, and physical decals. Preserve clear space equal to the amber segment's width
+around either mark. Do not rotate it, recolor it with rainbow gradients, or place it over
+detailed combat without a dark field.
+
+The earlier bracket-and-vector `BrandMark` remains a UI telemetry glyph derived from the
+Corridor Signal language; it is not the current product lockup or favicon.
 
 ## Color system
 
@@ -55,7 +65,7 @@ Color is semantic. Cyan never means danger; magenta never means a beneficial pic
 
 ## Shape and layout
 
-- Use clipped 8 px corners, rails, ticks, and open frames derived from the insignia.
+- Use clipped 8 px corners, rails, ticks, and open frames derived from the broader Corridor Signal telemetry language.
 - Keep the combat lane visually open. Dense chrome belongs at the outer margins.
 - Forward motion is vertical in-world and slightly right-leaning in typography.
 - Use one strong diagonal or bracket gesture per component; avoid nested sci-fi frames.
@@ -68,7 +78,7 @@ These motifs are implemented as the DOM UI primitive library; see [`UI_PRIMITIVE
 - Normal UI: 100–180 ms, direct ease-out, minimal overshoot.
 - Stream motion: steady vertical translation; no decorative floating.
 - Alerts: one sharp acquisition pulse, then stable. Do not continuously flash critical UI.
-- The title insignia may briefly hand off from cyan to amber, suggesting the corridor is being contested.
+- The title logo may briefly hand off from cyan to amber, suggesting the corridor is being contested.
 - Respect `prefers-reduced-motion`; color and shape must carry the state without animation.
 
 ## Image direction
@@ -77,7 +87,7 @@ Capability discovery and credential policy for generating assets live in `AGENTS
 
 Use this art brief for title-screen key art:
 
-> TCFU title-screen key art for a high-fidelity vertical arcade space shooter. A lone angular interceptor seen from elevated rear three-quarter view holds the center of deep hostile space. Cold cyan thruster plumes and precision lane-bracket telemetry face warm amber-orange hostile craft and weapons fire. Deep black void, sparse distant silhouettes, restrained emissive bloom, strong readable silhouettes, disciplined asymmetrical composition, generous negative space for a compact logo, cinematic PBR, no text, no watermark, no purple cyberpunk city, no retro pixels, no colossal trench walls as world identity.
+> They Came From Uranus title-screen key art for a high-fidelity vertical arcade space shooter. A lone angular interceptor seen from elevated rear three-quarter view holds the center of deep hostile space. Cold cyan thruster plumes and precision lane-bracket telemetry face warm amber-orange hostile craft and weapons fire. Deep black void, sparse distant silhouettes, restrained emissive bloom, strong readable silhouettes, disciplined asymmetrical composition, generous negative space for a compact logo, cinematic PBR, no text, no watermark, no purple cyberpunk city, no retro pixels, no colossal trench walls as world identity.
 
 ### Key-art reference
 
@@ -94,7 +104,7 @@ It is **not** a mandate to rebuild colossal corridor walls, floor shafts, or mag
 
 ## Applications and next assets
 
-1. Title lockup and favicon — implemented in the shell.
+1. Full-name Title logo and compact loop-and-bolt favicon — implemented in the shell.
 2. HUD icon family — HP, life, shield, bomb, W-cell, Scrap, weapon tier.
 3. World decals — corridor brackets, hazard ticks, salvage chevrons.
 4. Ship-kit submarks — one silhouette-led mark per Vanguard, Striker, Aegis, Phantom.

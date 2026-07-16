@@ -1,4 +1,4 @@
-# TCFU UI primitives
+# They Came From Uranus UI primitives
 
 The DOM UI primitive library. One canonical component per reusable atom, living in
 `src/app/components/ui/`. Screens and HUD compose these; they never hand-write design
@@ -32,7 +32,7 @@ primitive layer adds functional tokens so recurring greys and borders have one s
 - **Text tiers:** `--text-secondary`, `--text-faint` (primary text is `--ice-white`)
 - **Notch scale:** `--notch-sm: 6px`, `--notch: 8px`, `--notch-lg: 10px`
 
-The notch is the insignia-derived clipped corner (`VISUAL_IDENTITY.md` > Shape and
+The notch is a Corridor Signal telemetry gesture (`VISUAL_IDENTITY.md` > Shape and
 layout). It is a token scale, not a per-element literal; the old 5/7/9px offsets are drift
 and do not return.
 
@@ -100,7 +100,7 @@ Track + fill progress bar. Motif: instrument telemetry.
 
 ### PipRow
 
-A row of discrete state pips. Motif: ticks and segments derived from the insignia.
+A row of discrete state pips. Motif: ticks and segments from the Corridor Signal telemetry language.
 
 - `count`, `filled`
 - `shape`: `diamond` | `chevron` | `segment` | `dot`
@@ -149,7 +149,9 @@ name set. Motif: survives at 16px, silhouette before glow.
 
 ### BrandMark
 
-The insignia mark. Motif: signature lockup (`VISUAL_IDENTITY.md` > Signature motif).
+Legacy bracket-and-vector telemetry glyph retained for reusable UI chrome. It is not the
+current full-name product logo or compact favicon mark; those are authored brand assets
+governed by `VISUAL_IDENTITY.md` > Signature motif.
 
 ## Not primitives
 
