@@ -39,7 +39,12 @@ export function TitleScreen() {
         <Button onClick={() => setScreen('highScores')}>High Scores</Button>
         <Button onClick={() => setScreen('settings')}>Settings</Button>
       </div>
-      <p className="muted title-controls">WASD / arrows · Space fire · Shift bomb · Esc pause</p>
+      <p className="muted title-controls title-controls--pointer">
+        WASD / arrows · Space fire · Shift bomb · Esc pause
+      </p>
+      <p className="muted title-controls title-controls--touch">
+        Drag to fly · tap bomb · tap pause
+      </p>
     </div>
   )
 }

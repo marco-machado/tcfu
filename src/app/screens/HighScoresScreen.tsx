@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useSessionStore } from '../sessionStore'
 import { useMenuFocus } from '../menuFocus/useMenuFocus'
+import { shipKit } from '../../sim/shipKits'
 import { Button, ScreenHeader } from '../components/ui'
 
 export function HighScoresScreen() {
@@ -31,7 +32,7 @@ export function HighScoresScreen() {
               <tr key={`${row.timestamp}-${i}`}>
                 <td>{i + 1}</td>
                 <td>{row.score}</td>
-                <td>{row.shipId}</td>
+                <td>{shipKit(row.shipId).name}</td>
                 <td>{row.wave}</td>
                 <td>{Math.floor(row.timeSec)}s</td>
               </tr>
