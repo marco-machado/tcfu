@@ -5,7 +5,7 @@ Top-level screens controlled by `ScreenId`. The session starts on `title`; only 
 | id | name | role | primary content | entry points | exits |
 |----|------|------|-----------------|--------------|-------|
 | title | Title | Main menu | Full-name brand lockup, game premise, primary and secondary menu actions | App start; Hangar back; Results title | Hangar; High Scores; Settings |
-| hangar | Hangar | Pre-run ship selection | Career best, Scrap, selected-ship preview and stats, ship unlocks | Title play; Results hangar; Run pause exit; Upgrade Bay back | Run; Upgrade Bay; Title |
+| hangar | Hangar | Pre-run ship selection | Career best, Scrap, full-bleed deck carousel (centering a kit selects it), kit stats and loadout, locked-kit preview with unlock requirement | Title play; Results hangar; Run pause exit; Upgrade Bay back | Run; Upgrade Bay; Title |
 | upgradeBay | Upgrade Bay | Persistent progression | Scrap balance and permanent Arsenal, Hull, Salvage, and Thrusters ranks | Hangar | Hangar |
 | run | Run | Active gameplay | Three.js playfield, combat HUD, touch controls, pause and destroyed overlays | Hangar launch; Results quick retry; Run pause restart | Results after run end; Settings from pause; Hangar from pause |
 | results | Debrief | Post-run summary | Final score, ship, wave, kills, best chain, grazes, time, career best, unlocks, and Scrap payout | Run end | Run quick retry; Hangar; High Scores; Title |

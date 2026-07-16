@@ -5,6 +5,8 @@ export type ShipPassiveId = 'none' | 'dmg_10' | 'start_shield' | 'iframe_bonus'
 export type ShipKit = {
   id: ShipId
   name: string
+  /** Short role label shown beside the name (e.g. "Frontline interceptor"). */
+  role: string
   blurb: string
   unlockScore: number
   moveMult: number
@@ -28,7 +30,8 @@ const kits: Record<ShipId, ShipKit> = {
   vanguard: {
     id: 'vanguard',
     name: 'Vanguard',
-    blurb: 'Reliable frontline interceptor. Tuning baseline.',
+    role: 'Frontline interceptor',
+    blurb: 'Reliable and forgiving. Tuning baseline.',
     unlockScore: 0,
     moveMult: 1,
     hitboxR: 0.35,
@@ -46,7 +49,8 @@ const kits: Record<ShipId, ShipKit> = {
   striker: {
     id: 'striker',
     name: 'Striker',
-    blurb: 'Hot rod gunship. Higher DPS, glass hull.',
+    role: 'Hot rod gunship',
+    blurb: 'Higher DPS, glass hull.',
     unlockScore: 25_000,
     moveMult: 1.15,
     hitboxR: 0.32,
@@ -64,7 +68,8 @@ const kits: Record<ShipId, ShipKit> = {
   aegis: {
     id: 'aegis',
     name: 'Aegis',
-    blurb: 'Armored wing. Survives messy patterns.',
+    role: 'Armored wing',
+    blurb: 'Survives messy patterns.',
     unlockScore: 75_000,
     moveMult: 0.9,
     hitboxR: 0.38,
@@ -82,7 +87,8 @@ const kits: Record<ShipId, ShipKit> = {
   phantom: {
     id: 'phantom',
     name: 'Phantom',
-    blurb: 'Ghost interceptor. Dance the band.',
+    role: 'Ghost interceptor',
+    blurb: 'Dance the band.',
     unlockScore: 150_000,
     moveMult: 1.25,
     hitboxR: 0.28,

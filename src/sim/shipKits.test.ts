@@ -58,6 +58,14 @@ describe('ship kits', () => {
     expect(resolveSelectedShip('striker', 30_000)).toBe('striker')
   })
 
+  it('gives every kit a role label the blurb does not repeat', () => {
+    for (const id of SHIP_KIT_IDS) {
+      const kit = shipKit(id)
+      expect(kit.role.length).toBeGreaterThan(0)
+      expect(kit.blurb.toLowerCase()).not.toContain(kit.role.toLowerCase())
+    }
+  })
+
   it('covers all four kit ids', () => {
     expect(SHIP_KIT_IDS).toHaveLength(4)
   })
