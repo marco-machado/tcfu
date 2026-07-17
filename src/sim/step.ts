@@ -5,6 +5,8 @@ import {
   COLOSSUS,
   COMBO_WINDOW,
   CONTACT_ARM_TIME,
+  CROSS_PATH_STRAFE_SPEED,
+  CROSS_PATH_STREAM_MULT,
   CULL_X_MAX,
   CULL_Y_MAX,
   CULL_Y_MIN,
@@ -30,6 +32,9 @@ import {
   PLAYER_ACCEL,
   PLAYER_DECEL,
   PLAYER_MAX_SPEED,
+  ORBIT_PATH_ANGULAR_SPEED,
+  ORBIT_PATH_BOB,
+  ORBIT_PATH_RADIUS,
   POWERUP_SCORE,
   PRISM,
   RATE_UP_COOLDOWN_MULT,
@@ -405,6 +410,7 @@ export function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, stream
   e.hitFlash = 0
   e.phase = 'none'
   e.phaseElapsed = 0
+  e.fireSequence = 0
   e.vy = -streamSpeed
 
   if (event.path === 'strafe_enter_left') {
@@ -456,7 +462,11 @@ export function configureEnemy(e: Enemy, event: SpawnEvent, wave: number, stream
 
   if (event.path === 'dive') {
     e.vy = -streamSpeed * 1.6
-  } else if (event.path === 'hold_and_shot') {
+  } else if (
+    event.path === 'hold_and_shot' ||
+    event.path === 'orbit_hold_left' ||
+    event.path === 'orbit_hold_right'
+  ) {
     e.vy = -streamSpeed * 0.85
   }
 }
@@ -754,15 +764,19 @@ function fireEnemyShot(world: World, e: Enemy): void {
 
   if (e.shotStyle === 'ring8') {
     const count = PRISM.ringCount
+    const offset = e.fireSequence % 2 === 0 ? 0 : Math.PI / count
     for (let i = 0; i < count; i++) {
-      const a = (i / count) * Math.PI * 2
+      const a = (i / count) * Math.PI * 2 + offset
       spawnEnemyBullet(world, e.x, e.y, Math.cos(a) * e.bulletSpeed, Math.sin(a) * e.bulletSpeed)
     }
     return
   }
 
   if (e.shotStyle === 'boss_spray') {
-    const angles = [-0.55, -0.28, 0, 0.28, 0.55]
+    const angles =
+      e.fireSequence % 2 === 0
+        ? [-0.55, -0.28, 0, 0.28, 0.55]
+        : [-0.42, -0.14, 0.14, 0.42]
     for (const a of angles) {
       spawnEnemyBullet(world, e.x, e.y, Math.sin(a) * e.bulletSpeed, -Math.cos(a) * e.bulletSpeed)
     }
@@ -812,6 +826,28 @@ function advancePath(e: Enemy, dt: number, streamSpeed: number): void {
     return
   }
 
+  if (path === 'cross_left' || path === 'cross_right') {
+    const direction = path === 'cross_left' ? -1 : 1
+    e.x += direction * CROSS_PATH_STRAFE_SPEED * dt
+    e.vy = -streamSpeed * CROSS_PATH_STREAM_MULT
+    e.y += e.vy * dt
+    return
+  }
+
+  if (path === 'orbit_hold_left' || path === 'orbit_hold_right') {
+    const direction = path === 'orbit_hold_left' ? -1 : 1
+    const phase = e.pathPhase * ORBIT_PATH_ANGULAR_SPEED
+    e.x = e.laneX + direction * Math.sin(phase) * ORBIT_PATH_RADIUS
+    if (e.y > HOLD_Y) {
+      e.vy = -streamSpeed * 0.85
+      e.y = Math.max(HOLD_Y, e.y + e.vy * dt)
+    } else {
+      e.vy = 0
+      e.y = HOLD_Y + Math.sin(phase * 2) * ORBIT_PATH_BOB
+    }
+    return
+  }
+
   if (e.y > HOLD_Y) {
     e.vy = -streamSpeed * 0.85
     e.y += e.vy * dt
@@ -850,6 +886,7 @@ function stepEnemies(world: World, dt: number): void {
       e.fireCooldown -= dt
       if (e.fireCooldown <= 0) {
         fireEnemyShot(world, e)
+        e.fireSequence += 1
         e.fireCooldown = e.fireInterval
       }
     }

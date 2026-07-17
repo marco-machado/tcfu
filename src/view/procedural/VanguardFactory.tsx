@@ -18,6 +18,7 @@ type Props = {
   /** When true, materials are clones so hit-flash can mutate safely. */
   mutableMaterials?: boolean
   liveThrust?: boolean
+  showThrusterPlumes?: boolean
   onDiagnostics?: (d: ReturnType<typeof collectModelDiagnostics>) => void
 }
 
@@ -34,6 +35,7 @@ export function VanguardFactory({
   detail,
   mutableMaterials = false,
   liveThrust = false,
+  showThrusterPlumes = true,
   onDiagnostics,
 }: Props) {
   const root = useRef<Group>(null)
@@ -208,7 +210,7 @@ export function VanguardFactory({
                 <sphereGeometry args={[0.055, 12, 10]} />
                 <primitive object={m.glow} attach="material" />
               </mesh>
-              {show('thrusterPlume') && (
+              {showThrusterPlumes && show('thrusterPlume') && (
                 <ThrusterPlume
                   scale={1.1}
                   dense={detail === 'high'}

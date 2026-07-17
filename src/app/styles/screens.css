@@ -693,17 +693,44 @@
   -webkit-user-select: none;
 }
 .hangar-scene:active { cursor: grabbing; }
-.hangar-deck-r3f { width: 100% !important; height: 100% !important; display: block; }
+.hangar-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+  background: #02070b;
+}
+.hangar-backdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+.hangar-deck-r3f {
+  position: relative;
+  z-index: 1;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+@media (min-aspect-ratio: 12 / 5) {
+  .hangar-backdrop img { object-fit: contain; }
+}
 
 /* Scrim keeps chips and info-bar copy legible over bright hulls */
 .hangar-scene::after {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(3, 7, 11, 0.66), rgba(3, 7, 11, 0) 24%),
-    linear-gradient(0deg, rgba(3, 7, 11, 0.8), rgba(3, 7, 11, 0) 36%);
+    linear-gradient(180deg, rgba(3, 7, 11, 0.42), rgba(3, 7, 11, 0) 24%),
+    linear-gradient(0deg, rgba(3, 7, 11, 0.66), rgba(3, 7, 11, 0) 36%);
 }
 
 .hangar-screen .screen-header,

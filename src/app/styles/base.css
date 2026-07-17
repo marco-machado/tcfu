@@ -11,6 +11,11 @@ body,
   overflow: hidden;
 }
 
+/* Keep the interface optically consistent on 4K and ultrawide displays. */
+html {
+  font-size: clamp(16px, min(0.833333vw, 2.222222vh), 32px);
+}
+
 button,
 input,
 select {

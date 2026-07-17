@@ -111,6 +111,8 @@ export type Enemy = {
   contactDamage: number
   fireCooldown: number
   fireInterval: number
+  /** Number of volleys fired; drives deterministic alternating patterns. */
+  fireSequence: number
   bulletSpeed: number
   path: PathId
   pathPhase: number

@@ -8,6 +8,10 @@ export type PathId =
   | 'hold_and_shot'
   | 'strafe_enter_left'
   | 'strafe_enter_right'
+  | 'cross_left'
+  | 'cross_right'
+  | 'orbit_hold_left'
+  | 'orbit_hold_right'
 
 export type SpawnEvent = {
   t: number
@@ -121,8 +125,8 @@ export const EASY_LINE_DRONES: WavePattern = {
 export const EASY_DART_DIVE: WavePattern = {
   id: 'easy_dart_dive',
   events: [
-    ...column(0.0, 4, -2, 'dart', 'dive'),
-    ...column(0.5, 4, 2, 'dart', 'dive'),
+    ...column(0.0, 4, -4.8, 'dart', 'cross_right'),
+    ...column(0.5, 4, 4.8, 'dart', 'cross_left'),
     ...lineH(2.5, 3, -3, 3, 'drone', 'drift_down'),
   ],
 }
@@ -192,9 +196,9 @@ export const MID_GUN_WALL: WavePattern = {
 export const MID_SIDECAR_LANE: WavePattern = {
   id: 'mid_sidecar_lane',
   events: [
-    { t: 0.0, kind: 'sidecar', x: -3.5, y: SPAWN_Y, path: 'drift_down' },
+    { t: 0.0, kind: 'sidecar', x: -4.5, y: SPAWN_Y, path: 'cross_right' },
     { t: 0.4, kind: 'sidecar', x: 0, y: SPAWN_Y, path: 'drift_down' },
-    { t: 0.8, kind: 'sidecar', x: 3.5, y: SPAWN_Y, path: 'drift_down' },
+    { t: 0.8, kind: 'sidecar', x: 4.5, y: SPAWN_Y, path: 'cross_left' },
     ...lineH(2.0, 5, -4, 4, 'drone', 'sine_x'),
   ],
 }
@@ -222,7 +226,7 @@ export const MID_HOLD_SQUAD: WavePattern = {
 export const MID_ELITE_RAZOR: WavePattern = {
   id: 'mid_elite_razor',
   events: [
-    { t: 0.0, kind: 'razor', x: 0, y: SPAWN_Y, path: 'hold_and_shot' },
+    { t: 0.0, kind: 'razor', x: 0, y: SPAWN_Y, path: 'orbit_hold_right' },
     ...lineH(0.5, 6, -5, 5, 'drone', 'drift_down'),
     ...lineH(2.5, 5, -4, 4, 'drone', 'sine_x'),
   ],
@@ -231,7 +235,7 @@ export const MID_ELITE_RAZOR: WavePattern = {
 export const MID_PRISM_BURST: WavePattern = {
   id: 'mid_prism_burst',
   events: [
-    { t: 0.0, kind: 'prism', x: 0, y: SPAWN_Y, path: 'hold_and_shot' },
+    { t: 0.0, kind: 'prism', x: 0, y: SPAWN_Y, path: 'orbit_hold_left' },
     ...column(0.8, 4, -3, 'dart', 'dive'),
     ...column(1.0, 4, 3, 'dart', 'dive'),
   ],
@@ -251,8 +255,8 @@ export const MID_CHAOS_MIX: WavePattern = {
 export const LATE_RAZOR_PAIR: WavePattern = {
   id: 'late_razor_pair',
   events: [
-    { t: 0.0, kind: 'razor', x: -2.5, y: SPAWN_Y, path: 'hold_and_shot' },
-    { t: 1.5, kind: 'razor', x: 2.5, y: SPAWN_Y, path: 'hold_and_shot' },
+    { t: 0.0, kind: 'razor', x: -2.5, y: SPAWN_Y, path: 'orbit_hold_right' },
+    { t: 1.5, kind: 'razor', x: 2.5, y: SPAWN_Y, path: 'orbit_hold_left' },
     ...lineH(0.8, 5, -4, 4, 'drone', 'drift_down'),
   ],
 }
@@ -260,7 +264,7 @@ export const LATE_RAZOR_PAIR: WavePattern = {
 export const LATE_PRISM_GRID: WavePattern = {
   id: 'late_prism_grid',
   events: [
-    { t: 0.0, kind: 'prism', x: 0, y: SPAWN_Y, path: 'hold_and_shot' },
+    { t: 0.0, kind: 'prism', x: 0, y: SPAWN_Y, path: 'orbit_hold_right' },
     ...lineH(0.5, 8, -5.5, 5.5, 'drone', 'drift_down'),
     ...lineH(2.0, 6, -4, 4, 'drone', 'sine_x'),
   ],
@@ -281,8 +285,8 @@ export const LATE_GAUNTLET: WavePattern = {
 export const LATE_MIXED_ELITES: WavePattern = {
   id: 'late_mixed_elites',
   events: [
-    { t: 0.0, kind: 'razor', x: -2, y: SPAWN_Y, path: 'hold_and_shot' },
-    { t: 0.5, kind: 'prism', x: 2, y: SPAWN_Y, path: 'hold_and_shot' },
+    { t: 0.0, kind: 'razor', x: -2, y: SPAWN_Y, path: 'orbit_hold_right' },
+    { t: 0.5, kind: 'prism', x: 2, y: SPAWN_Y, path: 'orbit_hold_left' },
     { t: 1.5, kind: 'sidecar', x: -3.5, y: SPAWN_Y, path: 'drift_down' },
     { t: 1.7, kind: 'sidecar', x: 3.5, y: SPAWN_Y, path: 'drift_down' },
     ...lineH(2.5, 5, -4, 4, 'drone', 'drift_down'),
@@ -303,7 +307,7 @@ export const SET_COLOSSUS_PRISM: WavePattern = {
   id: 'set_colossus_prism',
   events: [
     { t: 0.0, kind: 'colossus', x: 0, y: SPAWN_Y, path: 'hold_and_shot' },
-    { t: 1.0, kind: 'prism', x: -3.5, y: SPAWN_Y, path: 'hold_and_shot' },
+    { t: 1.0, kind: 'prism', x: -3.5, y: SPAWN_Y, path: 'orbit_hold_right' },
     ...column(2.0, 3, 3, 'dart', 'dive'),
     ...lineH(3.0, 4, -3, 3, 'drone', 'drift_down'),
   ],

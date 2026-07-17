@@ -9,6 +9,7 @@ import {
   IFRAMES_HIT,
   IFRAMES_RESPAWN,
   IFRAMES_SHIELD,
+  HOLD_Y,
   MERCY_CLEAR_R,
   POWERUP_PITY_SECONDS,
   RESPAWN,
@@ -111,6 +112,7 @@ function placeDrone(world: World, x: number, y: number): World['enemies'][number
   slot.contactDamage = 1
   slot.fireCooldown = 0
   slot.fireInterval = 0
+  slot.fireSequence = 0
   slot.bulletSpeed = 0
   slot.path = 'drift_down'
   slot.pathPhase = 0
@@ -1509,6 +1511,40 @@ describe('content depth combat', () => {
     expect(activeEnemyBullets(world)).toHaveLength(8)
   })
 
+  it('prism rotates every other ring to change the dodge lanes', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const prism = placeKind(world, 'prism', 0, 12)
+
+    stepWorld(world, FIXED_DT, idle())
+    expect(activeEnemyBullets(world).some((b) => Math.abs(b.vx) < 1e-6)).toBe(true)
+
+    for (const b of world.enemyBullets) b.active = false
+    prism.fireCooldown = 0
+    stepWorld(world, FIXED_DT, idle())
+    const rotated = activeEnemyBullets(world)
+    expect(rotated).toHaveLength(8)
+    expect(rotated.every((b) => Math.abs(b.vx) > 0.1 && Math.abs(b.vy) > 0.1)).toBe(true)
+  })
+
+  it('colossus alternates a closed fan with a center-gap volley', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const boss = placeKind(world, 'colossus', 0, 12)
+
+    stepWorld(world, FIXED_DT, idle())
+    const closed = activeEnemyBullets(world)
+    expect(closed).toHaveLength(5)
+    expect(closed.some((b) => Math.abs(b.vx) < 1e-6)).toBe(true)
+
+    for (const b of world.enemyBullets) b.active = false
+    boss.fireCooldown = 0
+    stepWorld(world, FIXED_DT, idle())
+    const open = activeEnemyBullets(world)
+    expect(open).toHaveLength(4)
+    expect(open.every((b) => Math.abs(b.vx) > 0.1)).toBe(true)
+  })
+
   it('colossus contact deals heavy 2 and AABB takes bullet hits', () => {
     const world = createWorld('vanguard')
     suspendWaves(world)
@@ -1611,6 +1647,29 @@ describe('content depth combat', () => {
     e.x = -11
     steps(world, 60, idle())
     expect(e.x).toBeCloseTo(-3, 1)
+  })
+
+  it('cross paths sweep enemies diagonally through the combat lane', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const e = placeDrone(world, 4.5, 16)
+    e.path = 'cross_left'
+    steps(world, 60, idle())
+    expect(e.active).toBe(true)
+    expect(e.x).toBeLessThan(1)
+    expect(e.y).toBeLessThan(12)
+  })
+
+  it('orbit-hold paths make elites patrol around their authored lane', () => {
+    const world = createWorld('vanguard')
+    suspendWaves(world)
+    const e = placeKind(world, 'razor', 0, HOLD_Y)
+    e.path = 'orbit_hold_right'
+    e.laneX = 0
+    steps(world, 30, idle())
+    expect(e.x).toBeGreaterThan(1)
+    expect(e.y).toBeGreaterThanOrEqual(HOLD_Y - 0.3)
+    expect(e.y).toBeLessThanOrEqual(HOLD_Y + 0.3)
   })
 })
 

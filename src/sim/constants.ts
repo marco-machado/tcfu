@@ -201,6 +201,14 @@ export const WAVE_GAP = 0.75
 export const WAVE_CLEAR_WINDOW = 8
 export const HOLD_Y = 15
 
+/** Diagonal crossing paths turn edge spawns into readable lane sweeps. */
+export const CROSS_PATH_STRAFE_SPEED = 3.8
+export const CROSS_PATH_STREAM_MULT = 1.25
+/** Elite hold paths sweep around their authored lane instead of staying static. */
+export const ORBIT_PATH_RADIUS = 2.1
+export const ORBIT_PATH_BOB = 0.28
+export const ORBIT_PATH_ANGULAR_SPEED = 1.2
+
 export const HP_RAMP = 0.04
 export const HP_CAP = 2.5
 export const SHOT_SPEED_RAMP = 0.03

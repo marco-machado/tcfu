@@ -42,6 +42,7 @@ function emptyEnemy(_: unknown, id: number): Enemy {
     contactDamage: 1,
     fireCooldown: 0,
     fireInterval: 0,
+    fireSequence: 0,
     bulletSpeed: 0,
     path: 'drift_down',
     pathPhase: 0,

@@ -24,6 +24,10 @@ type Props = {
   flash?: number
   /** Scale thruster plumes from live player velocity (Run). Hangar leaves false. */
   liveThrust?: boolean
+  /** Keep engine hardware but omit the stylized exhaust geometry. */
+  showThrusterPlumes?: boolean
+  /** Presentation-only cleanup for legacy GLBs with exhaust baked into the hull mesh. */
+  hideBakedThrusterCones?: boolean
 }
 
 type MatSnapshot = {
@@ -117,13 +121,14 @@ type KitProps = {
   detail: DetailLevel
   mats: RoleMats
   liveThrust: boolean
+  showThrusterPlumes: boolean
 }
 
 /**
  * Striker: twin-boom gunship. Slim fuselage between two forward gun booms,
  * canards, swept rear wings, twin engines. Reads as "guns first".
  */
-function StrikerKit({ detail, mats, liveThrust }: KitProps) {
+function StrikerKit({ detail, mats, liveThrust, showThrusterPlumes }: KitProps) {
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('striker', detail, p)
   const { slimNose, canopy, bell } = useLatheSet()
   const plumeMat = usePlumeMat()
@@ -136,7 +141,7 @@ function StrikerKit({ detail, mats, liveThrust }: KitProps) {
     },
     [wingL, wingR],
   )
-  const plume = show('thrusterPlume')
+  const plume = showThrusterPlumes && show('thrusterPlume')
   const dense = detail === 'high'
 
   return (
@@ -248,7 +253,7 @@ function StrikerKit({ detail, mats, liveThrust }: KitProps) {
  * Aegis: armored bulwark. Wide layered wing-body, front armor chevrons,
  * shield ring, triple engines. Reads as "a wall with thrusters".
  */
-function AegisKit({ detail, mats, liveThrust }: KitProps) {
+function AegisKit({ detail, mats, liveThrust, showThrusterPlumes }: KitProps) {
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('aegis', detail, p)
   const { canopy, bell } = useLatheSet()
   const plumeMat = usePlumeMat()
@@ -261,7 +266,7 @@ function AegisKit({ detail, mats, liveThrust }: KitProps) {
     },
     [wingL, wingR],
   )
-  const plume = show('thrusterPlume')
+  const plume = showThrusterPlumes && show('thrusterPlume')
   const dense = detail === 'high'
 
   return (
@@ -372,7 +377,7 @@ function AegisKit({ detail, mats, liveThrust }: KitProps) {
  * Phantom: stiletto interceptor. Needle nose, blade wings swept hard back,
  * one oversized engine, dorsal glow spine. Reads as "a knife".
  */
-function PhantomKit({ detail, mats, liveThrust }: KitProps) {
+function PhantomKit({ detail, mats, liveThrust, showThrusterPlumes }: KitProps) {
   const show = (p: Parameters<typeof hasKitPart>[2]) => hasKitPart('phantom', detail, p)
   const { slimNose, canopy, bell } = useLatheSet()
   const plumeMat = usePlumeMat()
@@ -385,7 +390,7 @@ function PhantomKit({ detail, mats, liveThrust }: KitProps) {
     },
     [wingL, wingR],
   )
-  const plume = show('thrusterPlume')
+  const plume = showThrusterPlumes && show('thrusterPlume')
   const dense = detail === 'high'
 
   return (
@@ -466,6 +471,8 @@ type KitBodyProps = {
   detail: DetailLevel
   mutableMaterials: boolean
   liveThrust: boolean
+  showThrusterPlumes: boolean
+  hideBakedThrusterCones: boolean
 }
 
 function ProceduralKitBody({
@@ -473,21 +480,23 @@ function ProceduralKitBody({
   detail,
   mutableMaterials,
   liveThrust,
+  showThrusterPlumes,
 }: KitBodyProps) {
   const mats = useRoleMats(shipId, mutableMaterials)
   switch (shipId) {
     case 'striker':
-      return <StrikerKit detail={detail} mats={mats} liveThrust={liveThrust} />
+      return <StrikerKit detail={detail} mats={mats} liveThrust={liveThrust} showThrusterPlumes={showThrusterPlumes} />
     case 'aegis':
-      return <AegisKit detail={detail} mats={mats} liveThrust={liveThrust} />
+      return <AegisKit detail={detail} mats={mats} liveThrust={liveThrust} showThrusterPlumes={showThrusterPlumes} />
     case 'phantom':
-      return <PhantomKit detail={detail} mats={mats} liveThrust={liveThrust} />
+      return <PhantomKit detail={detail} mats={mats} liveThrust={liveThrust} showThrusterPlumes={showThrusterPlumes} />
     default:
       return (
         <VanguardFactory
           detail={detail}
           mutableMaterials={mutableMaterials}
           liveThrust={liveThrust}
+          showThrusterPlumes={showThrusterPlumes}
         />
       )
   }
@@ -506,6 +515,8 @@ export function ShipKitVisual({
   liveFlash = false,
   flash = 0,
   liveThrust = false,
+  showThrusterPlumes = true,
+  hideBakedThrusterCones = false,
 }: Props) {
   const group = useFlashDriver(liveFlash, flash, `${shipId}-${detail}`)
   return (
@@ -515,6 +526,8 @@ export function ShipKitVisual({
         detail={detail}
         mutableMaterials={liveFlash}
         liveThrust={liveThrust}
+        showThrusterPlumes={showThrusterPlumes}
+        hideBakedThrusterCones={hideBakedThrusterCones}
       />
     </group>
   )

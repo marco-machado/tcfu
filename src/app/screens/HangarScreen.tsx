@@ -9,6 +9,32 @@ import { Button, Chip, Icon, Meter, Panel, ScreenHeader, cn } from '../component
 
 const DRAG_PAGE_PX = 64
 
+function HangarBackdrop() {
+  return (
+    <picture className="hangar-backdrop" aria-hidden="true">
+      <source
+        media="(min-aspect-ratio: 2 / 1)"
+        sizes="100vw"
+        srcSet="/assets/hangar/hangar-bay-ultrawide-2560x1080.webp 2560w, /assets/hangar/hangar-bay-ultrawide-5120x2160.webp 5120w"
+      />
+      <source
+        media="(max-aspect-ratio: 3 / 4)"
+        sizes="100vw"
+        srcSet="/assets/hangar/hangar-bay-portrait-1080x1920.webp 1080w, /assets/hangar/hangar-bay-portrait-2160x3840.webp 2160w"
+      />
+      <img
+        src="/assets/hangar/hangar-bay-landscape-3840x2160.webp"
+        srcSet="/assets/hangar/hangar-bay-landscape-1920x1080.webp 1920w, /assets/hangar/hangar-bay-landscape-3840x2160.webp 3840w"
+        sizes="100vw"
+        alt=""
+        decoding="async"
+        fetchPriority="high"
+        draggable={false}
+      />
+    </picture>
+  )
+}
+
 function metricValue(value: number): number {
   return Math.max(0.1, Math.min(1, value))
 }
@@ -87,6 +113,7 @@ export function HangarScreen() {
         onPointerUp={() => (dragFrom.current = null)}
         onPointerCancel={() => (dragFrom.current = null)}
       >
+        <HangarBackdrop />
         <HangarDeck
           kitIds={SHIP_KIT_IDS}
           index={model.index}

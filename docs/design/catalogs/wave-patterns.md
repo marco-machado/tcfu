@@ -8,7 +8,12 @@ Authored patterns + playlist pools. No full procedural geometry.
 
 **Macros:** `line_h`, `v_column`, `vee`, `sweep_lr`, `sweep_rl` (expand to events in data or tooling).
 
-**Paths:** `drift_down`, `sine_x`, `strafe_enter_left`, `strafe_enter_right`, `hold_and_shot`, `dive`.
+**Paths:** `drift_down`, `sine_x`, `strafe_enter_left`, `strafe_enter_right`, `hold_and_shot`, `dive`, `cross_left`, `cross_right`, `orbit_hold_left`, `orbit_hold_right`.
+
+| Path family | Behavior |
+|-------------|----------|
+| `cross_left` / `cross_right` | Strafe **3.8 u/s** while descending at **1.25×** stream speed. |
+| `orbit_hold_left` / `orbit_hold_right` | Descend to hold Y, then patrol **2.1 u** around the authored lane at **1.2 rad/s**, with **0.28 u** vertical bob. |
 
 ## Wave lifecycle
 
@@ -62,7 +67,7 @@ No enemy shots.
 | id | intent | sketch |
 |----|--------|--------|
 | easy_line_drones | fodder lines | 2–3 line_h drones |
-| easy_dart_dive | dodge lanes | dart dive columns |
+| easy_dart_dive | crossing dodge lanes | opposing dart columns cross the corridor |
 | easy_vee | classic V | vee drones |
 | easy_sweep_lr | lateral read | sweep_lr drones + 1 gunner |
 | easy_sides | side enter | strafe_enter left/right drones |
@@ -75,19 +80,19 @@ No enemy shots.
 | id | intent | sketch |
 |----|--------|--------|
 | mid_gun_wall | grunt pressure | gunners + drones |
-| mid_sidecar_lane | side shots | sidecars drift |
+| mid_sidecar_lane | moving crossfire | edge sidecars cross while center sidecar drifts |
 | mid_double_sweep | two sweeps | sweep_lr + sweep_rl |
 | mid_hold_squad | pause shooters | 3× hold_and_shot gunner |
-| mid_elite_razor | elite intro | 1 razor + fodder screen |
-| mid_prism_burst | ring threat | 1 prism + darts |
+| mid_elite_razor | moving elite intro | 1 orbit-hold razor + fodder screen |
+| mid_prism_burst | rotating ring threat | 1 orbit-hold prism + darts |
 | mid_chaos_mix | density | all grunt types light |
 
 ## pool_late (4)
 
 | id | intent | sketch |
 |----|--------|--------|
-| late_razor_pair | dual elite | 2 razor staggered |
-| late_prism_grid | rings + fodder | prism + dense drones |
+| late_razor_pair | pincer elites | 2 razor orbit-hold in opposing directions |
+| late_prism_grid | rotating rings + fodder | orbit-hold prism + dense drones |
 | late_gauntlet | continuous pressure | overlapping mid macros |
 | late_mixed_elites | razor+prism | elite duo + sidecars |
 
