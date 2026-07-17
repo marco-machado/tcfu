@@ -1,0 +1,36 @@
+{
+  "projectId": "8a43e7fc-4d5e-4515-8b23-6e9e3544f323",
+  "shape": "package",
+  "pkg": "tcfu",
+  "globalName": "TCFU",
+  "srcDir": "src/app/components/ui",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": ".design-sync/.cache/flat.css",
+  "componentSrcMap": {
+    "Button": "src/app/components/ui/Button.tsx",
+    "IconButton": "src/app/components/ui/IconButton.tsx",
+    "Panel": "src/app/components/ui/Panel.tsx",
+    "Heading": "src/app/components/ui/Heading.tsx",
+    "Label": "src/app/components/ui/Label.tsx",
+    "Meter": "src/app/components/ui/Meter.tsx",
+    "PipRow": "src/app/components/ui/PipRow.tsx",
+    "Chip": "src/app/components/ui/Chip.tsx",
+    "Toggle": "src/app/components/ui/Toggle.tsx",
+    "Slider": "src/app/components/ui/Slider.tsx",
+    "Segmented": "src/app/components/ui/Segmented.tsx",
+    "Overlay": "src/app/components/ui/Overlay.tsx",
+    "Modal": "src/app/components/ui/Modal.tsx",
+    "ScreenHeader": "src/app/components/ui/ScreenHeader.tsx",
+    "ScreenRails": "src/app/components/ui/ScreenRails.tsx",
+    "Icon": "src/app/components/ui/Icon.tsx",
+    "BrandMark": "src/app/components/ui/BrandMark.tsx"
+  },
+  "buildCmd": "./.ds-sync/node_modules/.bin/esbuild src/app/styles/index.css --bundle --outfile=.design-sync/.cache/flat.css",
+  "extraEntries": [
+    "./.design-sync/preview-backdrop.tsx"
+  ],
+  "provider": {
+    "component": "PreviewBackdrop"
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
